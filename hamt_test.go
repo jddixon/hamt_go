@@ -3,7 +3,6 @@ package hamt_go
 // hamt_go/hamt_test.go
 
 import (
-	"code.google.com/p/intmath/intgr"
 	// "encoding/binary"
 	"fmt"
 	xr "github.com/jddixon/xlattice_go/rnglib"
@@ -112,14 +111,16 @@ func (s *XLSuite) insertHash(c *C, slice *[]byte, value byte) (where uint) {
 	// fmt.Printf("%s\n", s.dumpSlice(slice))
 	return
 }
+
+// Verify that the insert algorithm works.  We insert a key, requiring
+// that it be inserted in a point which leaves the table inserted.  We
+// confirm that the position computed by the bit-counting algorithm
+// return the same index.
 func (s *XLSuite) TestInsert(c *C) {
 
 	var (
-		hc, bitmap      uint32
-		lev             uint
-		idx             uint
-		flag, mask, pos int
-		where           uint
+		bitmap, flag, hc, idx, mask uint32
+		lev, pos, where             uint
 	)
 	rng := xr.MakeSimpleRNG()
 	perm := rng.Perm(32) // a random permutation of [0..32)
@@ -129,12 +130,12 @@ func (s *XLSuite) TestInsert(c *C) {
 		hc = uint32(perm[i])
 		// insert the value into the hash slice in such a way as
 		// to maintain order
-		idx = uint((hc >> lev) & 0x1f)
-		c.Assert(idx, Equals, uint(hc)) // hc is restricted to that range
+		idx = (hc >> lev) & 0x1f
+		c.Assert(idx, Equals, hc) // hc is restricted to that range
 		where = s.insertHash(c, &slice, byte(idx))
-		flag = int(1 << (idx + 1))
+		flag = 1 << (idx + 1)
 		mask = flag - 1
-		pos = intgr.BitCount(int(bitmap) & mask)
+		pos = BitCount32(bitmap & mask)
 		occupied := uint32(1 << idx)
 		bitmap |= uint32(occupied)
 
