@@ -4,3 +4,4 @@ v0.1.0
     2014-04-04
         * code extracted from ctries_go testing basic insert algo   * SLOC  104
         * added SWAR-based BitCount32/64() as util.go               * SLOC  148
+        * added Bytes*Key, EntryI, HAMT, Key*I, Leaf* and tests     * SLOC  238

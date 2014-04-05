@@ -1,6 +1,10 @@
 package hamt_go
 
-// The 32-bit SWAR algorithm.
+// The 32-bit SWAR algorithm.  These are variants of the code in Bagwell's
+// "Ideal Hash Trees".  The algorithm seems to have been created by the
+// aggregate.org/MAGIC group at the University of Kentucky earlier than
+// the fall of 1996.  Illmari Karonen (vyznev.net) explains the algorithm at
+// stackoverflow.com/questions/22081738/how-variable-precision-swar-algorithm-workds
 
 const (
 	OCTO_FIVES  = 0x55555555

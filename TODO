@@ -2,3 +2,6 @@ hamt_go/TODO
 
 2014-04-04
     * extract insert test from ctries_go                                * DONE
+    * add SWAR BitCount*() and 32/64 bit tests                          * DONE
+    * differentiate 32- and 64-bit keys                                 * DONE
+        - add appropriate tests                                         * DONE
