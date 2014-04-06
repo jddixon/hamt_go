@@ -1,5 +1,20 @@
 hamt_go/TODO
 
+2014-04-05
+    * implement HAMT32 and tests first, then HAMT64 and tests
+
+2014-04-04
+    * move insert code from hamt_test:TestInsert into Table.Insert()
+    * need HAMT.{Insert,Find,Delete}() and tests
+
+    * need perf tests, all 6 variants (32,64 * 3)
+        * must clearly identify OS, hardware, Go version
+    * eventually need option to use hardware POPCNT if available
+    * need docs
+        - and figures
+        - docs, figures get imported into gh-pages
+    * project README should refer to github.io (ie, gh-pages)
+
 2014-04-04
     * extract insert test from ctries_go                                * DONE
     * add SWAR BitCount*() and 32/64 bit tests                          * DONE

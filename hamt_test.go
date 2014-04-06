@@ -110,7 +110,7 @@ func (s *XLSuite) insertHash(c *C, slice *[]byte, value byte) (where uint) {
 	//fmt.Printf("  inserted 0x%02x at %d/%d\n", value, where, newSize)
 	// fmt.Printf("%s\n", s.dumpSlice(slice))
 	return
-}
+} // GEEP
 
 // Verify that the insert algorithm works.  We insert a key, requiring
 // that it be inserted in a point which leaves the table inserted.  We
