@@ -6,7 +6,7 @@ type HAMT32 struct {
 
 func NewHAMT32() (h *HAMT32) {
 	h = &HAMT32{
-		root: NewTable32(),
+		root: NewTable32(0),
 	}
 	return
 }

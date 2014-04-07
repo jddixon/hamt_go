@@ -47,17 +47,17 @@ func (b *Bytes32Key) Hashcode32() (hc uint32, err error) {
 	buf := bytes.NewReader(b.slice)
 	err = binary.Read(buf, binary.LittleEndian, &hc)
 	if err != nil {
-		fmt.Printf("attempt to read key failed\n")
+		fmt.Printf("attempt to read key failed: %v\n", err)
 	}
 	return
 }
 
-// convert the first 16 bytes of the key into an unsigned uint64
+// convert the first 8 bytes of the key into an unsigned uint64
 func (b *Bytes64Key) Hashcode64() (hc uint64, err error) {
 	buf := bytes.NewReader(b.slice)
 	err = binary.Read(buf, binary.LittleEndian, &hc)
 	if err != nil {
-		fmt.Printf("attempt to read key failed\n")
+		fmt.Printf("attempt to read key failed: %v\n", err)
 	}
 	return
 }
