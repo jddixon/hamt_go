@@ -5,8 +5,9 @@ type HAMT32 struct {
 }
 
 func NewHAMT32() (h *HAMT32) {
+	t32, _ := NewTable32(0)
 	h = &HAMT32{
-		root: NewTable32(0),
+		root: t32,
 	}
 	return
 }
@@ -29,7 +30,19 @@ func (h *HAMT32) Insert(k Key32I, v interface{}) (err error) {
 
 	hc, err := k.Hashcode32()
 	if err == nil {
-		err = h.root.Insert(hc, 0, k, v) // depth 0, so hc unshifted
+		ndx := byte(hc & LEVEL_MASK32)
+		var leaf *Leaf32
+		leaf, err = NewLeaf32(k, v)
+		if err == nil {
+			var e *Entry32
+			e, err = NewEntry32(ndx, leaf)
+			if err == nil {
+				var slotNbr uint
+				// depth is 0, so hc unshifted
+				slotNbr, err = h.root.insertEntry(hc, 0, e)
+				_ = slotNbr
+			}
+		}
 	}
 	return
 } // FOO

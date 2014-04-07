@@ -6,17 +6,17 @@ type Entry32I interface {
 }
 
 type Entry32 struct {
-	ndx byte
-	Node32I
+	ndx  byte
+	Node Node32I
 }
 
-func NewEntry32(ndx byte, node Node32I) (e Entry32I, err error) {
+func NewEntry32(ndx byte, node Node32I) (e *Entry32, err error) {
 	// XXX ndx must be within range
 
 	if err == nil {
 		e = &Entry32{
-			ndx:     ndx,
-			Node32I: node, // is this possible??
+			ndx:  ndx,
+			Node: node,
 		}
 	}
 	return
