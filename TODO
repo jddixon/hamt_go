@@ -1,5 +1,9 @@
 hamt_go/TODO
 
+2014-04-07
+    * table_test needs to be elaborated to make sure that what's in
+        the slot matches the index
+
 2014-04-05
     * implement HAMT32 and tests first, then HAMT64 and tests
 

@@ -49,8 +49,10 @@ func (t32 *Table32) insertEntry(hc uint32, depth uint, entry *Entry32) (
 
 	ndx := byte(hc & LEVEL_MASK32)
 
-	// curSize := uint(len(t32.slots))
 	curSize := uint(len(t32.indices))
+	curSlotCount := uint(len(t32.slots))
+
+	fmt.Printf("index count %d, slot count %d\n", curSize, curSlotCount)
 
 	if curSize == 0 {
 		t32.slots = append(t32.slots, entry)
@@ -86,9 +88,19 @@ func (t32 *Table32) insertEntry(hc uint32, depth uint, entry *Entry32) (
 				leftNdx = append(leftNdx, rightNdx...)
 
 				//fmt.Printf("%s\n", dumpIndices(&leftNdx))
-				t32.indices = leftNdx
+				t32.indices = leftNdx // FOO
 
 				// then insert the entry ----------------------------
+				// WORKING HERE
+				var leftSlots []*Entry32
+				if slotNbr > 0 {
+					// XXX PANICS
+					leftSlots = append(leftSlots, t32.slots[0:slotNbr]...)
+				}
+				rightSlots := t32.slots[slotNbr:]
+				leftSlots = append(leftSlots, entry)
+				leftSlots = append(leftSlots, rightSlots...)
+				t32.slots = leftSlots // FOO
 
 				// done ---------------------------------------------
 				inserted = true
@@ -108,9 +120,17 @@ func (t32 *Table32) insertEntry(hc uint32, depth uint, entry *Entry32) (
 					dumpIndices(leftNdx), ndx, dumpIndices(rightNdx))
 				leftNdx = append(leftNdx, ndx)
 				leftNdx = append(leftNdx, rightNdx...)
-				t32.indices = leftNdx
+				t32.indices = leftNdx // FOO
 
 				// then insert the entry ----------------------------
+				var leftSlots []*Entry32
+				if slotNbr > 0 {
+					leftSlots = append(leftSlots, t32.slots[0:slotNbr]...)
+				}
+				rightSlots := t32.slots[slotNbr:]
+				leftSlots = append(leftSlots, entry)
+				leftSlots = append(leftSlots, rightSlots...)
+				t32.slots = leftSlots // FOO
 
 				// done ---------------------------------------------
 				inserted = true
@@ -120,19 +140,33 @@ func (t32 *Table32) insertEntry(hc uint32, depth uint, entry *Entry32) (
 		}
 		if !inserted {
 			curNdx = t32.indices[i]
+			curEntry := t32.slots[i]
+
 			if curNdx < ndx {
+				// insert index -------------------------------------
 				fmt.Printf("C: appending %02x after %02x\n", ndx, curNdx)
 				t32.indices = append(t32.indices, ndx)
 				slotNbr = curSize
+				// insert entry -------------------------------------
+				t32.slots = append(t32.slots, entry)
+
 			} else {
+				// insert index -------------------------------------
 				leftNdx := (t32.indices)[0:i]
 				leftNdx = append(leftNdx, ndx)
 				leftNdx = append(leftNdx, curNdx)
-				t32.indices = leftNdx
+				t32.indices = leftNdx // FOO
 				slotNbr = curSize - 1
 				fmt.Printf("D: prepended %02x before %02x at %d\n",
 					ndx, curNdx, slotNbr)
+
+				// insert entry -------------------------------------
+				leftSlots := (t32.slots)[0:i]
+				leftSlots = append(leftSlots, entry)
+				leftSlots = append(leftSlots, curEntry)
+				t32.slots = leftSlots
 			}
+
 		}
 	}
 	// XXX IGNORES POSSIBLE ERRORS XXX
