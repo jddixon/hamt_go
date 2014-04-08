@@ -3,6 +3,8 @@ hamt_go/CHANGES
 v0.1.1
     2014-04-07
         * first level ndx inserts pass test                         * SLOC  549
+    2014-04-08
+        * test verifies first level values correct                  * SLOC  571
 
 v0.1.0
     2014-04-04

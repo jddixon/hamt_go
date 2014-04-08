@@ -3,7 +3,7 @@ package hamt_go
 // hamt_go/table_test.go
 
 import (
-	// "bytes"
+	"bytes"
 	// "encoding/binary"
 	"fmt"
 	xr "github.com/jddixon/xlattice_go/rnglib"
@@ -190,12 +190,7 @@ func (s *XLSuite) TestDepthZeroInserts(c *C) {
 		c.Assert(err, IsNil)
 		c.Assert(e, NotNil)
 		c.Assert(e.GetIndex(), Equals, ndx)
-
 		c.Assert(e.Node.IsLeaf(), Equals, true)
-		leaf2 := e.Node.(*Leaf32)
-
-		_ = leaf2 // XXX UNUSED
-
 		c.Assert(e.GetIndex(), Equals, ndx)
 
 		slotNbr, err := t32.insertEntry(hc, depth, e)
@@ -213,11 +208,30 @@ func (s *XLSuite) TestDepthZeroInserts(c *C) {
 		occupied := uint32(1 << idx)
 		bitmap |= uint32(occupied)
 
-		fmt.Printf("%02d: hc %02x, idx %02x, mask 0x%08x, bitmap 0x%08x, pos %02d slotNbr %02d\n\n",
-			i, hc, idx, mask, bitmap, pos, slotNbr)
+		// fmt.Printf("%02d: hc %02x, idx %02x, mask 0x%08x, bitmap 0x%08x, pos %02d slotNbr %02d\n\n",
+		//	i, hc, idx, mask, bitmap, pos, slotNbr)
 
 		c.Assert(t32.bitmap, Equals, bitmap)
 
 		c.Assert(uint(pos), Equals, slotNbr)
+	}
+	// verify that the order of entries in the slots is as expected
+	c.Assert(len(t32.indices), Equals, 32)
+	c.Assert(len(t32.slots), Equals, 32)
+	for i := uint(0); i < 32; i++ {
+		idx := t32.indices[i]
+		entry := t32.slots[i]
+		c.Assert(entry.GetIndex(), Equals, idx)
+		node := entry.Node
+		c.Assert(node.IsLeaf(), Equals, true)
+		leaf := node.(*Leaf32)
+		key32 := leaf.Key
+		hc, err := key32.Hashcode32()
+		c.Assert(err, IsNil)
+		c.Assert(hc&LEVEL_MASK32, Equals, uint32(idx))
+		value := leaf.Value.(*[]byte)
+
+		keyBytes := key32.(*Bytes32Key)
+		c.Assert(bytes.Equal((*keyBytes).Slice, *value), Equals, true)
 	}
 }

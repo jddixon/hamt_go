@@ -50,9 +50,9 @@ func (t32 *Table32) insertEntry(hc uint32, depth uint, entry *Entry32) (
 	ndx := byte(hc & LEVEL_MASK32)
 
 	curSize := uint(len(t32.indices))
-	curSlotCount := uint(len(t32.slots))
+	// curSlotCount := uint(len(t32.slots))
 
-	fmt.Printf("index count %d, slot count %d\n", curSize, curSlotCount)
+	//fmt.Printf("index count %d, slot count %d\n", curSize, curSlotCount)
 
 	if curSize == 0 {
 		t32.slots = append(t32.slots, entry)
@@ -66,13 +66,13 @@ func (t32 *Table32) insertEntry(hc uint32, depth uint, entry *Entry32) (
 			if curNdx < ndx {
 				nextNdx = t32.indices[i+1]
 				if nextNdx < ndx {
-					fmt.Printf("continuing: %02x after %02x, after %02x\n",
-						ndx, curNdx, nextNdx)
+					// fmt.Printf("continuing: %02x after %02x, after %02x\n",
+					//	ndx, curNdx, nextNdx)
 					continue
 				}
 				slotNbr = i + 1
-				fmt.Printf("A: inserting %02x after %02x, before %02x, at %d\n",
-					ndx, curNdx, nextNdx, slotNbr)
+				// fmt.Printf("A: inserting %02x after %02x, before %02x, at %d\n",
+				//	ndx, curNdx, nextNdx, slotNbr)
 
 				// first insert the index ---------------------------
 				var leftNdx []byte
@@ -107,8 +107,8 @@ func (t32 *Table32) insertEntry(hc uint32, depth uint, entry *Entry32) (
 				break
 			} else {
 				slotNbr = i
-				fmt.Printf("B: inserting %02x before %02x at %d\n",
-					ndx, curNdx, slotNbr)
+				// fmt.Printf("B: inserting %02x before %02x at %d\n",
+				//	ndx, curNdx, slotNbr)
 
 				// first insert the index ---------------------------
 				var leftNdx []byte
@@ -116,8 +116,8 @@ func (t32 *Table32) insertEntry(hc uint32, depth uint, entry *Entry32) (
 					leftNdx = append(leftNdx, t32.indices[0:slotNbr]...)
 				}
 				rightNdx := t32.indices[slotNbr:]
-				fmt.Printf("%s + %02x + %s\n",
-					dumpIndices(leftNdx), ndx, dumpIndices(rightNdx))
+				// fmt.Printf("%s + %02x + %s\n",
+				//	dumpIndices(leftNdx), ndx, dumpIndices(rightNdx))
 				leftNdx = append(leftNdx, ndx)
 				leftNdx = append(leftNdx, rightNdx...)
 				t32.indices = leftNdx // FOO
@@ -144,7 +144,7 @@ func (t32 *Table32) insertEntry(hc uint32, depth uint, entry *Entry32) (
 
 			if curNdx < ndx {
 				// insert index -------------------------------------
-				fmt.Printf("C: appending %02x after %02x\n", ndx, curNdx)
+				// fmt.Printf("C: appending %02x after %02x\n", ndx, curNdx)
 				t32.indices = append(t32.indices, ndx)
 				slotNbr = curSize
 				// insert entry -------------------------------------
@@ -157,8 +157,8 @@ func (t32 *Table32) insertEntry(hc uint32, depth uint, entry *Entry32) (
 				leftNdx = append(leftNdx, curNdx)
 				t32.indices = leftNdx // FOO
 				slotNbr = curSize - 1
-				fmt.Printf("D: prepended %02x before %02x at %d\n",
-					ndx, curNdx, slotNbr)
+				// fmt.Printf("D: prepended %02x before %02x at %d\n",
+				//	ndx, curNdx, slotNbr)
 
 				// insert entry -------------------------------------
 				leftSlots := (t32.slots)[0:i]
@@ -172,9 +172,9 @@ func (t32 *Table32) insertEntry(hc uint32, depth uint, entry *Entry32) (
 	// XXX IGNORES POSSIBLE ERRORS XXX
 	flag := uint32(1 << ndx)
 	t32.bitmap |= flag
-	newSize := uint(len(t32.indices))
-	fmt.Printf("  inserted 0x%02x at %d/%d\n", ndx, slotNbr, newSize)
-	fmt.Printf("%s\n", dumpIndices(t32.indices))
+	//newSize := uint(len(t32.indices))
+	//fmt.Printf("  inserted 0x%02x at %d/%d\n", ndx, slotNbr, newSize)
+	//fmt.Printf("%s\n", dumpIndices(t32.indices))
 	return
 } // GEEP
 
