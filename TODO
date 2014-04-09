@@ -1,5 +1,10 @@
 hamt_go/TODO
 
+2014-04-09
+    * need Table32.Find()                                               * DONE
+        - and test
+    * need Table32.Delete()
+        - and test
 2014-04-07
     * table_test needs to be elaborated to make sure that what's in     * DONE
         the slot matches the index                                      * DONE

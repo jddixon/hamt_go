@@ -3,6 +3,7 @@ package hamt_go
 // hamt_go/table.go
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 )
@@ -42,11 +43,54 @@ func (t32 *Table32) GetDepth() uint {
 	return uint(t32.depth)
 }
 
-// ndx is the value of the next W32 key bits
+// Enter with hc the hashcode for the key shifted appropriately for the
+// current depth.
 //
+func (t32 *Table32) findEntry(hc uint32, depth uint, key Key32I) (
+	value interface{}, err error) {
+
+	curSize := uint(len(t32.indices))
+	// curSlotCount := uint(len(t32.slots))
+
+	if curSize > 0 { // otherwise return nil value and nil error
+
+		// ndx is the value of the next W32 key bits
+		ndx := byte(hc & LEVEL_MASK32)
+		for i := uint(0); i < curSize; i++ {
+			curNdx := t32.indices[i]
+			if curNdx < ndx {
+				continue
+			} else if curNdx == ndx {
+				entry := t32.slots[i]
+				// XXX this MUST exist
+				if entry.Node.IsLeaf() {
+					// KEYS MUST BE OF THE SAME TYPE
+					myLeaf := entry.Node.(*Leaf32)
+					myKey := myLeaf.Key.(*Bytes32Key)
+					searchKey := key.(*Bytes32Key)
+					if bytes.Equal(searchKey.Slice, myKey.Slice) {
+						value = myLeaf.Value
+					}
+				} else {
+					// entry is a table, so recurse
+					hc >>= W32
+					depth++
+					value, err = t32.findEntry(hc, depth, key)
+				}
+				break
+			} else {
+				// curNdx > ndx, so it's not there
+				break
+			}
+		}
+	}
+	return
+}
+
 func (t32 *Table32) insertEntry(hc uint32, depth uint, entry *Entry32) (
 	slotNbr uint, err error) {
 
+	// ndx is the value of the next W32 key bits
 	ndx := byte(hc & LEVEL_MASK32)
 
 	curSize := uint(len(t32.indices))
