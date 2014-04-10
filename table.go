@@ -4,6 +4,7 @@ package hamt_go
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"strings"
 )
@@ -41,6 +42,83 @@ func NewTable32(depth uint) (t32 *Table32, err error) {
 
 func (t32 *Table32) GetDepth() uint {
 	return uint(t32.depth)
+}
+
+func (t32 *Table32) removeFromSlices(offset uint) (err error) {
+	curSize := uint(len(t32.indices))
+	if curSize == 0 {
+		err = DeleteFromEmptyTable
+	} else if offset >= curSize {
+		err = errors.New(fmt.Sprintf(
+			"InternalError: delete offset %d but table size %d\n",
+			offset, curSize))
+	} else if curSize == 1 {
+		// XXX LEAVES EMPTY TABLE, WHICH WILL HARM PERFORMANCE
+		t32.indices = t32.indices[0:0]
+		t32.slots = t32.slots[0:0]
+	} else if offset == 0 {
+		t32.indices = t32.indices[1:]
+		t32.slots = t32.slots[1:]
+	} else if offset == curSize-1 {
+		t32.indices = t32.indices[0 : offset-1]
+		t32.slots = t32.slots[0 : offset-1]
+	} else {
+		shorterNdx := t32.indices[0:offset]
+		shorterNdx = append(shorterNdx, t32.indices[offset+1:]...)
+		t32.indices = shorterNdx
+		shorterSlots := t32.slots[0:offset]
+		shorterSlots = append(shorterSlots, t32.slots[offset+1:]...)
+		t32.slots = shorterSlots
+	}
+	return
+}
+
+// Enter with hc the hashcode for the key shifted appropriately for the
+// current depth.
+//
+func (t32 *Table32) deleteEntry(hc uint32, depth uint, key Key32I) (err error) {
+
+	curSize := uint(len(t32.indices))
+	// curSlotCount := uint(len(t32.slots))
+
+	if curSize == 0 {
+		err = NotFound
+	} else {
+
+		// ndx is the value of the next W32 key bits
+		ndx := byte(hc & LEVEL_MASK32)
+		for i := uint(0); i < curSize; i++ {
+			curNdx := t32.indices[i]
+			if curNdx < ndx {
+				continue
+			} else if curNdx == ndx {
+				entry := t32.slots[i]
+				// XXX this MUST exist
+				if entry.Node.IsLeaf() {
+					// KEYS MUST BE OF THE SAME TYPE
+					myLeaf := entry.Node.(*Leaf32)
+					myKey := myLeaf.Key.(*Bytes32Key)
+					searchKey := key.(*Bytes32Key)
+					if bytes.Equal(searchKey.Slice, myKey.Slice) {
+						// XXX STUB: DELETE THE ENTRY
+					} else {
+						err = NotFound
+					}
+				} else {
+					// entry is a table, so recurse
+					hc >>= W32
+					depth++
+					err = t32.deleteEntry(hc, depth, key)
+				}
+				break
+			} else {
+				// curNdx > ndx, so it's not there
+				err = NotFound
+				break
+			}
+		}
+	}
+	return
 }
 
 // Enter with hc the hashcode for the key shifted appropriately for the
@@ -85,7 +163,7 @@ func (t32 *Table32) findEntry(hc uint32, depth uint, key Key32I) (
 		}
 	}
 	return
-}
+} // FOO
 
 func (t32 *Table32) insertEntry(hc uint32, depth uint, entry *Entry32) (
 	slotNbr uint, err error) {

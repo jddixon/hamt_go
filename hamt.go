@@ -14,8 +14,12 @@ func NewHAMT32() (h *HAMT32) {
 
 func (h *HAMT32) Delete(k Key32I) (err error) {
 
-	// XXX STUB
-
+	var hc uint32
+	hc, err = k.Hashcode32()
+	if err == nil {
+		// this is depth zero, so hc is not shifted
+		err = h.root.deleteEntry(hc, 0, k)
+	}
 	return
 }
 

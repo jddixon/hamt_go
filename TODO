@@ -1,5 +1,9 @@
 hamt_go/TODO
 
+2014-04-10
+    * where Table32.Delete() leaves empty table, need to remove the
+        table from the dadta structure - recursively
+
 2014-04-09
     * need Table32.Find()                                               * DONE
         - and test
