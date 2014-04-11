@@ -124,46 +124,67 @@ func (t32 *Table32) deleteEntry(hc uint32, depth uint, key Key32I) (err error) {
 // Enter with hc the hashcode for the key shifted appropriately for the
 // current depth.
 //
+// XXX THIS WORKS, but a binary search would be faster.
+//
 func (t32 *Table32) findEntry(hc uint32, depth uint, key Key32I) (
 	value interface{}, err error) {
 
 	curSize := uint(len(t32.indices))
 	// curSlotCount := uint(len(t32.slots))
 
-	if curSize > 0 { // otherwise return nil value and nil error
-
+	if curSize == 0 {
+		err = NotFound
+	} else {
 		// ndx is the value of the next W32 key bits
 		ndx := byte(hc & LEVEL_MASK32)
 		for i := uint(0); i < curSize; i++ {
 			curNdx := t32.indices[i]
+			// DEBUG
+			//fmt.Printf("  findEntry, ndx %2d, slot %2d, slot ndx %2d ",
+			//	ndx, i, curNdx)
+			// END
 			if curNdx < ndx {
-				continue
+				if i < curSize-1 {
+					//fmt.Printf("continuing\n")	// DEBUG
+					continue
+				} else {
+					//fmt.Printf("no more slots\n")	// DEBUG
+					err = NotFound
+				}
 			} else if curNdx == ndx {
 				entry := t32.slots[i]
 				// XXX this MUST exist
 				if entry.Node.IsLeaf() {
-					// KEYS MUST BE OF THE SAME TYPE
 					myLeaf := entry.Node.(*Leaf32)
 					myKey := myLeaf.Key.(*Bytes32Key)
 					searchKey := key.(*Bytes32Key)
 					if bytes.Equal(searchKey.Slice, myKey.Slice) {
 						value = myLeaf.Value
+						//fmt.Printf("FOUND\n")	// DEBUG
+					} else {
+						//fmt.Printf("LEAF, NO MATCH\n")	// DEBUG
+						err = NotFound
 					}
 				} else {
 					// entry is a table, so recurse
 					hc >>= W32
 					depth++
 					value, err = t32.findEntry(hc, depth, key)
+					// fmt.Printf("RECURSING\n")	// DEBUG
 				}
 				break
 			} else {
 				// curNdx > ndx, so it's not there
+				// DEBUG
+				//fmt.Printf("NO MATCH: curNdx %d > ndx %d\n", curNdx, ndx)
+				// END
+				err = NotFound
 				break
 			}
 		}
 	}
 	return
-} // FOO
+}
 
 func (t32 *Table32) insertEntry(hc uint32, depth uint, entry *Entry32) (
 	slotNbr uint, err error) {

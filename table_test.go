@@ -171,6 +171,9 @@ func (s *XLSuite) TestDepthZeroInserts(c *C) {
 	c.Assert(t32.GetDepth(), Equals, depth)
 
 	for i := uint(0); i < 32; i++ {
+		// DEBUG
+		// fmt.Printf("TestDepthZeroInserts: insert loop, i = %d\n", i)
+		// END
 		ndx := byte(perm[i])
 		key := make([]byte, 32)
 		key[0] = ndx // all the rest are zeroes
@@ -180,6 +183,9 @@ func (s *XLSuite) TestDepthZeroInserts(c *C) {
 		hc, err := key32.Hashcode32()
 		c.Assert(err, IsNil)
 		c.Assert(hc, Equals, uint32(ndx))
+
+		_, err = t32.findEntry(hc, 0, key32)
+		c.Assert(err, Equals, NotFound)
 
 		leaf, err := NewLeaf32(key32, &key)
 		c.Assert(err, IsNil)
@@ -214,6 +220,12 @@ func (s *XLSuite) TestDepthZeroInserts(c *C) {
 		c.Assert(t32.bitmap, Equals, bitmap)
 
 		c.Assert(uint(pos), Equals, slotNbr)
+
+		v, err := t32.findEntry(hc, 0, key32)
+		c.Assert(err, IsNil)
+		vBytes := v.(*[]byte)
+		c.Assert(bytes.Equal(*vBytes, key), Equals, true)
+
 	}
 	// verify that the order of entries in the slots is as expected
 	c.Assert(len(t32.indices), Equals, 32)
