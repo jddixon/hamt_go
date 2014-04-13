@@ -2,9 +2,9 @@ hamt_go/TODO
 
 2014-04-12
     * need recursive Table32.insertEntry()
-        - and test                                                      *
-    * need recursive Table32.findEntry()                                
-        - and test                                                      *
+        - and test
+    * need recursive Table32.findEntry()
+        - and test
     * need recursive Table32.deleteEntry()
         - and test
 2014-04-10
@@ -25,7 +25,7 @@ hamt_go/TODO
 
 2014-04-04
     * move insert code from hamt_test:TestInsert into Table.Insert()    * DONE
-    * need HAMT.{Insert,Find,Delete}() and tests
+    * need HAMT.{Insert,Find,Delete}() and tests                        * DONE
 
     * need perf tests, all 6 variants (32,64 * 3)
         * must clearly identify OS, hardware, Go version
