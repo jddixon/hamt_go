@@ -8,7 +8,6 @@ import (
 	"fmt"
 	xr "github.com/jddixon/xlattice_go/rnglib"
 	. "launchpad.net/gocheck"
-	// "strings"
 	// "sync/atomic"
 	//"unsafe"
 )
@@ -51,13 +50,13 @@ var _ = fmt.Print
 //				}
 //				right := mySlice[where:]
 //				//fmt.Printf("%s + %02x + %s => ",
-//				//	s.dumpSlice(&left),
+//				//	s.dumpByteSlice(&left),
 //				//	value,
-//				//	s.dumpSlice(&right))
+//				//	s.dumpByteSlice(&right))
 //				left = append(left, value)
 //				left = append(left, right...)
 //
-//				//fmt.Printf("%s\n", s.dumpSlice(&left))
+//				//fmt.Printf("%s\n", s.dumpByteSlice(&left))
 //				*slice = left
 //				inserted = true
 //				break
@@ -73,7 +72,7 @@ var _ = fmt.Print
 //				}
 //				right := mySlice[where:]
 //				// fmt.Printf("%s + %02x + %s\n",
-//				//	s.dumpSlice(&left), value, s.dumpSlice(&right))
+//				//	s.dumpByteSlice(&left), value, s.dumpByteSlice(&right))
 //				left = append(left, value)
 //				left = append(left, right...)
 //				*slice = left
@@ -104,7 +103,7 @@ var _ = fmt.Print
 //	newSize := uint(len(*slice))
 //	c.Assert(newSize, Equals, curSize+1)
 //	//fmt.Printf("  inserted 0x%02x at %d/%d\n", value, where, newSize)
-//	// fmt.Printf("%s\n", s.dumpSlice(slice))
+//	// fmt.Printf("%s\n", s.dumpByteSlice(slice))
 //	return
 //} // GEEP
 //
@@ -170,13 +169,17 @@ func (s *XLSuite) TestDepthZeroInserts(c *C) {
 	c.Assert(t32, NotNil)
 	c.Assert(t32.GetDepth(), Equals, depth)
 
+	keys := make([][]byte, 32)
+	indices := make([]byte, 32)
+
 	for i := uint(0); i < 32; i++ {
-		// DEBUG
-		// fmt.Printf("TestDepthZeroInserts: insert loop, i = %d\n", i)
-		// END
 		ndx := byte(perm[i])
+		indices[i] = ndx
+
 		key := make([]byte, 32)
 		key[0] = ndx // all the rest are zeroes
+		keys[i] = key
+
 		key32, err := NewBytes32Key(key)
 		c.Assert(err, IsNil)
 		c.Assert(key32, NotNil)
@@ -245,5 +248,40 @@ func (s *XLSuite) TestDepthZeroInserts(c *C) {
 
 		keyBytes := key32.(*Bytes32Key)
 		c.Assert(bytes.Equal((*keyBytes).Slice, *value), Equals, true)
+	}
+	// remove each key, then verify that it is in fact gone
+	c.Assert(len(t32.indices), Equals, 32)
+	c.Assert(len(t32.slots), Equals, 32)
+	for i := uint(0); i < 32; i++ {
+		idx := indices[i]
+		key := keys[i]
+
+		// verify it is present -------------------------------------
+		//fmt.Printf("%d VERIFYING PRESENT BEFORE DELETE: idx %02x\n", i, idx)
+		key32, err := NewBytes32Key(key)
+		c.Assert(err, IsNil)
+		c.Assert(key32, NotNil)
+		hc, err := key32.Hashcode32()
+		c.Assert(err, IsNil)
+		v, err := t32.findEntry(hc, 0, key32)
+		c.Assert(err, IsNil)
+		c.Assert(v, NotNil)
+		vAsKey := v.(*[]byte)
+		c.Assert(bytes.Equal(*vAsKey, key), Equals, true)
+
+		// delete it ------------------------------------------------
+		// depth is zero, so hc unshifted
+		//fmt.Printf("  %d DELETING: idx %02x\n", i, idx)
+		err = t32.deleteEntry(hc, 0, key32)
+		c.Assert(err, IsNil)
+
+		// verify that it is gone -----------------------------------
+		//fmt.Printf("  %d CHECKING NOT PRESENT AFTER DELETE: idx %02x\n", i, idx)
+		v, err = t32.findEntry(hc, 0, key32)
+
+		c.Assert(err, Equals, NotFound)
+		c.Assert(v, IsNil)
+
+		_ = idx // DEBUG
 	}
 }

@@ -1,14 +1,21 @@
 hamt_go/TODO
 
+2014-04-12
+    * need recursive Table32.insertEntry()
+        - and test                                                      *
+    * need recursive Table32.findEntry()                                
+        - and test                                                      *
+    * need recursive Table32.deleteEntry()
+        - and test
 2014-04-10
     * where Table32.Delete() leaves empty table, need to remove the
         table from the dadta structure - recursively
 
-2014-04-09
+2014-04-09 (level 0, no tested recursion)
     * need Table32.Find()                                               * DONE
-        - and test
-    * need Table32.Delete()
-        - and test
+        - and test                                                      * DONE
+    * need Table32.Delete()                                             * DONE
+        - and test                                                      * DONE
 2014-04-07
     * table_test needs to be elaborated to make sure that what's in     * DONE
         the slot matches the index                                      * DONE

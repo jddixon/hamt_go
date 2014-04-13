@@ -60,8 +60,8 @@ func (t32 *Table32) removeFromSlices(offset uint) (err error) {
 		t32.indices = t32.indices[1:]
 		t32.slots = t32.slots[1:]
 	} else if offset == curSize-1 {
-		t32.indices = t32.indices[0 : offset-1]
-		t32.slots = t32.slots[0 : offset-1]
+		t32.indices = t32.indices[0:offset]
+		t32.slots = t32.slots[0:offset]
 	} else {
 		shorterNdx := t32.indices[0:offset]
 		shorterNdx = append(shorterNdx, t32.indices[offset+1:]...)
@@ -100,7 +100,7 @@ func (t32 *Table32) deleteEntry(hc uint32, depth uint, key Key32I) (err error) {
 					myKey := myLeaf.Key.(*Bytes32Key)
 					searchKey := key.(*Bytes32Key)
 					if bytes.Equal(searchKey.Slice, myKey.Slice) {
-						// XXX STUB: DELETE THE ENTRY
+						err = t32.removeFromSlices(i)
 					} else {
 						err = NotFound
 					}
@@ -140,18 +140,21 @@ func (t32 *Table32) findEntry(hc uint32, depth uint, key Key32I) (
 		for i := uint(0); i < curSize; i++ {
 			curNdx := t32.indices[i]
 			// DEBUG
-			//fmt.Printf("  findEntry, ndx %2d, slot %2d, slot ndx %2d ",
+			//fmt.Printf("  findEntry, ndx %2x, slot %2d, slot ndx %02x ",
 			//	ndx, i, curNdx)
 			// END
 			if curNdx < ndx {
 				if i < curSize-1 {
-					//fmt.Printf("continuing\n")	// DEBUG
+					// fmt.Printf("continuing\n")	// DEBUG
 					continue
 				} else {
-					//fmt.Printf("no more slots\n")	// DEBUG
+					// fmt.Printf("no more slots\n")	// DEBUG
 					err = NotFound
 				}
 			} else if curNdx == ndx {
+				// DEBUG
+				//fmt.Printf("MATCH: curNdx %02x == ndx %02x\n", curNdx, ndx)
+				// END
 				entry := t32.slots[i]
 				// XXX this MUST exist
 				if entry.Node.IsLeaf() {
@@ -160,9 +163,9 @@ func (t32 *Table32) findEntry(hc uint32, depth uint, key Key32I) (
 					searchKey := key.(*Bytes32Key)
 					if bytes.Equal(searchKey.Slice, myKey.Slice) {
 						value = myLeaf.Value
-						//fmt.Printf("FOUND\n")	// DEBUG
+						//fmt.Printf("    FOUND, slot %d\n", i)	// DEBUG
 					} else {
-						//fmt.Printf("LEAF, NO MATCH\n")	// DEBUG
+						//fmt.Printf("    LEAF, NO MATCH\n")	// DEBUG
 						err = NotFound
 					}
 				} else {
@@ -170,13 +173,13 @@ func (t32 *Table32) findEntry(hc uint32, depth uint, key Key32I) (
 					hc >>= W32
 					depth++
 					value, err = t32.findEntry(hc, depth, key)
-					// fmt.Printf("RECURSING\n")	// DEBUG
+					//fmt.Printf("    RECURSING\n")	// DEBUG
 				}
 				break
 			} else {
 				// curNdx > ndx, so it's not there
 				// DEBUG
-				//fmt.Printf("NO MATCH: curNdx %d > ndx %d\n", curNdx, ndx)
+				//fmt.Printf("NO MATCH: curNdx %02x > ndx %02x\n", curNdx, ndx)
 				// END
 				err = NotFound
 				break
