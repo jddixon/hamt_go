@@ -196,9 +196,12 @@ func (t32 *Table32) insertEntry(hc uint32, depth uint, entry *Entry32) (
 	ndx := byte(hc & LEVEL_MASK32)
 
 	curSize := uint(len(t32.indices))
-	// curSlotCount := uint(len(t32.slots))
 
-	//fmt.Printf("index count %d, slot count %d\n", curSize, curSlotCount)
+	// DEBUG
+	curSlotCount := uint(len(t32.slots))
+	fmt.Printf("Table32.insertEntry: depth %d, index count %d, slot count %d\n",
+		depth, curSize, curSlotCount)
+	// END
 
 	if curSize == 0 {
 		t32.slots = append(t32.slots, entry)
@@ -329,43 +332,44 @@ func (t32 *Table32) insertEntry(hc uint32, depth uint, entry *Entry32) (
 //
 // XXX OBSOLETE
 //
-func (t32 *Table32) Insert(hc uint32, depth uint, k Key32I, v interface{}) (
-	err error) {
-
-	fmt.Printf("XXX CALL TO OBSOLETE FUNCTION t32.Insert\n")
-
-	// Mask off the first level mask bits, and see what we have there
-	where := byte(hc & LEVEL_MASK32)
-
-	p := t32.slots[where]
-	if p == nil {
-		// empty slot, so put the entry there
-		var leaf *Leaf32
-		leaf, err = NewLeaf32(k, v)
-		if err == nil {
-			var e *Entry32
-			e, err = NewEntry32(where, leaf)
-			if err == nil {
-				t32.slots[where] = e
-			}
-		}
-	} else if p.Node.IsLeaf() {
-
-		// XXX STUB
-		fmt.Printf("should be replacing leaf at slot %d\n", where)
-
-	} else {
-		// it's not a leaf, so try to insert
-		node := p.Node
-		nextT := node.(*Table32)
-		hc <<= W32 // shift appropriate number of bits
-		err = nextT.Insert(hc, depth+1, k, v)
-
-	}
-
-	// XXX STUB
-	return
-}
+//func (t32 *Table32) Insert(hc uint32, depth uint, k Key32I, v interface{}) (
+//	err error) {
+//
+//	fmt.Printf("XXX CALL TO OBSOLETE FUNCTION t32.Insert\n")
+//
+//	// Mask off the first level mask bits, and see what we have there
+//	where := byte(hc & LEVEL_MASK32)
+//
+//	p := t32.slots[where]
+//	if p == nil {
+//		// empty slot, so put the entry there
+//		var leaf *Leaf32
+//		leaf, err = NewLeaf32(k, v)
+//		if err == nil {
+//			var e *Entry32
+//			e, err = NewEntry32(where, leaf)
+//			if err == nil {
+//				t32.slots[where] = e
+//			}
+//		}
+//	} else if p.Node.IsLeaf() {
+//
+//		// XXX STUB
+//		fmt.Printf("should be replacing leaf at slot %d\n", where)
+//
+//	} else {
+//		// it's not a leaf, so try to insert
+//		node := p.Node
+//		nextT := node.(*Table32)
+//		hc <<= W32 // shift appropriate number of bits
+//		err = nextT.Insert(hc, depth+1, k, v)
+//
+//	}
+//
+//	// XXX STUB
+//	return
+//}
+//// END OBSOLETE
 
 func (t32 *Table32) IsLeaf() bool { return false }
 

@@ -22,7 +22,8 @@ func (s *XLSuite) TestTable32Ctor(c *C) {
 	c.Assert(t32.slots, IsNil)
 }
 
-func (s *XLSuite) TestDepthZeroInserts(c *C) {
+// XXX IN EFFECT, COMMENTED OUT
+func (s *XLSuite) xxxTestDepthZeroInserts(c *C) {
 
 	var (
 		bitmap, flag, idx, mask uint32
@@ -30,7 +31,7 @@ func (s *XLSuite) TestDepthZeroInserts(c *C) {
 	)
 	rng := xr.MakeSimpleRNG()
 	perm := rng.Perm(32) // a random permutation of [0..32)
-	depth := uint(0)	// COULD VARY DEPTH
+	depth := uint(0)     // COULD VARY DEPTH
 
 	t32, err := NewTable32(depth)
 	c.Assert(err, IsNil)
@@ -152,4 +153,111 @@ func (s *XLSuite) TestDepthZeroInserts(c *C) {
 
 		_ = idx // DEBUG
 	}
+}
+
+// Insert a series of entries, each of which should replace a leaf with
+// a table.
+
+func (s *XLSuite) TestEntrySplittingInserts(c *C) {
+	rng := xr.MakeSimpleRNG()
+	perm := rng.Perm(32) // a random permutation of [0..32)
+	depth := uint(0)     // COULD VARY DEPTH
+
+	t32, err := NewTable32(depth)
+	c.Assert(err, IsNil)
+	c.Assert(t32, NotNil)
+	c.Assert(t32.GetDepth(), Equals, depth)
+
+	keys := make([][]byte, 32)
+	key32s := make([]*Bytes32Key, 32)
+	indices := make([]byte, 32)
+	hashcodes := make([]uint32, 32)
+	values := make([]interface{}, 32)
+
+	// Build 32 keys of length 32, each with i+1 non-zero bytes on the
+	// left, and zero bytes on the right.  Each key duplicates the
+	// previous key except that a non-zero byte is introduced in the
+	// i-th position.
+	for i := uint(0); i < 32; i++ {
+		key := make([]byte, 32)
+		var j uint
+		if i > 0 {
+			lastKey := keys[i-1]
+			for j < i {
+				key[j] = lastKey[j]
+				j++
+			}
+		}
+		key[i] = byte(perm[i] + 1)
+		keys[i] = key
+
+		key32, err := NewBytes32Key(key)
+		c.Assert(err, IsNil)
+		c.Assert(key32, NotNil)
+		key32s[i] = key32
+
+		values[i] = &key
+
+		hc, err := key32.Hashcode32()
+		c.Assert(err, IsNil)
+		hashcodes[i] = hc
+
+	}
+	for i := uint(0); i < 32; i++ {
+		hc := hashcodes[i]
+		ndx := byte(hc & 0x1f) // depth 0, so no shift
+
+		// expect that no entry with this key can be found ----------
+		key32 := key32s[i]
+		_, err = t32.findEntry(hc, 0, key32)
+		c.Assert(err, Equals, NotFound)
+
+		// insert the entry -----------------------------------------
+		leaf, err := NewLeaf32(key32, values[i])
+		c.Assert(err, IsNil)
+		c.Assert(leaf, NotNil)
+		c.Assert(leaf.IsLeaf(), Equals, true)
+
+		e, err := NewEntry32(ndx, leaf)
+		c.Assert(err, IsNil)
+		c.Assert(e, NotNil)
+		c.Assert(e.GetIndex(), Equals, ndx)
+		c.Assert(e.Node.IsLeaf(), Equals, true)
+		c.Assert(e.GetIndex(), Equals, ndx)
+
+		slotNbr, err := t32.insertEntry(hc, depth, e)
+		c.Assert(err, IsNil)
+		// in this test, only one entry at the top level, so slotNbr always zero
+		c.Assert(slotNbr, Equals, uint(0))
+
+		// DEBUG
+		fmt.Printf("inserting i = %2d, hc 0x%x, ndx 0x%02x; slotNbr => %d\n",
+			i, hc, ndx, slotNbr)
+		// END
+
+		// confirm that the new entry is now present ----------------
+		_, err = t32.findEntry(hc, 0, key32)
+		c.Assert(err, IsNil)
+	}
+	for i := uint(0); i < 32; i++ {
+		hc := hashcodes[i]
+		// DEBUG
+		if err != nil {
+			fmt.Printf("deleting i = %2d, hc 0x%x\n", i, hc)
+		}
+		// END
+		key32 := key32s[i]
+		// confirm again that the entry is present ------------------
+		_, err = t32.findEntry(hc, 0, key32)
+		c.Assert(err, IsNil)
+
+		// delete the entry -----------------------------------------
+		err = t32.deleteEntry(hc, 0, key32)
+		c.Assert(err, IsNil)
+
+		// confirm that it is gone ----------------------------------
+		_, err = t32.findEntry(hc, 0, key32)
+		c.Assert(err, Equals, NotFound)
+	}
+	_ = indices // DEBUG
 }

@@ -3,13 +3,15 @@ hamt_go/TODO
 2014-04-12
     * need recursive Table32.insertEntry()
         - and test
+            * test specifically case where insert replaces a leaf
+                with a table
     * need recursive Table32.findEntry()
         - and test
     * need recursive Table32.deleteEntry()
         - and test
 2014-04-10
     * where Table32.Delete() leaves empty table, need to remove the
-        table from the dadta structure - recursively
+        table from the data structure - recursively
 
 2014-04-09 (level 0, no tested recursion)
     * need Table32.Find()                                               * DONE
