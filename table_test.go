@@ -77,7 +77,7 @@ func (s *XLSuite) xxxTestDepthZeroInserts(c *C) {
 
 		// insert the value into the hash slice in such a way as
 		// to maintain order
-		idx = (hc >> depth) & 0x1f
+		idx = (hc >> (depth * W32)) & 0x1f
 		c.Assert(idx, Equals, hc) // hc is restricted to that range
 
 		flag = 1 << (idx + 1)
@@ -161,7 +161,7 @@ func (s *XLSuite) xxxTestDepthZeroInserts(c *C) {
 func (s *XLSuite) TestEntrySplittingInserts(c *C) {
 	rng := xr.MakeSimpleRNG()
 	perm := rng.Perm(32) // a random permutation of [0..32)
-	depth := uint(0)     // COULD VARY DEPTH
+	depth := uint(0)
 
 	t32, err := NewTable32(depth)
 	c.Assert(err, IsNil)
@@ -203,7 +203,9 @@ func (s *XLSuite) TestEntrySplittingInserts(c *C) {
 		hashcodes[i] = hc
 
 	}
+	fmt.Printf("\nINSERTION LOOP\n")
 	for i := uint(0); i < 32; i++ {
+		fmt.Printf("\nINSERTING KEY %d: %s\n", i, dumpByteSlice(keys[i]))
 		hc := hashcodes[i]
 		ndx := byte(hc & 0x1f) // depth 0, so no shift
 
@@ -236,20 +238,26 @@ func (s *XLSuite) TestEntrySplittingInserts(c *C) {
 		// END
 
 		// confirm that the new entry is now present ----------------
+		// DEBUG
+		fmt.Printf("verifying new entry is present\n")
+		// END
 		_, err = t32.findEntry(hc, 0, key32)
-		c.Assert(err, IsNil)
+		c.Assert(err, IsNil) // FAILS XXX
 	}
+	fmt.Println("\nDELETION LOOP") // DEBUG
 	for i := uint(0); i < 32; i++ {
 		hc := hashcodes[i]
+
 		// DEBUG
 		if err != nil {
-			fmt.Printf("deleting i = %2d, hc 0x%x\n", i, hc)
+			fmt.Printf("i = %2d, hc 0x%x\n", i, hc)
 		}
 		// END
+
 		key32 := key32s[i]
 		// confirm again that the entry is present ------------------
 		_, err = t32.findEntry(hc, 0, key32)
-		c.Assert(err, IsNil)
+		c.Assert(err, IsNil) // XXX FAILS
 
 		// delete the entry -----------------------------------------
 		err = t32.deleteEntry(hc, 0, key32)

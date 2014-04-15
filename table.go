@@ -130,7 +130,18 @@ func (t32 *Table32) findEntry(hc uint32, depth uint, key Key32I) (
 	value interface{}, err error) {
 
 	curSize := uint(len(t32.indices))
-	// curSlotCount := uint(len(t32.slots))
+	curSlotCount := uint(len(t32.slots))
+
+	// DEBUG
+	if curSize != curSlotCount {
+		fmt.Printf("curSize %d but curSlotCount %d !!\n",
+			curSize, curSlotCount)
+	}
+	//if depth > 0 {
+	fmt.Printf("findEntry: hc %08x, depth %d, curSize %d\n",
+		hc, depth, curSize)
+	//}
+	// END
 
 	if curSize == 0 {
 		err = NotFound
@@ -140,20 +151,21 @@ func (t32 *Table32) findEntry(hc uint32, depth uint, key Key32I) (
 		for i := uint(0); i < curSize; i++ {
 			curNdx := t32.indices[i]
 			// DEBUG
-			//fmt.Printf("  findEntry, ndx %2x, slot %2d, slot ndx %02x ",
-			//	ndx, i, curNdx)
+			fmt.Printf(
+				"  findEntry, depth %d, ndx %2x, slot %2d, slot ndx %02x ",
+				depth, ndx, i, curNdx)
 			// END
 			if curNdx < ndx {
 				if i < curSize-1 {
-					// fmt.Printf("continuing\n")	// DEBUG
+					fmt.Printf("continuing\n") // DEBUG
 					continue
 				} else {
-					// fmt.Printf("no more slots\n")	// DEBUG
+					fmt.Printf("no more slots\n") // DEBUG
 					err = NotFound
 				}
 			} else if curNdx == ndx {
 				// DEBUG
-				//fmt.Printf("MATCH: curNdx %02x == ndx %02x\n", curNdx, ndx)
+				fmt.Printf("MATCH: curNdx %02x == ndx %02x\n", curNdx, ndx)
 				// END
 				entry := t32.slots[i]
 				// XXX this MUST exist
@@ -163,9 +175,9 @@ func (t32 *Table32) findEntry(hc uint32, depth uint, key Key32I) (
 					searchKey := key.(*Bytes32Key)
 					if bytes.Equal(searchKey.Slice, myKey.Slice) {
 						value = myLeaf.Value
-						//fmt.Printf("    FOUND, slot %d\n", i)	// DEBUG
+						fmt.Printf("    FOUND, slot %d\n", i) // DEBUG
 					} else {
-						//fmt.Printf("    LEAF, NO MATCH\n")	// DEBUG
+						fmt.Printf("    LEAF, NO MATCH\n") // DEBUG
 						err = NotFound
 					}
 				} else {
@@ -173,13 +185,15 @@ func (t32 *Table32) findEntry(hc uint32, depth uint, key Key32I) (
 					hc >>= W32
 					depth++
 					value, err = t32.findEntry(hc, depth, key)
-					//fmt.Printf("    RECURSING\n")	// DEBUG
+					// DEBUG
+					fmt.Printf("    BACK FROM RECURSION: err = %v\n", err)
+					// END
 				}
 				break
 			} else {
 				// curNdx > ndx, so it's not there
 				// DEBUG
-				//fmt.Printf("NO MATCH: curNdx %02x > ndx %02x\n", curNdx, ndx)
+				fmt.Printf("NO MATCH: curNdx %02x > ndx %02x\n", curNdx, ndx)
 				// END
 				err = NotFound
 				break
@@ -189,6 +203,83 @@ func (t32 *Table32) findEntry(hc uint32, depth uint, key Key32I) (
 	return
 }
 
+func (t32 *Table32) insertAtMatch(hc uint32, depth uint, entry *Entry32,
+	i uint, ndx byte) (err error) {
+
+	fmt.Printf("curNdx == ndx == %02x\n", ndx) // DEBUG
+	e := t32.slots[i]
+
+	// LEAF -----------------------------------
+	// if it's a leaf, we replace the value only iff the keys match
+	if e.Node.IsLeaf() {
+		fmt.Printf("FOUND LEAF\n")
+
+		//////////////////////////////////////
+		// XXX NOT CHECKING FOR DUPLICATE KEYS
+		//////////////////////////////////////
+
+		var (
+			t32Deeper *Table32
+			oldEntry  *Entry32
+			oldHC     uint32
+		)
+
+		depth++
+		// DEBUG
+		fmt.Printf("  CREATING TABLE AT DEPTH %d\n", depth)
+		// END
+		t32Deeper, err = NewTable32(depth)
+		if err == nil {
+			hc >>= W32 // this is hc for the NEW entry
+
+			oldEntry = e
+			oldLeaf := e.Node.(*Leaf32)
+			oldHC, err = oldLeaf.Key.Hashcode32()
+		}
+		if err == nil {
+			oldHC >>= depth * W32
+
+			// put the existing leaf into the new table
+			// DEBUG
+			fmt.Printf("    inserting oldEntry into new table\n")
+			// END
+			_, err = t32Deeper.insertEntry(oldHC, depth, oldEntry)
+			if err == nil {
+				// then put the new entry in the new table
+				// DEBUG
+				fmt.Printf("    adding old entry to new table\n")
+				// END
+				_, err = t32Deeper.insertEntry(hc, depth, entry)
+				if err == nil {
+					// the new table replaces the existing leaf
+					var eTab *Entry32
+					eTab, err = NewEntry32(ndx, t32Deeper)
+					// DEBUG
+					fmt.Printf(
+						"    FINISHED TABLE depth %d, ndx %02x\n",
+						depth, ndx)
+					// END
+					if err == nil {
+						t32.slots[i] = eTab
+					}
+				}
+			}
+		}
+
+		// TABLE ----------------------------------
+		// otherwise it's a table, so recurse
+	} else {
+		fmt.Printf("FOUND TABLE, recursing\n")
+		hc >>= W32
+		depth++
+		_, err = t32.insertEntry(hc, depth, entry)
+
+	}
+	return
+}
+
+// Enter with hc having been shifted to remove preceding ndx, if any
+//
 func (t32 *Table32) insertEntry(hc uint32, depth uint, entry *Entry32) (
 	slotNbr uint, err error) {
 
@@ -199,11 +290,15 @@ func (t32 *Table32) insertEntry(hc uint32, depth uint, entry *Entry32) (
 
 	// DEBUG
 	curSlotCount := uint(len(t32.slots))
-	fmt.Printf("Table32.insertEntry: depth %d, index count %d, slot count %d\n",
-		depth, curSize, curSlotCount)
+	fmt.Printf(
+		"\nTable32.insertEntry: depth %d, ndx %02x, index count %d, slot count %d\n",
+		depth, ndx, curSize, curSlotCount)
 	// END
 
 	if curSize == 0 {
+		// DEBUG
+		fmt.Printf("  insertion empty table: depth %d ndx %02x\n", depth, ndx)
+		// END
 		t32.slots = append(t32.slots, entry)
 		t32.indices = append(t32.indices, ndx)
 	} else {
@@ -212,16 +307,20 @@ func (t32 *Table32) insertEntry(hc uint32, depth uint, entry *Entry32) (
 		var curNdx, nextNdx byte
 		for i = 0; i < curSize-1; i++ {
 			curNdx = t32.indices[i]
+			// DEBUG
+			fmt.Printf("  insertion: depth %d ndx %02x curNdx %02x\n",
+				depth, ndx, curNdx)
+			// END
 			if curNdx < ndx {
 				nextNdx = t32.indices[i+1]
 				if nextNdx < ndx {
-					// fmt.Printf("continuing: %02x after %02x, after %02x\n",
-					//	ndx, curNdx, nextNdx)
+					fmt.Printf("continuing: %02x after %02x, after %02x\n",
+						ndx, curNdx, nextNdx)
 					continue
 				}
 				slotNbr = i + 1
-				// fmt.Printf("A: inserting %02x after %02x, before %02x, at %d\n",
-				//	ndx, curNdx, nextNdx, slotNbr)
+				fmt.Printf("A: inserting %02x after %02x, before %02x, at %d\n",
+					ndx, curNdx, nextNdx, slotNbr)
 
 				// first insert the index ---------------------------
 				var leftNdx []byte
@@ -229,21 +328,19 @@ func (t32 *Table32) insertEntry(hc uint32, depth uint, entry *Entry32) (
 					leftNdx = append(leftNdx, t32.indices[0:slotNbr]...)
 				}
 				rightNdx := t32.indices[slotNbr:]
-				//fmt.Printf("%s + %02x + %s => ",
-				//	dumpIndices(&leftNdx),
-				//	ndx,
-				//	dumpIndices(&rightNdx))
+				fmt.Printf("%s + %02x + %s => ",
+					dumpIndices(leftNdx),
+					ndx,
+					dumpIndices(rightNdx))
 				leftNdx = append(leftNdx, ndx)
 				leftNdx = append(leftNdx, rightNdx...)
 
-				//fmt.Printf("%s\n", dumpIndices(&leftNdx))
+				fmt.Printf("%s\n", dumpIndices(leftNdx))
 				t32.indices = leftNdx // FOO
 
 				// then insert the entry ----------------------------
-				// WORKING HERE
 				var leftSlots []*Entry32
 				if slotNbr > 0 {
-					// XXX PANICS
 					leftSlots = append(leftSlots, t32.slots[0:slotNbr]...)
 				}
 				rightSlots := t32.slots[slotNbr:]
@@ -254,10 +351,17 @@ func (t32 *Table32) insertEntry(hc uint32, depth uint, entry *Entry32) (
 				// done ---------------------------------------------
 				inserted = true
 				break
+			} else if curNdx == ndx {
+
+				err = t32.insertAtMatch(hc, depth, entry, i, ndx)
+				if err == nil {
+					inserted = true
+				}
+				break
 			} else {
 				slotNbr = i
-				// fmt.Printf("B: inserting %02x before %02x at %d\n",
-				//	ndx, curNdx, slotNbr)
+				fmt.Printf("B: inserting %02x before %02x at %d\n",
+					ndx, curNdx, slotNbr)
 
 				// first insert the index ---------------------------
 				var leftNdx []byte
@@ -265,8 +369,8 @@ func (t32 *Table32) insertEntry(hc uint32, depth uint, entry *Entry32) (
 					leftNdx = append(leftNdx, t32.indices[0:slotNbr]...)
 				}
 				rightNdx := t32.indices[slotNbr:]
-				// fmt.Printf("%s + %02x + %s\n",
-				//	dumpIndices(leftNdx), ndx, dumpIndices(rightNdx))
+				fmt.Printf("%s + %02x + %s\n",
+					dumpIndices(leftNdx), ndx, dumpIndices(rightNdx))
 				leftNdx = append(leftNdx, ndx)
 				leftNdx = append(leftNdx, rightNdx...)
 				t32.indices = leftNdx // FOO
@@ -293,12 +397,15 @@ func (t32 *Table32) insertEntry(hc uint32, depth uint, entry *Entry32) (
 
 			if curNdx < ndx {
 				// insert index -------------------------------------
-				// fmt.Printf("C: appending %02x after %02x\n", ndx, curNdx)
+				fmt.Printf("C: appending %02x after %02x\n", ndx, curNdx)
 				t32.indices = append(t32.indices, ndx)
 				slotNbr = curSize
 				// insert entry -------------------------------------
 				t32.slots = append(t32.slots, entry)
-
+			} else if curNdx == ndx {
+				fmt.Printf("INSERTING AT MATCH: curNdx = ndx = %02x\n",
+					ndx)
+				err = t32.insertAtMatch(hc, depth, entry, i, ndx)
 			} else {
 				// insert index -------------------------------------
 				leftNdx := (t32.indices)[0:i]
@@ -306,8 +413,8 @@ func (t32 *Table32) insertEntry(hc uint32, depth uint, entry *Entry32) (
 				leftNdx = append(leftNdx, curNdx)
 				t32.indices = leftNdx // FOO
 				slotNbr = curSize - 1
-				// fmt.Printf("D: prepended %02x before %02x at %d\n",
-				//	ndx, curNdx, slotNbr)
+				fmt.Printf("D: prepended %02x before %02x at %d\n",
+					ndx, curNdx, slotNbr)
 
 				// insert entry -------------------------------------
 				leftSlots := (t32.slots)[0:i]
@@ -321,55 +428,14 @@ func (t32 *Table32) insertEntry(hc uint32, depth uint, entry *Entry32) (
 	// XXX IGNORES POSSIBLE ERRORS XXX
 	flag := uint32(1 << ndx)
 	t32.bitmap |= flag
-	//newSize := uint(len(t32.indices))
-	//fmt.Printf("  inserted 0x%02x at %d/%d\n", ndx, slotNbr, newSize)
-	//fmt.Printf("%s\n", dumpIndices(t32.indices))
+	// DEBUG
+	newSize := uint(len(t32.indices))
+	fmt.Printf("  depth %d: inserted 0x%02x at %d/%d\n",
+		depth, ndx, slotNbr, newSize)
+	fmt.Printf("  DEPTH %d INDICES: %s\n", depth, dumpIndices(t32.indices))
+	// END
 	return
-} // GEEP
-
-// hc is the hashcode shifted the number of bits appropriate for the
-// depth.  If it is necessary to recurse, the depth is increased by
-//
-// XXX OBSOLETE
-//
-//func (t32 *Table32) Insert(hc uint32, depth uint, k Key32I, v interface{}) (
-//	err error) {
-//
-//	fmt.Printf("XXX CALL TO OBSOLETE FUNCTION t32.Insert\n")
-//
-//	// Mask off the first level mask bits, and see what we have there
-//	where := byte(hc & LEVEL_MASK32)
-//
-//	p := t32.slots[where]
-//	if p == nil {
-//		// empty slot, so put the entry there
-//		var leaf *Leaf32
-//		leaf, err = NewLeaf32(k, v)
-//		if err == nil {
-//			var e *Entry32
-//			e, err = NewEntry32(where, leaf)
-//			if err == nil {
-//				t32.slots[where] = e
-//			}
-//		}
-//	} else if p.Node.IsLeaf() {
-//
-//		// XXX STUB
-//		fmt.Printf("should be replacing leaf at slot %d\n", where)
-//
-//	} else {
-//		// it's not a leaf, so try to insert
-//		node := p.Node
-//		nextT := node.(*Table32)
-//		hc <<= W32 // shift appropriate number of bits
-//		err = nextT.Insert(hc, depth+1, k, v)
-//
-//	}
-//
-//	// XXX STUB
-//	return
-//}
-//// END OBSOLETE
+}
 
 func (t32 *Table32) IsLeaf() bool { return false }
 

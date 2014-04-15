@@ -1,5 +1,8 @@
 hamt_go/TODO
 
+2014-04-15
+    * debug TestEntrySplittingInsrets()
+
 2014-04-12
     * need recursive Table32.insertEntry()
         - and test
