@@ -11,11 +11,15 @@
 <div class="content">
 <h1>hamt_go</h1>
 
-<p>Go implementation of the HAMT data structure</p>
+<p>Go implementation of the HAMT data structure.</p>
+
+<p>This code is not thread-safe.  That is, using code must provide any
+necessary locking.</p>
 
 <h2>Project Status</h2>
 
-<p>Pre-pre-alpha.</p>
+<p>The code works and is reasonably well-tested.  A test run which includes
+32K inserts, 32K deletes, and at least 128K finds takes just over a second.`</p>
   <div class="f">
     <hr />
     <div class="license">
