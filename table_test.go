@@ -233,13 +233,13 @@ func (s *XLSuite) TestEntrySplittingInserts(c *C) {
 		c.Assert(slotNbr, Equals, uint(0))
 
 		// DEBUG
-		fmt.Printf("inserting i = %2d, hc 0x%x, ndx 0x%02x; slotNbr => %d\n",
+		fmt.Printf("inserted i = %2d, hc 0x%x, ndx 0x%02x; slotNbr => %d\n",
 			i, hc, ndx, slotNbr)
 		// END
 
 		// confirm that the new entry is now present ----------------
 		// DEBUG
-		fmt.Printf("verifying new entry is present\n")
+		fmt.Printf("--- verifying new entry is present after insertion -----\n")
 		// END
 		_, err = t32.findEntry(hc, 0, key32)
 		c.Assert(err, IsNil) // FAILS XXX
@@ -250,22 +250,25 @@ func (s *XLSuite) TestEntrySplittingInserts(c *C) {
 
 		// DEBUG
 		if err != nil {
-			fmt.Printf("i = %2d, hc 0x%x\n", i, hc)
+			fmt.Printf("  deleting key %2d, hc 0x%x\n", i, hc)
 		}
 		// END
 
 		key32 := key32s[i]
 		// confirm again that the entry is present ------------------
 		_, err = t32.findEntry(hc, 0, key32)
-		c.Assert(err, IsNil) // XXX FAILS
+		c.Assert(err, IsNil)
+		fmt.Printf("    key %2d is present before deletion\n", i) // DEBUG
 
 		// delete the entry -----------------------------------------
 		err = t32.deleteEntry(hc, 0, key32)
-		c.Assert(err, IsNil)
+		c.Assert(err, IsNil)                            // FAILS XXX :-)
+		fmt.Printf("    key %2d has been deleted\n", i) // DEBUG
 
 		// confirm that it is gone ----------------------------------
 		_, err = t32.findEntry(hc, 0, key32)
 		c.Assert(err, Equals, NotFound)
+		fmt.Printf("    key %2d gone after deletion\n\n", i) // DEBUG
 	}
 	_ = indices // DEBUG
 }
