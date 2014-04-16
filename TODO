@@ -1,22 +1,26 @@
 hamt_go/TODO
 
 2014-04-15
-    * debug TestEntrySplittingInsrets()
+    * to make this thing useful:
+        - add buckets at the bottom level (in a 32K run, with random
+            keys, there were 6 entries at level 6, 150 at level5)
+        - where Table32.Delete() leaves empty table, need to remove the
+            table from the data structure - recursively
+ 
+2014-04-15
+    * debug TestEntrySplittingInsrets()                                 * DONE
 
 2014-04-12
-    * need recursive Table32.insertEntry()
-        - and test
-            * test specifically case where insert replaces a leaf
-                with a table
-    * need recursive Table32.findEntry()
-        - and test
-    * need recursive Table32.deleteEntry()
-        - and test
-2014-04-10
-    * where Table32.Delete() leaves empty table, need to remove the
-        table from the data structure - recursively
+    * need recursive Table32.insertEntry()								* DONE
+        - and test								                        * DONE
+            * test specifically case where insert replaces a leaf	    * DONE
+                with a table								            * DONE
+    * need recursive Table32.findEntry()								* DONE
+        - and test								                        * DONE
+    * need recursive Table32.deleteEntry()								* DONE
+        - and test								                        * DONE
 
-2014-04-09 (level 0, no tested recursion)
+2014-04-09 (level 0, no tested recursion)                               * DONE
     * need Table32.Find()                                               * DONE
         - and test                                                      * DONE
     * need Table32.Delete()                                             * DONE
