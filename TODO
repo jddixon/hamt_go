@@ -1,12 +1,14 @@
 hamt_go/TODO
 
-2014-04-15
+2014-04-16
+    * clean up, save, step version number
     * to make this thing useful:
         - add buckets at the bottom level (in a 32K run, with random
             keys, there were 6 entries at level 6, 150 at level5)
         - where Table32.Delete() leaves empty table, need to remove the
             table from the data structure - recursively
-        - do tests at the HAMT level 
+        - do tests at the HAMT level                                    * DONE
+    * documentation needs to mention POPCNT/SWAR
 
 2014-04-15
     * debug TestEntrySplittingInsrets()                                 * DONE

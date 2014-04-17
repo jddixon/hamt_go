@@ -25,10 +25,3 @@ func NewEntry32(ndx byte, node Node32I) (e *Entry32, err error) {
 func (e32 *Entry32) GetIndex() byte {
 	return e32.ndx
 }
-
-// ==================================================================
-
-type Entry64I interface {
-	GetIndex() byte
-	IsLeaf() bool
-}

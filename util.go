@@ -5,10 +5,11 @@ import (
 	"strings"
 )
 
-// The 32-bit SWAR algorithm.  These are variants of the code in Bagwell's
-// "Ideal Hash Trees".  The algorithm seems to have been created by the
-// aggregate.org/MAGIC group at the University of Kentucky earlier than
-// the fall of 1996.  Illmari Karonen (vyznev.net) explains the algorithm at
+// The 32- and 64-bit versions of the SWAR algorithm.  These are variants of
+// the code in Bagwell's "Ideal Hash Trees".  The algorithm seems to have been
+// created by the aggregate.org/MAGIC group at the University of Kentucky
+// earlier than the fall of 1996.  Illmari Karonen (vyznev.net) explains the
+// algorithm at
 // stackoverflow.com/questions/22081738/how-variable-precision-swar-algorithm-workds
 
 const (

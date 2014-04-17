@@ -7,7 +7,7 @@ v0.1.1
         * test verifies first level values correct                  * SLOC  571
     2014-04-12
         * tested, working Table32.{insert,find,delete}Entry()       * SLOC  730
-    2014-04-15
+    2014-04-16
         * recursive Table32 tests succeed                           * SLOC  967
         * tested, working HAMT32.{Insert,Find,Delete}               * SLOC 1007
 
