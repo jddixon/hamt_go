@@ -1,26 +1,14 @@
 package hamt_go
 
-// hamt_go/table.go
+// hamt_go/table32.go
 
 import (
 	"bytes"
 	"errors"
 	"fmt"
-	"strings"
 )
 
 var _ = fmt.Print
-
-// DEBUG
-func dumpIndices(indices []byte) string {
-	var ss []string
-	for i := 0; i < len(indices); i++ {
-		ss = append(ss, fmt.Sprintf("%02x ", indices[i]))
-	}
-	return strings.Join(ss, "")
-}
-
-// END
 
 type Table32 struct {
 	// prefix []byte	// XXX could add pfor debugging
@@ -371,11 +359,11 @@ func (t32 *Table32) insertEntry(hc uint32, depth uint, entry *Entry32) (
 				}
 				rightNdx := t32.indices[slotNbr:]
 				//fmt.Printf("%s + %02x + %s => ",
-				//	dumpIndices(leftNdx), ndx, dumpIndices(rightNdx))
+				//	dumpByteSlice(leftNdx), ndx, dumpByteSlice(rightNdx))
 				leftNdx = append(leftNdx, ndx)
 				leftNdx = append(leftNdx, rightNdx...)
 
-				//fmt.Printf("%s\n", dumpIndices(leftNdx))
+				//fmt.Printf("%s\n", dumpByteSlice(leftNdx))
 				t32.indices = leftNdx // FOO
 
 				// then insert the entry ----------------------------
@@ -403,7 +391,7 @@ func (t32 *Table32) insertEntry(hc uint32, depth uint, entry *Entry32) (
 				}
 				rightNdx := t32.indices[slotNbr:]
 				//fmt.Printf("%s + %02x + %s\n",
-				//	dumpIndices(leftNdx), ndx, dumpIndices(rightNdx))
+				//	dumpByteSlice(leftNdx), ndx, dumpByteSlice(rightNdx))
 				leftNdx = append(leftNdx, ndx)
 				leftNdx = append(leftNdx, rightNdx...)
 				t32.indices = leftNdx // FOO
@@ -464,7 +452,7 @@ func (t32 *Table32) insertEntry(hc uint32, depth uint, entry *Entry32) (
 	//newSize := uint(len(t32.indices))
 	//fmt.Printf("  depth %d: inserted 0x%02x at %d/%d\n",
 	//	depth, ndx, slotNbr, newSize)
-	//fmt.Printf("  DEPTH %d INDICES: %s\n", depth, dumpIndices(t32.indices))
+	//fmt.Printf("  DEPTH %d INDICES: %s\n", depth, dumpByteSlice(t32.indices))
 	//// END
 	return
 }

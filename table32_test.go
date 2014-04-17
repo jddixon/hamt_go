@@ -1,6 +1,6 @@
 package hamt_go
 
-// hamt_go/table_test.go
+// hamt_go/table32_test.go
 
 import (
 	"bytes"
@@ -22,8 +22,7 @@ func (s *XLSuite) TestTable32Ctor(c *C) {
 	c.Assert(t32.slots, IsNil)
 }
 
-// XXX IN EFFECT, COMMENTED OUT
-func (s *XLSuite) xxxTestDepthZeroInserts(c *C) {
+func (s *XLSuite) TestDepthZeroInserts(c *C) {
 
 	var (
 		bitmap, flag, idx, mask uint32
@@ -41,7 +40,7 @@ func (s *XLSuite) xxxTestDepthZeroInserts(c *C) {
 	keys := make([][]byte, 32)
 	indices := make([]byte, 32)
 
-	for i := uint(0); i < MAX_DEPTH32; i++ {
+	for i := uint(0); i < 32; i++ {
 		ndx := byte(perm[i])
 		indices[i] = ndx
 
@@ -102,7 +101,7 @@ func (s *XLSuite) xxxTestDepthZeroInserts(c *C) {
 	// verify that the order of entries in the slots is as expected
 	c.Assert(len(t32.indices), Equals, 32)
 	c.Assert(len(t32.slots), Equals, 32)
-	for i := uint(0); i < MAX_DEPTH32; i++ {
+	for i := uint(0); i < 32; i++ {
 		idx := t32.indices[i]
 		entry := t32.slots[i]
 		c.Assert(entry.GetIndex(), Equals, idx)
@@ -121,7 +120,7 @@ func (s *XLSuite) xxxTestDepthZeroInserts(c *C) {
 	// remove each key, then verify that it is in fact gone
 	c.Assert(len(t32.indices), Equals, 32)
 	c.Assert(len(t32.slots), Equals, 32)
-	for i := uint(0); i < MAX_DEPTH32; i++ {
+	for i := uint(0); i < 32; i++ {
 		idx := indices[i]
 		key := keys[i]
 

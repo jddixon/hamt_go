@@ -1,5 +1,7 @@
 package hamt_go
 
+// hamt_go/hamt32.go
+
 type HAMT32 struct {
 	root *Table32 // could be Entry32I
 }
@@ -53,10 +55,4 @@ func (h *HAMT32) Insert(k Key32I, v interface{}) (err error) {
 		}
 	}
 	return
-} // FOO
-
-// ==================================================================
-
-type HAMT64 struct {
-	root Entry64I
 }

@@ -6,7 +6,8 @@ hamt_go/TODO
             keys, there were 6 entries at level 6, 150 at level5)
         - where Table32.Delete() leaves empty table, need to remove the
             table from the data structure - recursively
- 
+        - do tests at the HAMT level 
+
 2014-04-15
     * debug TestEntrySplittingInsrets()                                 * DONE
 
