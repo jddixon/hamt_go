@@ -5,40 +5,14 @@ hamt_go/TODO
     * to make this thing useful:
         - add buckets at the bottom level (in a 32K run, with random
             keys, there were 6 entries at level 6, 150 at level5)
-        - where Table32.Delete() leaves empty table, need to remove the
-            table from the data structure - recursively
-        - do tests at the HAMT level                                    * DONE
+        - where Table32.Delete() leaves empty table, need to remove 
+            the table from the data structure - recursively
     * documentation needs to mention POPCNT/SWAR
 
-2014-04-15
-    * debug TestEntrySplittingInsrets()                                 * DONE
-
-2014-04-12
-    * need recursive Table32.insertEntry()								* DONE
-        - and test								                        * DONE
-            * test specifically case where insert replaces a leaf	    * DONE
-                with a table								            * DONE
-    * need recursive Table32.findEntry()								* DONE
-        - and test								                        * DONE
-    * need recursive Table32.deleteEntry()								* DONE
-        - and test								                        * DONE
-
-2014-04-09 (level 0, no tested recursion)                               * DONE
-    * need Table32.Find()                                               * DONE
-        - and test                                                      * DONE
-    * need Table32.Delete()                                             * DONE
-        - and test                                                      * DONE
-2014-04-07
-    * table_test needs to be elaborated to make sure that what's in     * DONE
-        the slot matches the index                                      * DONE
-
 2014-04-05
-    * implement HAMT32 and tests first, then HAMT64 and tests
+    * implement HAMT32 and tests first, then HAMT64 and tests           * DONE
 
 2014-04-04
-    * move insert code from hamt_test:TestInsert into Table.Insert()    * DONE
-    * need HAMT.{Insert,Find,Delete}() and tests                        * DONE
-
     * need perf tests, all 6 variants (32,64 * 3)
         * must clearly identify OS, hardware, Go version
     * eventually need option to use hardware POPCNT if available
@@ -46,9 +20,3 @@ hamt_go/TODO
         - and figures
         - docs, figures get imported into gh-pages
     * project README should refer to github.io (ie, gh-pages)
-
-2014-04-04
-    * extract insert test from ctries_go                                * DONE
-    * add SWAR BitCount*() and 32/64 bit tests                          * DONE
-    * differentiate 32- and 64-bit keys                                 * DONE
-        - add appropriate tests                                         * DONE

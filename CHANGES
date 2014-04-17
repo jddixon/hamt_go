@@ -1,5 +1,8 @@
 hamt_go/CHANGES
 
+v0.2.0
+    2014-04-17
+        * tested, working HAMT64 code                               * SLOC 1717
 v0.1.1
     2014-04-07
         * first level ndx inserts pass test                         * SLOC  549
