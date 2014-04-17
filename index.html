@@ -13,13 +13,39 @@
 
 <p>Go implementation of the HAMT data structure.</p>
 
-<p>This code is not thread-safe.  That is, using code must provide any
-necessary locking.</p>
+<p>A Hash Array Mapped Trie ([bagwell2002][HAMT]) provides fast and memory-
+efficient access to large amounts of data held in memory.  In this
+particular implementation there are 32- and 64-bit implementations
+of the code.  HAMT associates keys and values.  The <strong>key</strong> is
+something that produces a 32- or 64-bit unsigned integer, as appropriate.
+The value is completely arbitrary.</p>
+
+<h1>Limitations</h1>
+
+<ul>
+<li><p>This code is not thread-safe.  That is, using code must provide any
+necessary locking.</p></li>
+
+<li><p>HAMT depends upon bit-counting.  On modern Intel and AMD processors this is
+done using a specific machine-language instruction, POPCNT.  The current
+implementation of hamt_go emulates this using the
+<a href="http://en.wikipedia.org/wiki/SWAR">SWAR</a> algorithm,  The emulation code is on the order of ten times
+slower than the machine instruction.</p></li>
+</ul>
 
 <h2>Project Status</h2>
 
-<p>The code works and is reasonably well-tested.  A test run which includes
-32K inserts, 32K deletes, and at least 128K finds takes just over a second.`</p>
+<p>Both 32- and 64-bit versions of the code work and are reasonably well-tested.
+Insert, find, and delete operations, while not yet thoroughly optimized,
+take on the order of 10 microseconds each on a lightly-loaded server.</p>
+
+<h2>References</h2>
+
+<p><a href="http://infoscience.epfl.ch/record/64398/files/idealhashtrees.pdf">Bagwell, &ldquo;Ideal Hash Trees&rdquo;</a></p>
+
+<p><a href="http://en.wikipedia.org/wiki/Hash_array_mapped_trie">Wikipeida, &ldquo;Hash array mapped trie&rdquo;</a></p>
+
+<p><a href="http://en.wikipedia.org/wiki/SWAR">Wikipedia, &ldquo;SWAR&rdquo;</a></p>
   <div class="f">
     <hr />
     <div class="license">
