@@ -1,13 +1,20 @@
 hamt_go/TODO
 
+2014-04-17
+    * consider allowing larger root table of 2^(t + W) entries
+    * then possibly allow dynamic resizing
+        - this might be restricted to tables of 2^(N * W) entries
+    * need tools for static analysis of frozen HAMTs
+    * possibly need serialization/deserialization tools
+
 2014-04-16
-    * clean up, save, step version number
-    * to make this thing useful:
+    * clean up, save, step version number                               * DONE
+    * to make this thing more useful:
         - add buckets at the bottom level (in a 32K run, with random
             keys, there were 6 entries at level 6, 150 at level5)
         - where Table32.Delete() leaves empty table, need to remove 
             the table from the data structure - recursively
-    * documentation needs to mention POPCNT/SWAR
+    * documentation needs to mention POPCNT/SWAR                        * DONE
 
 2014-04-05
     * implement HAMT32 and tests first, then HAMT64 and tests           * DONE
