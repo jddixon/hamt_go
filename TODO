@@ -1,11 +1,22 @@
 hamt_go/TODO
 
+2014-04-18
+    * hamt64_perf_test.go                                               * DONE
+        - 10^6 run with 32-byte keys about 2700ns/op, 450 MB RAM
+        - idMap about 2050 ns/op, 1 GB RAM (uses 256 slot tables)
+    * need to benchmark HAMT64 with 1024 slot root table
+    * need buckets at max depth to do hamt32_perf_test (million-entry 
+        trie too deep for HAMT32)
+
 2014-04-17
     * consider allowing larger root table of 2^(t + W) entries
     * then possibly allow dynamic resizing
         - this might be restricted to tables of 2^(N * W) entries
     * need tools for static analysis of frozen HAMTs
     * possibly need serialization/deserialization tools
+
+    * start 'dev' branch, do new work there, with only urgent           * DONE
+        bugfixes on the master branch.
 
 2014-04-16
     * clean up, save, step version number                               * DONE
