@@ -2,7 +2,7 @@
 
 Go implementation of the HAMT data structure.
 
-A Hash Array Mapped Trie ([HAMT][bagwell2002]) 
+A Hash Array Mapped Trie ([HAMT][bagwell2001]) 
 provides fast and memory-efficient access to large amounts of data held 
 in memory.  In this 
 particular implementation there are 32- and 64-bit versions
@@ -44,14 +44,14 @@ take on the order of 10 microseconds each on a lightly-loaded server.
 
 ## References
 
-[Bagwell, "Ideal Hash Trees"][bagwell2002]  (2002 PDF)
+[Bagwell, "Ideal Hash Trees"][bagwell2001]  (2001 PDF)
 
 [Wikipeida, "Hash array mapped trie"][wiki-hamt]
 
 [Wikipedia, "SWAR"][wiki-swar]
 
 
-[bagwell2002]: http://infoscience.epfl.ch/record/64398/files/idealhashtrees.pdf
+[bagwell2001]: http://infoscience.epfl.ch/record/64398/files/idealhashtrees.pdf
 
 [wiki-hamt]: http://en.wikipedia.org/wiki/Hash_array_mapped_trie
 

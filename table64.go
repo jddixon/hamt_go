@@ -11,7 +11,6 @@ import (
 var _ = fmt.Print
 
 type Table64 struct {
-	// prefix []byte	// XXX could add pfor debugging
 	depth   uint   // only here for use in development and debugging !
 	indices []byte // probably only used in development and debugging
 	bitmap  uint64
@@ -25,6 +24,30 @@ func NewTable64(depth uint) (t64 *Table64, err error) {
 		t64.depth = depth
 	}
 	return
+}
+
+// Return a count of leaf nodes in this table.
+func (t64 *Table64) GetLeafCount() (count uint) {
+	for i := 0; i < 64; i++ {
+		node := t64.slots[i].Node
+		if node != nil && node.IsLeaf() {
+			count++
+		}
+	}
+	return	
+}
+
+// 
+func (t64 *Table64) GetTableCount() (count uint) {
+	count = 1
+	for i := 0; i < len(t64.slots); i++ {
+		node := t64.slots[i].Node
+		if node != nil && !node.IsLeaf() {
+			tDeeper := node.(*Table64)
+			count += tDeeper.GetTableCount()
+		}
+	}
+	return	
 }
 
 func (t64 *Table64) GetDepth() uint {
