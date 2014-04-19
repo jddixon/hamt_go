@@ -4,9 +4,21 @@ hamt_go/TODO
     * hamt64_perf_test.go                                               * DONE
         - 10^6 run with 32-byte keys about 2700ns/op, 450 MB RAM
         - idMap about 2050 ns/op, 1 GB RAM (uses 256 slot tables)
-    * need to benchmark HAMT64 with 1024 slot root table
-    * need buckets at max depth to do hamt32_perf_test (million-entry 
+    * Need to benchmark HAMT64 with different sizes of root table
+    * Need buckets at max depth to do hamt32_perf_test (million-entry
         trie too deep for HAMT32)
+
+    * Need GetLeafCount() and GetTableCount() functions for both        * DONE
+        HAMT32 and HAMT64                                               * DONE
+    * Possibly change meaning of 'depth' to bitDepth
+    * Possibly break connection between wordlenth (32 or 64) and
+        W (log base 2 of number of entries in table)
+
+    * Need to test GetLeafCount() and GetTableCount() functions
+        for both HAMT32 and HAMT64
+    * Investigate suspicion that while larger root table has a small
+        positive effect on performance, larger tables elsewhere cause
+        a large increase in memory consumption.
 
 2014-04-17
     * consider allowing larger root table of 2^(t + W) entries
@@ -23,7 +35,7 @@ hamt_go/TODO
     * to make this thing more useful:
         - add buckets at the bottom level (in a 32K run, with random
             keys, there were 6 entries at level 6, 150 at level5)
-        - where Table32.Delete() leaves empty table, need to remove 
+        - where Table32.Delete() leaves empty table, need to remove
             the table from the data structure - recursively
     * documentation needs to mention POPCNT/SWAR                        * DONE
 

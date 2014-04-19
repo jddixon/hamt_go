@@ -79,4 +79,6 @@ func (s *XLSuite) BenchmarkMakeSomeKeys(c *C) {
 		c.Assert(bytes.Equal(*val, keys[i]), Equals, true)
 
 	}
+	// A BIT OF A HACK
+	fmt.Printf("table count = %d\n", m.root.GetTableCount())
 }

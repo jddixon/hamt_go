@@ -11,7 +11,6 @@ import (
 var _ = fmt.Print
 
 type Table32 struct {
-	// prefix []byte	// XXX could add pfor debugging
 	depth   uint   // only here for use in development and debugging !
 	indices []byte // probably only used in development and debugging
 	bitmap  uint32
@@ -25,6 +24,30 @@ func NewTable32(depth uint) (t32 *Table32, err error) {
 		t32.depth = depth
 	}
 	return
+}
+
+// Return a count of leaf nodes in this table.
+func (t32 *Table32) GetLeafCount() (count uint) {
+	for i := 0; i < 32; i++ {
+		node := t32.slots[i].Node
+		if node != nil && node.IsLeaf() {
+			count++
+		}
+	}
+	return	
+}
+
+// 
+func (t32 *Table32) GetTableCount() (count uint) {
+	count = 1
+	for i := 0; i < len(t32.slots); i++ {
+		node := t32.slots[i].Node
+		if node != nil && !node.IsLeaf() {
+			tDeeper := node.(*Table32)
+			count += tDeeper.GetTableCount()
+		}
+	}
+	return	
 }
 
 func (t32 *Table32) GetDepth() uint {
