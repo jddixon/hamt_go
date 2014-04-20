@@ -13,14 +13,14 @@ import (
 
 var _ = fmt.Print
 
-func (s *XLSuite) TestHAMT64Ctor(c *C) {
+func (s *XLSuite) xxxTestHAMT64Ctor(c *C) {
 	h64 := NewHAMT64()
 	c.Assert(h64, NotNil)
 }
 
 // XXX Initially just a copy of the function in table_test.go.
 
-func (s *XLSuite) TestDepthZeroHAMT64(c *C) {
+func (s *XLSuite) xxxTestDepthZeroHAMT64(c *C) {
 
 	rng := xr.MakeSimpleRNG()
 	perm := rng.Perm(64) // a random permutation of [0..64)
@@ -78,7 +78,7 @@ func (s *XLSuite) TestDepthZeroHAMT64(c *C) {
 		c.Assert(v, IsNil)
 	}
 }
-func (s *XLSuite) TestHAMT64InsertsOfRandomishValues(c *C) {
+func (s *XLSuite) xxxTestHAMT64InsertsOfRandomishValues(c *C) {
 
 	const KEY_COUNT = 1024
 	var err error

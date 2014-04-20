@@ -13,14 +13,15 @@ import (
 
 var _ = fmt.Print
 
-func (s *XLSuite) TestHAMT32Ctor(c *C) {
+func (s *XLSuite) xxxTestHAMT32Ctor(c *C) {
 	h32 := NewHAMT32()
 	c.Assert(h32, NotNil)
 }
 
 // XXX Initially just a copy of the function in table_test.go.
 
-func (s *XLSuite) TestDepthZeroHAMT32(c *C) {
+// xxx effectively comments out the test
+func (s *XLSuite) xxxTestDepthZeroHAMT32(c *C) {
 
 	rng := xr.MakeSimpleRNG()
 	perm := rng.Perm(32) // a random permutation of [0..32)
@@ -78,7 +79,7 @@ func (s *XLSuite) TestDepthZeroHAMT32(c *C) {
 		c.Assert(v, IsNil)
 	}
 }
-func (s *XLSuite) TestHAMT32InsertsOfRandomishValues(c *C) {
+func (s *XLSuite) xxxTestHAMT32InsertsOfRandomishValues(c *C) {
 
 	const KEY_COUNT = 1024
 	var err error

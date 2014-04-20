@@ -13,20 +13,38 @@ import (
 
 var _ = fmt.Print
 
+// ==================================================================
+
 func (s *XLSuite) TestHAMTCtor(c *C) {
-	h32 := NewHAMT(5, 0)
+	if VERBOSITY > 0 {
+		fmt.Println("\nTEST_HAMT_CTOR")
+	}
+	t := uint(0)
+	s.doTestHAMTCtor(c, uint(4), t)
+	s.doTestHAMTCtor(c, uint(5), t)
+	s.doTestHAMTCtor(c, uint(6), t)
+}
+func (s *XLSuite) doTestHAMTCtor(c *C, w, t uint) {
+	h32 := NewHAMT(w, t)
 	c.Assert(h32, NotNil)
 }
 
-// XXX Initially just a copy of the function in table_test.go.
+// ==================================================================
 
 func (s *XLSuite) TestDepthZeroHAMT(c *C) {
+	if VERBOSITY > 0 {
+		fmt.Println("\nTEST_DEPTH_ZERO_HAMT")
+	}
+	t := uint(0)
+	s.doTestDepthZeroHAMT(c, uint(4), t)
+	s.doTestDepthZeroHAMT(c, uint(5), t)
+	s.doTestDepthZeroHAMT(c, uint(6), t)
+}
 
+func (s *XLSuite) doTestDepthZeroHAMT(c *C, w, t uint) {
 	rng := xr.MakeSimpleRNG()
 	perm := rng.Perm(32) // a random permutation of [0..32)
 
-	w := uint(5)
-	t := uint(0)
 	h32 := NewHAMT(w, t)
 	keys := make([][]byte, 32)
 	indices := make([]byte, 32)
@@ -81,13 +99,20 @@ func (s *XLSuite) TestDepthZeroHAMT(c *C) {
 	}
 }
 func (s *XLSuite) TestHAMTInsertsOfRandomishValues(c *C) {
+	if VERBOSITY > 0 {
+		fmt.Println("\nTEST_HAMT_INSERT_OF_RANDOMISH_VALUES")
+	}
+	t := uint(0)
+	s.doTestHAMTInsertsOfRandomishValues(c, uint(4), t)
+	s.doTestHAMTInsertsOfRandomishValues(c, uint(5), t)
+	s.doTestHAMTInsertsOfRandomishValues(c, uint(6), t)
 
+}
+func (s *XLSuite) doTestHAMTInsertsOfRandomishValues(c *C, w, t uint) {
 	const KEY_COUNT = 1024
 	var err error
 
 	rng := xr.MakeSimpleRNG()
-	w := uint(5)
-	t := uint(0)
 	h32 := NewHAMT(w, t)
 	c.Assert(h32, NotNil)
 

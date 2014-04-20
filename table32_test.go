@@ -11,7 +11,8 @@ import (
 
 var _ = fmt.Print
 
-func (s *XLSuite) TestTable32Ctor(c *C) {
+// 'xxx' prefix effectively comments out the test
+func (s *XLSuite) xxxTestTable32Ctor(c *C) {
 	rng := xr.MakeSimpleRNG()
 	depth := uint(rng.Intn(7)) // max of 6, because 6*5 = 30 < 32
 	t32, err := NewTable32(depth)
@@ -22,7 +23,7 @@ func (s *XLSuite) TestTable32Ctor(c *C) {
 	c.Assert(t32.slots, IsNil)
 }
 
-func (s *XLSuite) TestT32DepthZeroInserts(c *C) {
+func (s *XLSuite) xxxTestT32DepthZeroInserts(c *C) {
 
 	var (
 		bitmap, flag, idx, mask uint64
@@ -157,7 +158,7 @@ func (s *XLSuite) TestT32DepthZeroInserts(c *C) {
 // Insert a series of entries, each of which should replace a leaf with
 // a table.
 
-func (s *XLSuite) TestT32EntrySplittingInserts(c *C) {
+func (s *XLSuite) xxxTestT32EntrySplittingInserts(c *C) {
 	rng := xr.MakeSimpleRNG()
 	perm := rng.Perm(32) // a random permutation of [0..32)
 	depth := uint(0)
@@ -277,7 +278,7 @@ func (s *XLSuite) TestT32EntrySplittingInserts(c *C) {
 // entries 3.3 to 3.4 sec.  8K entries, 13 sec.  32K entries, 50 sec.
 // Without the debug statements, 32K entries, about 1.2 sec, 32us/entry.
 
-func (s *XLSuite) TestInsertsOfRandomishValues(c *C) {
+func (s *XLSuite) xxxTestInsertsOfRandomishValues(c *C) {
 	rng := xr.MakeSimpleRNG()
 	depth := uint(0)
 

@@ -11,7 +11,8 @@ import (
 
 var _ = fmt.Print
 
-func (s *XLSuite) TestTable64Ctor(c *C) {
+// xxx comments out the test
+func (s *XLSuite) xxxTestTable64Ctor(c *C) {
 	rng := xr.MakeSimpleRNG()
 	depth := uint(rng.Intn(7)) // max of 6, because 6*5 = 30 < 64
 	t64, err := NewTable64(depth)
@@ -22,7 +23,7 @@ func (s *XLSuite) TestTable64Ctor(c *C) {
 	c.Assert(t64.slots, IsNil)
 }
 
-func (s *XLSuite) TestT64DepthZeroInserts(c *C) {
+func (s *XLSuite) xxxTestT64DepthZeroInserts(c *C) {
 
 	var (
 		bitmap, flag, idx, mask uint64
@@ -157,7 +158,7 @@ func (s *XLSuite) TestT64DepthZeroInserts(c *C) {
 // Insert a series of entries, each of which should replace a leaf with
 // a table.
 
-func (s *XLSuite) TestT64EntrySplittingInserts(c *C) {
+func (s *XLSuite) xxxTestT64EntrySplittingInserts(c *C) {
 	rng := xr.MakeSimpleRNG()
 	perm := rng.Perm(64) // a random permutation of [0..64)
 	depth := uint(0)
@@ -275,7 +276,7 @@ func (s *XLSuite) TestT64EntrySplittingInserts(c *C) {
 // Insert a series of randomly selected entries, some of which may replace
 // a leaf with a table.
 
-func (s *XLSuite) TestT64InsertsOfRandomishValues(c *C) {
+func (s *XLSuite) xxxTestT64InsertsOfRandomishValues(c *C) {
 	rng := xr.MakeSimpleRNG()
 	depth := uint(0)
 
