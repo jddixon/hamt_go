@@ -14,6 +14,7 @@ type Table struct {
 	depth    uint // only here for use in development and debugging !
 	w        uint // non-root tables have 2^n slots
 	t        uint // root table have 2^(t+n) slots
+	maxDepth uint
 	maxSlots uint // maximum slots for table at this depth
 	mask     uint64
 	indices  []byte // probably only used in development and debugging
@@ -22,21 +23,30 @@ type Table struct {
 }
 
 func NewTable(depth, w, t uint) (table *Table, err error) {
-	err = CheckTableDepth(depth)
-	if err == nil {
-		table = new(Table)
-		table.depth = depth
-		table.w = w
-		table.t = t
-		var exp uint // power of 2
-		if depth == 0 {
-			exp = t + w
-		} else {
-			exp = w
-		}
-		flag := uint64(1)
-		flag <<= exp
-		table.mask = flag - 1
+	table = new(Table)
+	table.depth = depth
+	table.w = w
+	table.t = t
+	var exp uint // power of 2
+	if depth == 0 {
+		exp = t + w
+	} else {
+		exp = w
+	}
+	flag := uint64(1)
+	flag <<= exp
+	table.mask = flag - 1
+	table.maxDepth = (64 / w) // rounds down
+	table.maxSlots = (64 / w) // NO CONSIDERATION OF t
+
+	// DEBUG
+	//fmt.Printf("NewTable: depth %d/%d, w %d, t %d, maxSlots %d\n",
+	//	depth, table.maxDepth, w, t, table.maxSlots)
+	// END
+
+	err = table.CheckTableDepth(depth)
+	if err != nil {
+		table = nil
 	}
 	return
 }
@@ -111,7 +121,7 @@ func (table *Table) deleteEntry(hc uint64, depth uint, key KeyI) (
 		err = NotFound
 	} else {
 
-		// ndx is the value of the next W key bits
+		// ndx is the value of the next w key bits
 		ndx := byte(hc & table.mask)
 		for i := uint(0); i < curSize; i++ {
 			curNdx := table.indices[i]
@@ -133,7 +143,7 @@ func (table *Table) deleteEntry(hc uint64, depth uint, key KeyI) (
 				} else {
 					// entry is a table, so recurse
 					tDeeper := entry.Node.(*Table)
-					hc >>= W
+					hc >>= table.w
 					depth++
 					err = tDeeper.deleteEntry(hc, depth, key)
 				}
@@ -173,7 +183,7 @@ func (table *Table) findEntry(hc uint64, depth uint, key KeyI) (
 	if curSize == 0 {
 		err = NotFound
 	} else {
-		// ndx is the value of the next W key bits
+		// ndx is the value of the next w key bits
 		ndx := byte(hc & table.mask)
 		/////////////////////////////////////////////////////////////////
 		// XXX This linear search is VERY expensive in terms of run time.
@@ -213,7 +223,7 @@ func (table *Table) findEntry(hc uint64, depth uint, key KeyI) (
 				} else {
 					// entry is a table, so recurse
 					tDeeper := entry.Node.(*Table)
-					hc >>= W
+					hc >>= table.w
 					depth++
 					value, err = tDeeper.findEntry(hc, depth, key)
 					// DEBUG
@@ -267,14 +277,14 @@ func (table *Table) insertAtMatch(newHC uint64, depth uint, entry *Entry,
 		// END
 		tableDeeper, err = NewTable(depth, table.w, 0)
 		if err == nil {
-			newHC >>= W // this is hc for the NEW entry
+			newHC >>= table.w // this is hc for the NEW entry
 
 			oldEntry = e
 			oldLeaf := e.Node.(*Leaf)
 			oldHC, err = oldLeaf.Key.Hashcode()
 		}
 		if err == nil {
-			oldHC >>= depth * W
+			oldHC >>= depth * table.w
 			// indexes for this depth
 
 			// put the existing leaf into the new table
@@ -309,7 +319,7 @@ func (table *Table) insertAtMatch(newHC uint64, depth uint, entry *Entry,
 	} else {
 		// fmt.Printf("FOUND TABLE, recursing\n")
 		tDeeper := e.Node.(*Table)
-		newHC >>= W
+		newHC >>= table.w
 		depth++
 		_, err = tDeeper.insertEntry(newHC, depth, entry)
 
@@ -317,10 +327,10 @@ func (table *Table) insertAtMatch(newHC uint64, depth uint, entry *Entry,
 	return // FOO
 }
 
-func CheckTableDepth(depth uint) (err error) {
-	if depth > MAX_DEPTH {
-		msg := fmt.Sprintf("Table64: depth is %d but MaxDepth is %d\n",
-			depth, MAX_DEPTH)
+func (table *Table) CheckTableDepth(depth uint) (err error) {
+	if depth > table.maxDepth {
+		msg := fmt.Sprintf("Table depth is %d but max depth is %d\n",
+			depth, table.maxDepth)
 		err = errors.New(msg)
 	}
 	return
@@ -331,7 +341,7 @@ func CheckTableDepth(depth uint) (err error) {
 func (table *Table) insertEntry(hc uint64, depth uint, entry *Entry) (
 	slotNbr uint, err error) {
 
-	err = CheckTableDepth(depth)
+	err = table.CheckTableDepth(depth)
 	if err != nil {
 		return
 	}

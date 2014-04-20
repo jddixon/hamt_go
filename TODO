@@ -1,5 +1,10 @@
 hamt_go/TODO
 
+2014-04-20 (rev branch)
+    * investigate: TestTableEntrySplittingInserts creates two tables
+        for each key inserted - should create only one
+    * investigate: Table.maxSlots never used
+
 2014-04-19 (rev branch)
     * produce hamt.go with root table size 2^T slots, all other
         tables 2^W slots

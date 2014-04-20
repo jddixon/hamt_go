@@ -12,6 +12,9 @@ import (
 var _ = fmt.Print
 
 func (s *XLSuite) TestTableCtor(c *C) {
+	if VERBOSITY > 0 {
+		fmt.Println("\nTEST_TABLE_CTOR")
+	}
 	rng := xr.MakeSimpleRNG()
 	depth := uint(rng.Intn(7)) // WHY ???
 	w := uint(5)
@@ -26,6 +29,9 @@ func (s *XLSuite) TestTableCtor(c *C) {
 
 func (s *XLSuite) TestTableDepthZeroInserts(c *C) {
 
+	if VERBOSITY > 0 {
+		fmt.Println("\nTEST_TABLE_DEPTH_ZERO_INSERTS")
+	}
 	var (
 		bitmap, flag, idx, mask uint64
 		pos                     uint
@@ -40,6 +46,13 @@ func (s *XLSuite) TestTableDepthZeroInserts(c *C) {
 	c.Assert(err, IsNil)
 	c.Assert(table, NotNil)
 	c.Assert(table.GetDepth(), Equals, depth)
+
+	c.Assert(table.w, Equals, w)
+	c.Assert(table.t, Equals, t)
+	flag = uint64(1)
+	flag <<= (t + w)
+	expectedMask := flag - 1
+	c.Assert(table.mask, Equals, expectedMask)
 
 	rawKeys := make([][]byte, 32)
 	indices := make([]byte, 32)
@@ -80,7 +93,7 @@ func (s *XLSuite) TestTableDepthZeroInserts(c *C) {
 
 		// insert the value into the hash slice in such a way as
 		// to maintain order
-		idx = (hc >> (depth * W32)) & LEVEL_MASK64
+		idx = (hc >> (depth * w)) & LEVEL_MASK64
 		c.Assert(idx, Equals, hc) // hc is restricted to that range
 
 		flag = 1 << (idx + 1)
@@ -115,7 +128,7 @@ func (s *XLSuite) TestTableDepthZeroInserts(c *C) {
 		key64 := leaf.Key
 		hc, err := key64.Hashcode()
 		c.Assert(err, IsNil)
-		c.Assert(hc&LEVEL_MASK32, Equals, uint64(idx))
+		c.Assert(hc&table.mask, Equals, uint64(idx))
 		value := leaf.Value.(*[]byte)
 
 		keyBytes := key64.(*BytesKey)
@@ -162,6 +175,9 @@ func (s *XLSuite) TestTableDepthZeroInserts(c *C) {
 // a table.
 
 func (s *XLSuite) TestTableEntrySplittingInserts(c *C) {
+	if VERBOSITY > 0 {
+		fmt.Println("\nTEST_TABLE_ENTRY_SPLITTING_INSERTS")
+	}
 	rng := xr.MakeSimpleRNG()
 	perm := rng.Perm(32) // a random permutation of [0..32)
 	depth := uint(0)
@@ -173,19 +189,28 @@ func (s *XLSuite) TestTableEntrySplittingInserts(c *C) {
 	c.Assert(table, NotNil)
 	c.Assert(table.GetDepth(), Equals, depth)
 
-	const KEY_COUNT = 4 // XXX 5 causes attempt to build table at depth 7
+	c.Assert(table.w, Equals, w)
+	c.Assert(table.t, Equals, t)
+	flag := uint64(1)
+	flag <<= (t + w)
+	expectedMask := flag - 1
+	c.Assert(table.mask, Equals, expectedMask)
+	c.Assert(table.maxDepth, Equals, 64/w)
+	KEY_COUNT := table.maxDepth / 2 // XXX SILLINESS
+
+	fmt.Printf("KEY_COUNT = %d\n", KEY_COUNT) // DEBUG
 
 	rawKeys := make([][]byte, KEY_COUNT)
 	key64s := make([]*BytesKey, KEY_COUNT)
 	hashcodes := make([]uint64, KEY_COUNT)
 	values := make([]interface{}, KEY_COUNT)
 
-	// Build KEY_COUNT rawKeys of length 32, each with i+1 non-zero bytes on the
+	// Build KEY_COUNT rawKeys of length 16, each with i+1 non-zero bytes on the
 	// left, and zero bytes on the right.  Each key duplicates the
 	// previous key except that a non-zero byte is introduced in the
 	// i-th position.
 	for i := uint(0); i < KEY_COUNT; i++ {
-		key := make([]byte, 32)
+		key := make([]byte, 16)
 		var j uint
 		if i > 0 {
 			lastKey := rawKeys[i-1]
@@ -211,9 +236,9 @@ func (s *XLSuite) TestTableEntrySplittingInserts(c *C) {
 	}
 	// fmt.Printf("\nINSERTION LOOP\n")
 	for i := uint(0); i < KEY_COUNT; i++ {
-		//fmt.Printf("\nINSERTING KEY %d: %s\n", i, dumpByteSlice(rawKeys[i]))
+		fmt.Printf("\nINSERTING KEY %d: %s\n", i, dumpByteSlice(rawKeys[i]))
 		hc := hashcodes[i]
-		ndx := byte(hc & LEVEL_MASK32) // depth 0, so no shift
+		ndx := byte(hc & table.mask) // depth 0, so no shift
 
 		// expect that no entry with this key can be found ----------
 		key64 := key64s[i]
@@ -233,7 +258,7 @@ func (s *XLSuite) TestTableEntrySplittingInserts(c *C) {
 		c.Assert(e.Node.IsLeaf(), Equals, true)
 		c.Assert(e.GetIndex(), Equals, ndx)
 
-		slotNbr, err := table.insertEntry(hc, depth, e)
+		slotNbr, err := table.insertEntry(hc, 0, e) // depth == 0
 		c.Assert(err, IsNil)
 		// in this test, only one entry at the top level, so slotNbr always zero
 		c.Assert(slotNbr, Equals, uint(0))
@@ -284,6 +309,9 @@ func (s *XLSuite) TestTableEntrySplittingInserts(c *C) {
 // Without the debug statements, 32K entries, about 1.2 sec, 32us/entry.
 
 func (s *XLSuite) TestTableInsertsOfRandomishValues(c *C) {
+	if VERBOSITY > 0 {
+		fmt.Println("\nTEST_TABLE_INSERTS_OF_RANDOMISH_VALUES")
+	}
 	rng := xr.MakeSimpleRNG()
 	depth := uint(0)
 	w := uint(5)
@@ -331,7 +359,7 @@ func (s *XLSuite) TestTableInsertsOfRandomishValues(c *C) {
 	for i := uint(0); i < KEY_COUNT; i++ {
 		//fmt.Printf("\nINSERTING KEY %d: %s\n", i, dumpByteSlice(rawKeys[i]))
 		hc := hashcodes[i]
-		ndx := byte(hc & LEVEL_MASK32) // depth 0, so no shift
+		ndx := byte(hc & table.mask) // depth 0, so no shift
 
 		// expect that no entry with this key can be found ----------
 		key64 := key64s[i]
