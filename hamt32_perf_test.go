@@ -43,7 +43,7 @@ func makeSomeKey64s(N, K int) (keys [][]byte, key64s []*Bytes64Key) {
 
 func (s *XLSuite) BenchmarkMakeSomeKey64s(c *C) {
 	if VERBOSITY > 0 {
-		fmt.Println("TEST_MAKE_SOME_KEYS")
+		fmt.Println("BENCHMARK HAMT32: MAKE_SOME_KEYS")
 	}
 
 	// build an array of N random-ish K-byte keys

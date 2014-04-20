@@ -11,17 +11,32 @@ import (
 var _ = fmt.Print
 
 type Table struct {
-	depth   uint     // only here for use in development and debugging !
-	indices []byte   // probably only used in development and debugging
-	bitmap  uint64   // XXX MAJOR CHANGE
-	slots   []*Entry // each nil or a pointer to either a leaf or a table
+	depth    uint // only here for use in development and debugging !
+	w        uint // non-root tables have 2^n slots
+	t        uint // root table have 2^(t+n) slots
+	maxSlots uint // maximum slots for table at this depth
+	mask     uint64
+	indices  []byte // probably only used in development and debugging
+	bitmap   uint64
+	slots    []*Entry // each nil or a pointer to either a leaf or a table
 }
 
-func NewTable(depth uint) (table *Table, err error) {
+func NewTable(depth, w, t uint) (table *Table, err error) {
 	err = CheckTableDepth(depth)
 	if err == nil {
 		table = new(Table)
 		table.depth = depth
+		table.w = w
+		table.t = t
+		var exp uint // power of 2
+		if depth == 0 {
+			exp = t + w
+		} else {
+			exp = w
+		}
+		flag := uint64(1)
+		flag <<= exp
+		table.mask = flag - 1
 	}
 	return
 }
@@ -97,7 +112,7 @@ func (table *Table) deleteEntry(hc uint64, depth uint, key KeyI) (
 	} else {
 
 		// ndx is the value of the next W key bits
-		ndx := byte(hc & LEVEL_MASK)
+		ndx := byte(hc & table.mask)
 		for i := uint(0); i < curSize; i++ {
 			curNdx := table.indices[i]
 			if curNdx < ndx {
@@ -159,7 +174,7 @@ func (table *Table) findEntry(hc uint64, depth uint, key KeyI) (
 		err = NotFound
 	} else {
 		// ndx is the value of the next W key bits
-		ndx := byte(hc & LEVEL_MASK)
+		ndx := byte(hc & table.mask)
 		/////////////////////////////////////////////////////////////////
 		// XXX This linear search is VERY expensive in terms of run time.
 		/////////////////////////////////////////////////////////////////
@@ -250,7 +265,7 @@ func (table *Table) insertAtMatch(newHC uint64, depth uint, entry *Entry,
 		// DEBUG
 		// fmt.Printf("  CREATING TABLE AT DEPTH %d\n", depth)
 		// END
-		tableDeeper, err = NewTable(depth)
+		tableDeeper, err = NewTable(depth, table.w, 0)
 		if err == nil {
 			newHC >>= W // this is hc for the NEW entry
 
@@ -322,7 +337,7 @@ func (table *Table) insertEntry(hc uint64, depth uint, entry *Entry) (
 	}
 
 	// ndx is the value of the next W key bits
-	ndx := byte(hc & LEVEL_MASK)
+	ndx := byte(hc & table.mask)
 
 	curSize := uint(len(table.indices))
 

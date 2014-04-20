@@ -2,12 +2,20 @@ package hamt_go
 
 // hamt_go/hamt.go
 
+// global variables with default values
+var (
+	W          = uint(5)
+	MAX_DEPTH  = uint(64 / W)
+	MAX_SLOTS  = uint(32)     // XXX A KLUDGE
+	LEVEL_MASK = uint64(0x1f) // masks off W bits
+)
+
 type HAMT struct {
 	root *Table // could be EntryI
 }
 
-func NewHAMT() (h *HAMT) {
-	table, _ := NewTable(0)
+func NewHAMT(w, t uint) (h *HAMT) {
+	table, _ := NewTable(0, w, t)
 	h = &HAMT{
 		root: table,
 	}

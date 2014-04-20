@@ -42,7 +42,7 @@ func makeSomeMoreKeys(N, K int) (rawKeys [][]byte, bKeys []*BytesKey) {
 
 func (s *XLSuite) BenchmarkMakeSomeMoreKeys(c *C) {
 	if VERBOSITY > 0 {
-		fmt.Println("TEST_MAKE_SOME_MORE_KEYS")
+		fmt.Println("BENCHMARK: HAMT MAKE_SOME_MORE_KEYS")
 	}
 
 	// build an array of N random-ish K-byte rawKeys
@@ -54,8 +54,9 @@ func (s *XLSuite) BenchmarkMakeSomeMoreKeys(c *C) {
 	deltaT := t1.Sub(t0)
 	fmt.Printf("setup time for %d %d-byte rawKeys: %v\n", N, K, deltaT)
 
-	// build an IDMap to put them in (ignoring any error)
-	m := NewHAMT()
+	w := uint(5)
+	t := uint(0)
+	m := NewHAMT(w, t)
 
 	c.ResetTimer()
 	c.StartTimer()

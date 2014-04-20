@@ -14,7 +14,7 @@ import (
 var _ = fmt.Print
 
 func (s *XLSuite) TestHAMTCtor(c *C) {
-	h32 := NewHAMT()
+	h32 := NewHAMT(5, 0)
 	c.Assert(h32, NotNil)
 }
 
@@ -25,7 +25,9 @@ func (s *XLSuite) TestDepthZeroHAMT(c *C) {
 	rng := xr.MakeSimpleRNG()
 	perm := rng.Perm(32) // a random permutation of [0..32)
 
-	h32 := NewHAMT()
+	w := uint(5)
+	t := uint(0)
+	h32 := NewHAMT(w, t)
 	keys := make([][]byte, 32)
 	indices := make([]byte, 32)
 
@@ -84,7 +86,9 @@ func (s *XLSuite) TestHAMTInsertsOfRandomishValues(c *C) {
 	var err error
 
 	rng := xr.MakeSimpleRNG()
-	h32 := NewHAMT()
+	w := uint(5)
+	t := uint(0)
+	h32 := NewHAMT(w, t)
 	c.Assert(h32, NotNil)
 
 	keys := make([][]byte, KEY_COUNT)

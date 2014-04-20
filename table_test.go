@@ -14,7 +14,9 @@ var _ = fmt.Print
 func (s *XLSuite) TestTableCtor(c *C) {
 	rng := xr.MakeSimpleRNG()
 	depth := uint(rng.Intn(7)) // WHY ???
-	table, err := NewTable(depth)
+	w := uint(5)
+	t := uint(0)
+	table, err := NewTable(depth, w, t)
 	c.Assert(err, IsNil)
 	c.Assert(table, NotNil)
 	c.Assert(table.GetDepth(), Equals, depth)
@@ -32,7 +34,9 @@ func (s *XLSuite) TestTableDepthZeroInserts(c *C) {
 	perm := rng.Perm(32) // a random permutation of [0..32)
 	depth := uint(0)     // COULD VARY DEPTH
 
-	table, err := NewTable(depth)
+	w := uint(5)
+	t := uint(0)
+	table, err := NewTable(depth, w, t)
 	c.Assert(err, IsNil)
 	c.Assert(table, NotNil)
 	c.Assert(table.GetDepth(), Equals, depth)
@@ -161,8 +165,10 @@ func (s *XLSuite) TestTableEntrySplittingInserts(c *C) {
 	rng := xr.MakeSimpleRNG()
 	perm := rng.Perm(32) // a random permutation of [0..32)
 	depth := uint(0)
+	w := uint(5)
+	t := uint(0)
 
-	table, err := NewTable(depth)
+	table, err := NewTable(depth, w, t)
 	c.Assert(err, IsNil)
 	c.Assert(table, NotNil)
 	c.Assert(table.GetDepth(), Equals, depth)
@@ -280,8 +286,10 @@ func (s *XLSuite) TestTableEntrySplittingInserts(c *C) {
 func (s *XLSuite) TestTableInsertsOfRandomishValues(c *C) {
 	rng := xr.MakeSimpleRNG()
 	depth := uint(0)
+	w := uint(5)
+	t := uint(0)
 
-	table, err := NewTable(depth)
+	table, err := NewTable(depth, w, t)
 	c.Assert(err, IsNil)
 	c.Assert(table, NotNil)
 	c.Assert(table.GetDepth(), Equals, depth)
