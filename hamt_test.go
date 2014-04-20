@@ -1,6 +1,6 @@
 package hamt_go
 
-// hamt_go/hamt32_test.go
+// hamt_go/hamt_test.go
 
 import (
 	"bytes"
@@ -13,19 +13,19 @@ import (
 
 var _ = fmt.Print
 
-func (s *XLSuite) TestHAMT32Ctor(c *C) {
-	h32 := NewHAMT32()
+func (s *XLSuite) TestHAMTCtor(c *C) {
+	h32 := NewHAMT()
 	c.Assert(h32, NotNil)
 }
 
 // XXX Initially just a copy of the function in table_test.go.
 
-func (s *XLSuite) TestDepthZeroHAMT32(c *C) {
+func (s *XLSuite) TestDepthZeroHAMT(c *C) {
 
 	rng := xr.MakeSimpleRNG()
 	perm := rng.Perm(32) // a random permutation of [0..32)
 
-	h32 := NewHAMT32()
+	h32 := NewHAMT()
 	keys := make([][]byte, 32)
 	indices := make([]byte, 32)
 
@@ -37,7 +37,7 @@ func (s *XLSuite) TestDepthZeroHAMT32(c *C) {
 		key[0] = ndx // all the rest are zeroes
 		keys[i] = key
 
-		key64, err := NewBytes64Key(key)
+		key64, err := NewBytesKey(key)
 		c.Assert(err, IsNil)
 		c.Assert(key64, NotNil)
 
@@ -61,7 +61,7 @@ func (s *XLSuite) TestDepthZeroHAMT32(c *C) {
 
 		// verify it is present
 		//fmt.Printf("%d VERIFYING PRESENT BEFORE DELETE: idx %02x\n", i, idx)
-		key64, err := NewBytes64Key(key)
+		key64, err := NewBytesKey(key)
 		c.Assert(err, IsNil)
 		c.Assert(key64, NotNil)
 		v, err := h32.Find(key64)
@@ -78,17 +78,17 @@ func (s *XLSuite) TestDepthZeroHAMT32(c *C) {
 		c.Assert(v, IsNil)
 	}
 }
-func (s *XLSuite) TestHAMT32InsertsOfRandomishValues(c *C) {
+func (s *XLSuite) TestHAMTInsertsOfRandomishValues(c *C) {
 
 	const KEY_COUNT = 1024
 	var err error
 
 	rng := xr.MakeSimpleRNG()
-	h32 := NewHAMT32()
+	h32 := NewHAMT()
 	c.Assert(h32, NotNil)
 
 	keys := make([][]byte, KEY_COUNT)
-	key64s := make([]*Bytes64Key, KEY_COUNT)
+	key64s := make([]*BytesKey, KEY_COUNT)
 	hashcodes := make([]uint64, KEY_COUNT)
 	values := make([]interface{}, KEY_COUNT)
 	hcMap := make(map[uint64]bool)
@@ -102,12 +102,12 @@ func (s *XLSuite) TestHAMT32InsertsOfRandomishValues(c *C) {
 			rng.NextBytes(key) // fill with quasi-random values
 			keys[i] = key
 
-			key64, err := NewBytes64Key(key)
+			key64, err := NewBytesKey(key)
 			c.Assert(err, IsNil)
 			c.Assert(key64, NotNil)
 			key64s[i] = key64
 
-			hc, err = key64.Hashcode64()
+			hc, err = key64.Hashcode()
 			c.Assert(err, IsNil)
 			_, ok := hcMap[hc]
 			if !ok {

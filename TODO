@@ -1,5 +1,10 @@
 hamt_go/TODO
 
+2014-04-19 (rev branch)
+    * produce hamt.go with root table size 2^T slots, all other
+        tables 2^W slots
+    * this begins as copies of the dev branch hamt32.go, etc            * DONE
+
 2014-04-18
     * hamt64_perf_test.go                                               * DONE
         - 10^6 run with 32-byte keys about 2700ns/op, 450 MB RAM

@@ -1,6 +1,6 @@
 package hamt_go
 
-// hamt_go/bytes64Key.go
+// hamt_go/bytesKey.go
 
 import (
 	"bytes"
@@ -10,17 +10,17 @@ import (
 
 var _ = fmt.Print
 
-type Bytes64Key struct {
+type BytesKey struct {
 	Slice []byte
 }
 
-func NewBytes64Key(b []byte) (k *Bytes64Key, err error) {
+func NewBytesKey(b []byte) (k *BytesKey, err error) {
 	if b == nil {
 		err = NilKey
-	} else if len(b) < 16 {
+	} else if len(b) < 8 {
 		err = ShortKey
 	} else {
-		k = &Bytes64Key{Slice: b}
+		k = &BytesKey{Slice: b}
 	}
 	return
 }
@@ -28,11 +28,13 @@ func NewBytes64Key(b []byte) (k *Bytes64Key, err error) {
 // KeyI interface ///////////////////////////////////////////////////
 
 // convert the first 8 bytes of the key into an unsigned uint64
-func (b *Bytes64Key) Hashcode64() (hc uint64, err error) {
+func (b *BytesKey) Hashcode() (hc uint64, err error) {
 	buf := bytes.NewReader(b.Slice)
 	err = binary.Read(buf, binary.LittleEndian, &hc)
+	// DEBUG
 	if err != nil {
 		fmt.Printf("attempt to read key failed: %v\n", err)
 	}
+	// END
 	return
 }

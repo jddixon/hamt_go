@@ -1,6 +1,6 @@
 package hamt_go
 
-// hamt_go/table32_test.go
+// hamt_go/table_test.go
 
 import (
 	"bytes"
@@ -11,18 +11,18 @@ import (
 
 var _ = fmt.Print
 
-func (s *XLSuite) TestTable32Ctor(c *C) {
+func (s *XLSuite) TestTableCtor(c *C) {
 	rng := xr.MakeSimpleRNG()
-	depth := uint(rng.Intn(7)) // max of 6, because 6*5 = 30 < 32
-	t32, err := NewTable32(depth)
+	depth := uint(rng.Intn(7)) // WHY ???
+	table, err := NewTable(depth)
 	c.Assert(err, IsNil)
-	c.Assert(t32, NotNil)
-	c.Assert(t32.GetDepth(), Equals, depth)
+	c.Assert(table, NotNil)
+	c.Assert(table.GetDepth(), Equals, depth)
 
-	c.Assert(t32.slots, IsNil)
+	c.Assert(table.slots, IsNil)
 }
 
-func (s *XLSuite) TestT32DepthZeroInserts(c *C) {
+func (s *XLSuite) TestTableDepthZeroInserts(c *C) {
 
 	var (
 		bitmap, flag, idx, mask uint64
@@ -32,10 +32,10 @@ func (s *XLSuite) TestT32DepthZeroInserts(c *C) {
 	perm := rng.Perm(32) // a random permutation of [0..32)
 	depth := uint(0)     // COULD VARY DEPTH
 
-	t32, err := NewTable32(depth)
+	table, err := NewTable(depth)
 	c.Assert(err, IsNil)
-	c.Assert(t32, NotNil)
-	c.Assert(t32.GetDepth(), Equals, depth)
+	c.Assert(table, NotNil)
+	c.Assert(table.GetDepth(), Equals, depth)
 
 	rawKeys := make([][]byte, 32)
 	indices := make([]byte, 32)
@@ -48,29 +48,29 @@ func (s *XLSuite) TestT32DepthZeroInserts(c *C) {
 		rawKey[0] = ndx // all the rest are zeroes
 		rawKeys[i] = rawKey
 
-		key64, err := NewBytes64Key(rawKey)
+		key64, err := NewBytesKey(rawKey)
 		c.Assert(err, IsNil)
 		c.Assert(key64, NotNil)
-		hc, err := key64.Hashcode64()
+		hc, err := key64.Hashcode()
 		c.Assert(err, IsNil)
 		c.Assert(hc, Equals, uint64(ndx))
 
-		_, err = t32.findEntry(hc, 0, key64)
+		_, err = table.findEntry(hc, 0, key64)
 		c.Assert(err, Equals, NotFound)
 
-		leaf, err := NewLeaf64(key64, &rawKey)
+		leaf, err := NewLeaf(key64, &rawKey)
 		c.Assert(err, IsNil)
 		c.Assert(leaf, NotNil)
 		c.Assert(leaf.IsLeaf(), Equals, true)
 
-		e, err := NewEntry32(ndx, leaf)
+		e, err := NewEntry(ndx, leaf)
 		c.Assert(err, IsNil)
 		c.Assert(e, NotNil)
 		c.Assert(e.GetIndex(), Equals, ndx)
 		c.Assert(e.Node.IsLeaf(), Equals, true)
 		c.Assert(e.GetIndex(), Equals, ndx)
 
-		slotNbr, err := t32.insertEntry(hc, depth, e)
+		slotNbr, err := table.insertEntry(hc, depth, e)
 		c.Assert(err, IsNil)
 		c.Assert(0 <= slotNbr && slotNbr < 32, Equals, true)
 
@@ -88,50 +88,50 @@ func (s *XLSuite) TestT32DepthZeroInserts(c *C) {
 		// fmt.Printf("%02d: hc %02x, idx %02x, mask 0x%08x, bitmap 0x%08x, pos %02d slotNbr %02d\n\n",
 		//	i, hc, idx, mask, bitmap, pos, slotNbr)
 
-		c.Assert(t32.bitmap, Equals, bitmap)
+		c.Assert(table.bitmap, Equals, bitmap)
 
 		c.Assert(uint(pos), Equals, slotNbr)
 
-		v, err := t32.findEntry(hc, 0, key64)
+		v, err := table.findEntry(hc, 0, key64)
 		c.Assert(err, IsNil)
 		vBytes := v.(*[]byte)
 		c.Assert(bytes.Equal(*vBytes, rawKey), Equals, true)
 
 	}
 	// verify that the order of entries in the slots is as expected
-	c.Assert(len(t32.indices), Equals, 32)
-	c.Assert(len(t32.slots), Equals, 32)
+	c.Assert(len(table.indices), Equals, 32)
+	c.Assert(len(table.slots), Equals, 32)
 	for i := uint(0); i < 32; i++ {
-		idx := t32.indices[i]
-		entry := t32.slots[i]
+		idx := table.indices[i]
+		entry := table.slots[i]
 		c.Assert(entry.GetIndex(), Equals, idx)
 		node := entry.Node
 		c.Assert(node.IsLeaf(), Equals, true)
-		leaf := node.(*Leaf64)
+		leaf := node.(*Leaf)
 		key64 := leaf.Key
-		hc, err := key64.Hashcode64()
+		hc, err := key64.Hashcode()
 		c.Assert(err, IsNil)
 		c.Assert(hc&LEVEL_MASK32, Equals, uint64(idx))
 		value := leaf.Value.(*[]byte)
 
-		keyBytes := key64.(*Bytes64Key)
+		keyBytes := key64.(*BytesKey)
 		c.Assert(bytes.Equal((*keyBytes).Slice, *value), Equals, true)
 	}
 	// remove each key, then verify that it is in fact gone
-	c.Assert(len(t32.indices), Equals, 32)
-	c.Assert(len(t32.slots), Equals, 32)
+	c.Assert(len(table.indices), Equals, 32)
+	c.Assert(len(table.slots), Equals, 32)
 	for i := uint(0); i < 32; i++ {
 		idx := indices[i]
 		key := rawKeys[i]
 
 		// verify it is present -------------------------------------
 		//fmt.Printf("%d VERIFYING PRESENT BEFORE DELETE: idx %02x\n", i, idx)
-		key64, err := NewBytes64Key(key)
+		key64, err := NewBytesKey(key)
 		c.Assert(err, IsNil)
 		c.Assert(key64, NotNil)
-		hc, err := key64.Hashcode64()
+		hc, err := key64.Hashcode()
 		c.Assert(err, IsNil)
-		v, err := t32.findEntry(hc, 0, key64)
+		v, err := table.findEntry(hc, 0, key64)
 		c.Assert(err, IsNil)
 		c.Assert(v, NotNil)
 		vAsKey := v.(*[]byte)
@@ -140,12 +140,12 @@ func (s *XLSuite) TestT32DepthZeroInserts(c *C) {
 		// delete it ------------------------------------------------
 		// depth is zero, so hc unshifted
 		//fmt.Printf("  %d DELETING: idx %02x\n", i, idx)
-		err = t32.deleteEntry(hc, 0, key64)
+		err = table.deleteEntry(hc, 0, key64)
 		c.Assert(err, IsNil)
 
 		// verify that it is gone -----------------------------------
 		//fmt.Printf("  %d CHECKING NOT PRESENT AFTER DELETE: idx %02x\n", i, idx)
-		v, err = t32.findEntry(hc, 0, key64)
+		v, err = table.findEntry(hc, 0, key64)
 
 		c.Assert(err, Equals, NotFound)
 		c.Assert(v, IsNil)
@@ -157,20 +157,20 @@ func (s *XLSuite) TestT32DepthZeroInserts(c *C) {
 // Insert a series of entries, each of which should replace a leaf with
 // a table.
 
-func (s *XLSuite) TestT32EntrySplittingInserts(c *C) {
+func (s *XLSuite) TestTableEntrySplittingInserts(c *C) {
 	rng := xr.MakeSimpleRNG()
 	perm := rng.Perm(32) // a random permutation of [0..32)
 	depth := uint(0)
 
-	t32, err := NewTable32(depth)
+	table, err := NewTable(depth)
 	c.Assert(err, IsNil)
-	c.Assert(t32, NotNil)
-	c.Assert(t32.GetDepth(), Equals, depth)
+	c.Assert(table, NotNil)
+	c.Assert(table.GetDepth(), Equals, depth)
 
 	const KEY_COUNT = 4 // XXX 5 causes attempt to build table at depth 7
 
 	rawKeys := make([][]byte, KEY_COUNT)
-	key64s := make([]*Bytes64Key, KEY_COUNT)
+	key64s := make([]*BytesKey, KEY_COUNT)
 	hashcodes := make([]uint64, KEY_COUNT)
 	values := make([]interface{}, KEY_COUNT)
 
@@ -191,14 +191,14 @@ func (s *XLSuite) TestT32EntrySplittingInserts(c *C) {
 		key[i] = byte(perm[i] + 1)
 		rawKeys[i] = key
 
-		key64, err := NewBytes64Key(key)
+		key64, err := NewBytesKey(key)
 		c.Assert(err, IsNil)
 		c.Assert(key64, NotNil)
 		key64s[i] = key64
 
 		values[i] = &key
 
-		hc, err := key64.Hashcode64()
+		hc, err := key64.Hashcode()
 		c.Assert(err, IsNil)
 		hashcodes[i] = hc
 
@@ -211,23 +211,23 @@ func (s *XLSuite) TestT32EntrySplittingInserts(c *C) {
 
 		// expect that no entry with this key can be found ----------
 		key64 := key64s[i]
-		_, err = t32.findEntry(hc, 0, key64)
+		_, err = table.findEntry(hc, 0, key64)
 		c.Assert(err, Equals, NotFound)
 
 		// insert the entry -----------------------------------------
-		leaf, err := NewLeaf64(key64, values[i])
+		leaf, err := NewLeaf(key64, values[i])
 		c.Assert(err, IsNil)
 		c.Assert(leaf, NotNil)
 		c.Assert(leaf.IsLeaf(), Equals, true)
 
-		e, err := NewEntry32(ndx, leaf)
+		e, err := NewEntry(ndx, leaf)
 		c.Assert(err, IsNil)
 		c.Assert(e, NotNil)
 		c.Assert(e.GetIndex(), Equals, ndx)
 		c.Assert(e.Node.IsLeaf(), Equals, true)
 		c.Assert(e.GetIndex(), Equals, ndx)
 
-		slotNbr, err := t32.insertEntry(hc, depth, e)
+		slotNbr, err := table.insertEntry(hc, depth, e)
 		c.Assert(err, IsNil)
 		// in this test, only one entry at the top level, so slotNbr always zero
 		c.Assert(slotNbr, Equals, uint(0))
@@ -241,7 +241,7 @@ func (s *XLSuite) TestT32EntrySplittingInserts(c *C) {
 		// DEBUG
 		//fmt.Printf("--- verifying new entry is present after insertion -----\n")
 		// END
-		_, err = t32.findEntry(hc, 0, key64)
+		_, err = table.findEntry(hc, 0, key64)
 		c.Assert(err, IsNil) // FAILS XXX
 	}
 	//fmt.Println("\nDELETION LOOP") // DEBUG
@@ -256,17 +256,17 @@ func (s *XLSuite) TestT32EntrySplittingInserts(c *C) {
 
 		key64 := key64s[i]
 		// confirm again that the entry is present ------------------
-		_, err = t32.findEntry(hc, 0, key64)
+		_, err = table.findEntry(hc, 0, key64)
 		c.Assert(err, IsNil)
 		//fmt.Printf("    key %2d is present before deletion\n", i) // DEBUG
 
 		// delete the entry -----------------------------------------
-		err = t32.deleteEntry(hc, 0, key64)
+		err = table.deleteEntry(hc, 0, key64)
 		c.Assert(err, IsNil)
 		//fmt.Printf("    key %2d has been deleted\n", i) // DEBUG
 
 		// confirm that it is gone ----------------------------------
-		_, err = t32.findEntry(hc, 0, key64)
+		_, err = table.findEntry(hc, 0, key64)
 		c.Assert(err, Equals, NotFound)
 		//fmt.Printf("    key %2d gone after deletion\n\n", i) // DEBUG
 	}
@@ -277,19 +277,19 @@ func (s *XLSuite) TestT32EntrySplittingInserts(c *C) {
 // entries 3.3 to 3.4 sec.  8K entries, 13 sec.  32K entries, 50 sec.
 // Without the debug statements, 32K entries, about 1.2 sec, 32us/entry.
 
-func (s *XLSuite) TestInsertsOfRandomishValues(c *C) {
+func (s *XLSuite) TestTableInsertsOfRandomishValues(c *C) {
 	rng := xr.MakeSimpleRNG()
 	depth := uint(0)
 
-	t32, err := NewTable32(depth)
+	table, err := NewTable(depth)
 	c.Assert(err, IsNil)
-	c.Assert(t32, NotNil)
-	c.Assert(t32.GetDepth(), Equals, depth)
+	c.Assert(table, NotNil)
+	c.Assert(table.GetDepth(), Equals, depth)
 
 	const KEY_COUNT = 16 * 1024
 
 	rawKeys := make([][]byte, KEY_COUNT)
-	key64s := make([]*Bytes64Key, KEY_COUNT)
+	key64s := make([]*BytesKey, KEY_COUNT)
 	hashcodes := make([]uint64, KEY_COUNT)
 	values := make([]interface{}, KEY_COUNT)
 	hcMap := make(map[uint64]bool)
@@ -302,12 +302,12 @@ func (s *XLSuite) TestInsertsOfRandomishValues(c *C) {
 			rng.NextBytes(key) // fill with quasi-random values
 			rawKeys[i] = key
 
-			key64, err := NewBytes64Key(key)
+			key64, err := NewBytesKey(key)
 			c.Assert(err, IsNil)
 			c.Assert(key64, NotNil)
 			key64s[i] = key64
 
-			hc, err = key64.Hashcode64()
+			hc, err = key64.Hashcode()
 			c.Assert(err, IsNil)
 			_, ok := hcMap[hc]
 			if !ok {
@@ -327,23 +327,23 @@ func (s *XLSuite) TestInsertsOfRandomishValues(c *C) {
 
 		// expect that no entry with this key can be found ----------
 		key64 := key64s[i]
-		_, err = t32.findEntry(hc, 0, key64)
+		_, err = table.findEntry(hc, 0, key64)
 		c.Assert(err, Equals, NotFound)
 
 		// insert the entry -----------------------------------------
-		leaf, err := NewLeaf64(key64, values[i])
+		leaf, err := NewLeaf(key64, values[i])
 		c.Assert(err, IsNil)
 		c.Assert(leaf, NotNil)
 		c.Assert(leaf.IsLeaf(), Equals, true)
 
-		e, err := NewEntry32(ndx, leaf)
+		e, err := NewEntry(ndx, leaf)
 		c.Assert(err, IsNil)
 		c.Assert(e, NotNil)
 		c.Assert(e.GetIndex(), Equals, ndx)
 		c.Assert(e.Node.IsLeaf(), Equals, true)
 		c.Assert(e.GetIndex(), Equals, ndx)
 
-		slotNbr, err := t32.insertEntry(hc, depth, e)
+		slotNbr, err := table.insertEntry(hc, depth, e)
 		_ = slotNbr // DEBUG
 		c.Assert(err, IsNil)
 
@@ -356,7 +356,7 @@ func (s *XLSuite) TestInsertsOfRandomishValues(c *C) {
 		// DEBUG
 		//fmt.Printf("--- verifying new entry is present after insertion -----\n")
 		// END
-		_, err = t32.findEntry(hc, 0, key64)
+		_, err = table.findEntry(hc, 0, key64)
 		c.Assert(err, IsNil)
 	}
 	//fmt.Println("\nDELETION LOOP") // DEBUG
@@ -371,17 +371,17 @@ func (s *XLSuite) TestInsertsOfRandomishValues(c *C) {
 
 		key64 := key64s[i]
 		// confirm again that the entry is present ------------------
-		_, err = t32.findEntry(hc, 0, key64)
+		_, err = table.findEntry(hc, 0, key64)
 		c.Assert(err, IsNil)
 		//fmt.Printf("    key %2d is present before deletion\n", i) // DEBUG
 
 		// delete the entry -----------------------------------------
-		err = t32.deleteEntry(hc, 0, key64)
+		err = table.deleteEntry(hc, 0, key64)
 		c.Assert(err, IsNil)
 		//fmt.Printf("    key %2d has been deleted\n", i) // DEBUG
 
 		// confirm that it is gone ----------------------------------
-		_, err = t32.findEntry(hc, 0, key64)
+		_, err = table.findEntry(hc, 0, key64)
 		c.Assert(err, Equals, NotFound)
 		//fmt.Printf("    key %2d gone after deletion\n\n", i) // DEBUG
 	}

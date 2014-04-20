@@ -1,6 +1,6 @@
 package hamt_go
 
-// ctries_go/bytes32Key.go
+// hamt_go/bytes32Key.go
 
 import (
 	"bytes"

@@ -14,10 +14,10 @@ func NewHAMT32() (h *HAMT32) {
 	return
 }
 
-func (h *HAMT32) Delete(k Key32I) (err error) {
+func (h *HAMT32) Delete(k Key64I) (err error) {
 
-	var hc uint32
-	hc, err = k.Hashcode32()
+	var hc uint64
+	hc, err = k.Hashcode64()
 	if err == nil {
 		// this is depth zero, so hc is not shifted
 		err = h.root.deleteEntry(hc, 0, k)
@@ -25,10 +25,10 @@ func (h *HAMT32) Delete(k Key32I) (err error) {
 	return
 }
 
-func (h *HAMT32) Find(k Key32I) (v interface{}, err error) {
+func (h *HAMT32) Find(k Key64I) (v interface{}, err error) {
 
-	var hc uint32
-	hc, err = k.Hashcode32()
+	var hc uint64
+	hc, err = k.Hashcode64()
 	if err == nil {
 		// this is depth zero, so hc is not shifted
 		v, err = h.root.findEntry(hc, 0, k)
@@ -36,13 +36,13 @@ func (h *HAMT32) Find(k Key32I) (v interface{}, err error) {
 	return
 }
 
-func (h *HAMT32) Insert(k Key32I, v interface{}) (err error) {
+func (h *HAMT32) Insert(k Key64I, v interface{}) (err error) {
 
-	hc, err := k.Hashcode32()
+	hc, err := k.Hashcode64()
 	if err == nil {
 		ndx := byte(hc & LEVEL_MASK32)
-		var leaf *Leaf32
-		leaf, err = NewLeaf32(k, v)
+		var leaf *Leaf64
+		leaf, err = NewLeaf64(k, v)
 		if err == nil {
 			var e *Entry32
 			e, err = NewEntry32(ndx, leaf)
