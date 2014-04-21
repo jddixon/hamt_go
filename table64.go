@@ -34,10 +34,9 @@ func (t64 *Table64) GetLeafCount() (count uint) {
 			count++
 		}
 	}
-	return
+	return	
 }
 
-//
 func (t64 *Table64) GetTableCount() (count uint) {
 	count = 1
 	for i := 0; i < len(t64.slots); i++ {
