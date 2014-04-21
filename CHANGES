@@ -3,6 +3,10 @@ hamt_go/CHANGES
 v0.2.0
     2014-04-17
         * tested, working HAMT64 code                               * SLOC 1717
+    2014-04-20
+        * HAMT32 and HAMT64 replaced by HAMT parameterized by w     * SLOC 2827
+            and t; legacy code remains, the t parameter is present
+            but ignored
 v0.1.1
     2014-04-07
         * first level ndx inserts pass test                         * SLOC  549
