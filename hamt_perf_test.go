@@ -41,23 +41,33 @@ func makeSomeMoreKeys(N, K int) (rawKeys [][]byte, bKeys []*BytesKey) {
 // -- tests proper --------------------------------------------------
 
 func (s *XLSuite) BenchmarkHAMT_4(c *C) {
-	if VERBOSITY > 0 { fmt.Println("\nBenchmarkHAMT_4") }
+	if VERBOSITY > 0 {
+		fmt.Println("\nBenchmarkHAMT_4")
+	}
 	s.doBenchmark(c, uint(4), 0)
 }
 func (s *XLSuite) BenchmarkHAMT_5(c *C) {
-	if VERBOSITY > 0 { fmt.Println("\nBenchmarkHAMT_5") }
+	if VERBOSITY > 0 {
+		fmt.Println("\nBenchmarkHAMT_5")
+	}
 	s.doBenchmark(c, uint(5), 0)
 }
 func (s *XLSuite) BenchmarkHAMT_6(c *C) {
-	if VERBOSITY > 0 { fmt.Println("\nBenchmarkHAMT_6") }
+	if VERBOSITY > 0 {
+		fmt.Println("\nBenchmarkHAMT_6")
+	}
 	s.doBenchmark(c, uint(6), 0)
 }
 func (s *XLSuite) BenchmarkHAMT_7(c *C) {
-	if VERBOSITY > 0 { fmt.Println("\nBenchmarkHAMT_7") }
+	if VERBOSITY > 0 {
+		fmt.Println("\nBenchmarkHAMT_7")
+	}
 	s.doBenchmark(c, uint(7), 0)
 }
 func (s *XLSuite) BenchmarkHAMT_8(c *C) {
-	if VERBOSITY > 0 { fmt.Println("\nBenchmarkHAMT_8") }
+	if VERBOSITY > 0 {
+		fmt.Println("\nBenchmarkHAMT_8")
+	}
 	s.doBenchmark(c, uint(8), 0)
 }
 func (s *XLSuite) doBenchmark(c *C, w, t uint) {
@@ -96,7 +106,7 @@ func (s *XLSuite) doBenchmark(c *C, w, t uint) {
 	tableCount := m.root.GetTableCount()
 	slotCount := m.root.maxSlots * tableCount
 	byteCount := slotCount * 8
-	megabytes := float32(byteCount) / (1024*1024)
-	fmt.Printf("%6d tables, %7d slots, %3.1f megabytes\n", 
+	megabytes := float32(byteCount) / (1024 * 1024)
+	fmt.Printf("%6d tables, %7d slots, %3.1f megabytes\n",
 		tableCount, slotCount, megabytes)
 }

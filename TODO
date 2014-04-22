@@ -1,5 +1,11 @@
 hamt_go/TODO
 
+2014-04-21 
+    * FIX: insertIntoOccupiedSlot() does not replace the value 
+        where there is an exact match on keys
+    * need to add buckets to handle exact matches on 64 bit keys
+        (however unlikely this may be)
+
 2014-04-20 (rev branch)
     * investigate: TestTableEntrySplittingInserts creates two tables
         for each key inserted - should create only one
@@ -43,8 +49,9 @@ hamt_go/TODO
 2014-04-16
     * clean up, save, step version number                               * DONE
     * to make this thing more useful:
-        - add buckets at the bottom level (in a 32K run, with random
-            keys, there were 6 entries at level 6, 150 at level5)
+        - add buckets at the bottom level (in a 32K run, with random    * SKIP
+            keys, there were 6 entries at level 6, 150 at level5)		* SKIP
+            * moved to 64-bit keys, making this far less urgent		    * SKIP
         - where Table32.Delete() leaves empty table, need to remove
             the table from the data structure - recursively
     * documentation needs to mention POPCNT/SWAR                        * DONE

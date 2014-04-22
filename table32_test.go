@@ -243,7 +243,7 @@ func (s *XLSuite) xxxTestT32EntrySplittingInserts(c *C) {
 		//fmt.Printf("--- verifying new entry is present after insertion -----\n")
 		// END
 		_, err = t32.findEntry(hc, 0, key64)
-		c.Assert(err, IsNil) // FAILS XXX
+		c.Assert(err, IsNil)
 	}
 	//fmt.Println("\nDELETION LOOP") // DEBUG
 	for i := uint(0); i < KEY_COUNT; i++ {

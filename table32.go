@@ -34,10 +34,10 @@ func (t32 *Table32) GetLeafCount() (count uint) {
 			count++
 		}
 	}
-	return	
+	return
 }
 
-// 
+//
 func (t32 *Table32) GetTableCount() (count uint) {
 	count = 1
 	for i := 0; i < len(t32.slots); i++ {

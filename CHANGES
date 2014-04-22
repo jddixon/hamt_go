@@ -1,5 +1,9 @@
 hamt_go/CHANGES
 
+v0.3.0
+    2014-04-21
+        * debugged HAMT that actually uses SWAR code                * SLOC 2793
+            - much legacy code still present
 v0.2.0
     2014-04-17
         * tested, working HAMT64 code                               * SLOC 1717

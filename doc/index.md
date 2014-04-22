@@ -4,10 +4,10 @@ Go implementation of the HAMT data structure.
 
 A Hash Array Mapped Trie ([HAMT][bagwell2001]) 
 provides fast and memory-efficient access to large amounts of data held 
-in memory.  Values are stored by *key*.  All HAMT keys are mapped into 
+in memory.  Values are stored by **key**.  All HAMT keys are mapped into 
 fixed length unsigned integers. In this implementation these are 64 bits
-long, Go `uint64`s..  The *value* may be of any type but typically is a 
-*pointer* to a data structure of interest.
+long, Go `uint64`s..  The **value** may be of any type but typically is a 
+**pointer** to a data structure of interest.
 
 The HAMT trie is essentially a prefix trie.  At each level
 there is a table with `2^w` slots.  The `w` bits are construed as
@@ -41,7 +41,7 @@ The code works and is reasonably well-tested.
 `Insert`, `Find`, and `Delete` operations, while not yet thoroughly optimized, 
 take on the order of 1.5 microseconds each on a lightly-loaded server 
 (just under 3us each to insert a million values and verify that the 
-value can be found using the key.
+value can be found using the key).
 
 ## References
 

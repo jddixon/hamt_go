@@ -1,8 +1,8 @@
 package hamt_go
 
 const (
-	VERSION      = "0.2.1"
-	VERSION_DATE = "2014-04-19"
+	VERSION      = "0.3.0"
+	VERSION_DATE = "2014-04-21"
 )
 
 const (

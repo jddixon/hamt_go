@@ -39,9 +39,9 @@ func (s *XLSuite) TestTableDepthZeroInserts(c *C) {
 	if VERBOSITY > 0 {
 		fmt.Println("\nTEST_TABLE_DEPTH_ZERO_INSERTS")
 	}
+	s.doTestTableDepthZeroInserts(c, uint(4))
 	s.doTestTableDepthZeroInserts(c, uint(5))
 	s.doTestTableDepthZeroInserts(c, uint(6))
-	s.doTestTableDepthZeroInserts(c, uint(4))
 }
 func (s *XLSuite) doTestTableDepthZeroInserts(c *C, w uint) {
 	var (
@@ -125,7 +125,7 @@ func (s *XLSuite) doTestTableDepthZeroInserts(c *C, w uint) {
 		//	i, hc, idx, mask, bitmap, pos, slotNbr)
 
 		c.Assert(table.bitmap, Equals, bitmap)
-		c.Assert(uint(pos), Equals, slotNbr) // FAILS 04-20
+		c.Assert(uint(pos), Equals, slotNbr)
 
 		v, err := table.findEntry(hc, 0, key64)
 		c.Assert(err, IsNil)
@@ -293,7 +293,7 @@ func (s *XLSuite) TestTableEntrySplittingInserts(c *C) {
 		//fmt.Printf("--- verifying new entry is present after insertion -----\n")
 		// END
 		_, err = table.findEntry(hc, 0, key64)
-		c.Assert(err, IsNil) // FAILS XXX
+		c.Assert(err, IsNil)
 	}
 	//fmt.Println("\nDELETION LOOP") // DEBUG
 	for i := uint(0); i < KEY_COUNT; i++ {

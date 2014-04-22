@@ -34,7 +34,7 @@ func (t64 *Table64) GetLeafCount() (count uint) {
 			count++
 		}
 	}
-	return	
+	return
 }
 
 func (t64 *Table64) GetTableCount() (count uint) {
