@@ -4,7 +4,11 @@ hamt_go/TODO
     * FIX: insertIntoOccupiedSlot() does not replace the value 
         where there is an exact match on keys
     * need to add buckets to handle exact matches on 64 bit keys
-        (however unlikely this may be)
+        (however very unlikely such matches may be in actual use)
+    * drop HAMT32, HAMT64, and related bits and pieces                  * DONE
+    * FIX: w=7 and w=8 versions of the HAMT benchmark have stopped
+        working
+    * modify code to actually use t (w = 5, t = 5 yield 1K slot root)
 
 2014-04-20 (rev branch)
     * investigate: TestTableEntrySplittingInserts creates two tables
