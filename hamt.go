@@ -6,7 +6,6 @@ package hamt_go
 var (
 	W          = uint(5)
 	MAX_DEPTH  = uint(64 / W)
-	MAX_SLOTS  = uint(32)     // XXX A KLUDGE
 	LEVEL_MASK = uint64(0x1f) // masks off W bits
 )
 

@@ -39,18 +39,21 @@ func (s *XLSuite) TestTableDepthZeroInserts(c *C) {
 	if VERBOSITY > 0 {
 		fmt.Println("\nTEST_TABLE_DEPTH_ZERO_INSERTS")
 	}
-	s.doTestTableDepthZeroInserts(c, uint(4))
-	s.doTestTableDepthZeroInserts(c, uint(5))
-	s.doTestTableDepthZeroInserts(c, uint(6))
+	// with the current logic, this should produce a 32-slot root table
+	s.doTestTableDepthZeroInserts(c, 4, 2)
+
+	s.doTestTableDepthZeroInserts(c, 4, 0)
+	s.doTestTableDepthZeroInserts(c, 5, 0)
+	s.doTestTableDepthZeroInserts(c, 6, 0)
+
 }
-func (s *XLSuite) doTestTableDepthZeroInserts(c *C, w uint) {
+func (s *XLSuite) doTestTableDepthZeroInserts(c *C, w, t uint) {
 	var (
 		bitmap, flag, idx, mask uint64
 		pos                     uint
 	)
-	depth := uint(0) // COULD VARY DEPTH
+	depth := uint(0)
 
-	t := uint(0)
 	table, err := NewTable(depth, w, t)
 	c.Assert(err, IsNil)
 	c.Assert(table, NotNil)
@@ -66,8 +69,8 @@ func (s *XLSuite) doTestTableDepthZeroInserts(c *C, w uint) {
 	SLOT_COUNT := table.maxSlots
 
 	// DEBUG
-	//fmt.Printf("w = %d, mask = 0x%x, maxSlots = %d\n",
-	//	w, table.mask, SLOT_COUNT)
+	//fmt.Printf("doTest: w = %d, t = %d, mask = 0x%x, maxSlots = %d\n",
+	//	w, t, table.mask, SLOT_COUNT)
 	// END
 
 	rng := xr.MakeSimpleRNG()
@@ -111,18 +114,17 @@ func (s *XLSuite) doTestTableDepthZeroInserts(c *C, w uint) {
 
 		// insert the value into the hash slice in such a way as
 		// to maintain order
-		idx = (hc >> (depth * w)) & table.mask
-		// XXX INEXPLICABLE TEST
-		//c.Assert(idx, Equals, hc) // hc is restricted to that range
-
-		flag = 1 << (idx + 1)
+		idx = hc & table.mask
+		flag = 1 << idx
 		mask = flag - 1
 		pos = BitCount64(bitmap & mask)
 		occupied := uint64(1 << idx)
 		bitmap |= occupied
 
+		// DEBUG
 		//fmt.Printf("%02d: hc %02x, idx %02x, mask 0x%08x, bitmap 0x%08x, pos %02d slotNbr %02d\n\n",
 		//	i, hc, idx, mask, bitmap, pos, slotNbr)
+		// END
 
 		c.Assert(table.bitmap, Equals, bitmap)
 		c.Assert(uint(pos), Equals, slotNbr)

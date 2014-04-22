@@ -36,8 +36,12 @@ func NewTable(depth, w, t uint) (table *Table, err error) {
 	flag := uint64(1)
 	flag <<= exp
 	table.mask = flag - 1
-	table.maxDepth = (64 / w) // rounds down
-	table.maxSlots = (64 / w) // NO CONSIDERATION OF t
+	table.maxDepth = (64 / w) // rounds down	XXX NO ALLOWANCE FOR t
+	if depth == 0 {
+		table.maxSlots = maxSlots(t + w)
+	} else {
+		table.maxSlots = maxSlots(w)
+	}
 
 	// DEBUG
 	//fmt.Printf("NewTable: depth %d/%d, w %d, t %d, maxSlots %d\n",

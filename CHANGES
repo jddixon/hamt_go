@@ -5,7 +5,7 @@ v0.3.0
         * debugged HAMT that actually uses SWAR code                * SLOC 2793
             - much legacy code still present
     2014-04-22
-        * dropped HAMT32, HAMT64, and related code                  * SLOC 2793
+        * dropped HAMT32, HAMT64, and related code                  * SLOC 1046
 v0.2.0
     2014-04-17
         * tested, working HAMT64 code                               * SLOC 1717

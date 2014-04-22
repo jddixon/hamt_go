@@ -58,18 +58,6 @@ func (s *XLSuite) BenchmarkHAMT_6(c *C) {
 	}
 	s.doBenchmark(c, uint(6), 0)
 }
-func (s *XLSuite) BenchmarkHAMT_7(c *C) {
-	if VERBOSITY > 0 {
-		fmt.Println("\nBenchmarkHAMT_7")
-	}
-	s.doBenchmark(c, uint(7), 0)
-}
-func (s *XLSuite) BenchmarkHAMT_8(c *C) {
-	if VERBOSITY > 0 {
-		fmt.Println("\nBenchmarkHAMT_8")
-	}
-	s.doBenchmark(c, uint(8), 0)
-}
 func (s *XLSuite) doBenchmark(c *C, w, t uint) {
 	// build an array of N random-ish K-byte rawKeys
 	K := 16
@@ -106,7 +94,7 @@ func (s *XLSuite) doBenchmark(c *C, w, t uint) {
 	tableCount := m.root.GetTableCount()
 	slotCount := m.root.maxSlots * tableCount
 	byteCount := slotCount * 8
-	megabytes := float32(byteCount) / (1024 * 1024)
-	fmt.Printf("%6d tables, %7d slots, %3.1f megabytes\n",
+	megabytes := float32(byteCount) / (1000 * 1000)
+	fmt.Printf("%6d tables, %8d slots, %5.2f megabytes\n",
 		tableCount, slotCount, megabytes)
 }

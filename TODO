@@ -1,5 +1,10 @@
 hamt_go/TODO
 
+2014-04-22
+    * change logic so that root table has 2^t slots, with no
+        compression (ie, we don't use popcount at the root)
+    * w cannot exceed 6 because POPCOUNT is limited to a 64-bit range
+
 2014-04-21 
     * FIX: insertIntoOccupiedSlot() does not replace the value 
         where there is an exact match on keys
@@ -11,20 +16,20 @@ hamt_go/TODO
     * modify code to actually use t (w = 5, t = 5 yield 1K slot root)
 
 2014-04-20 (rev branch)
-    * investigate: TestTableEntrySplittingInserts creates two tables
-        for each key inserted - should create only one
+    * investigate: TestTableEntrySplittingInserts creates two tables    
+        for each key inserted - should create only one                  
     * investigate: Table.maxSlots never used
 
 2014-04-19 (rev branch)
-    * produce hamt.go with root table size 2^T slots, all other
-        tables 2^W slots
+    * produce hamt.go with root table size 2^T slots, all other		    * DONE
+        tables 2^W slots		                                        * DONE
     * this begins as copies of the dev branch hamt32.go, etc            * DONE
 
 2014-04-18
     * hamt64_perf_test.go                                               * DONE
         - 10^6 run with 32-byte keys about 2700ns/op, 450 MB RAM
         - idMap about 2050 ns/op, 1 GB RAM (uses 256 slot tables)
-    * Need to benchmark HAMT64 with different sizes of root table
+    * Need to benchmark HAMT64 with different sizes of root table       * SKIP
     * Need buckets at max depth to do hamt32_perf_test (million-entry
         trie too deep for HAMT32)
 

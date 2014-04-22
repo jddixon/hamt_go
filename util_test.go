@@ -56,3 +56,12 @@ func (s *XLSuite) TestSWAR64(c *C) {
 		c.Assert(swar64Count, Equals, slowCount)
 	}
 }
+
+func (s *XLSuite) TestMaxSlots(c *C) {
+
+	n := uint(1)
+	for i := uint(0); i < 16; i++ {
+		c.Assert(maxSlots(i), Equals, n)
+		n *= 2
+	}
+}

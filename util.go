@@ -43,3 +43,21 @@ func dumpByteSlice(sl []byte) string {
 	}
 	return strings.Join(ss, "")
 }
+
+var MAX_SLOTS []uint
+
+func init() {
+	MAX_SLOTS = append(MAX_SLOTS, uint(1))
+	for i := 1; i < 16; i++ {
+		MAX_SLOTS = append(MAX_SLOTS, 2*MAX_SLOTS[i-1])
+	}
+}
+
+// n represents the number of bits in a prefix (so w + t); return
+// 2^(w+t).
+func maxSlots(n uint) uint {
+	if n > uint(len(MAX_SLOTS)) {
+		panic("maxSlots parameter out of range")
+	}
+	return MAX_SLOTS[n]
+}
