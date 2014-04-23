@@ -1,9 +1,14 @@
 hamt_go/TODO
 
 2014-04-22
-    * change logic so that root table has 2^t slots, with no
-        compression (ie, we don't use popcount at the root)
+    * change logic so that root table has 2^t slots, with no            * DONE
+        compression (ie, we don't use popcount at the root)             * DONE
     * w cannot exceed 6 because POPCOUNT is limited to a 64-bit range
+    * values in the root table should NOT be entries; the index
+        is known.  Make these Nodes instead.  This may be URGENT.
+    * DEBUG: tests of HAMT using Root largely succeed, except that
+        reconfirmation of presence of root value fails around line
+        175 in hamt_test.go 
 
 2014-04-21 
     * FIX: insertIntoOccupiedSlot() does not replace the value 

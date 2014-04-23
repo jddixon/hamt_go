@@ -35,10 +35,10 @@ func (s *XLSuite) TestDepthZeroHAMT(c *C) {
 	if VERBOSITY > 0 {
 		fmt.Println("\nTEST_DEPTH_ZERO_HAMT")
 	}
-	t := uint(0)
-	s.doTestDepthZeroHAMT(c, uint(4), t)
-	s.doTestDepthZeroHAMT(c, uint(5), t)
-	s.doTestDepthZeroHAMT(c, uint(6), t)
+	w := uint(5)
+	s.doTestDepthZeroHAMT(c, w, uint(4))
+	s.doTestDepthZeroHAMT(c, w, uint(5))
+	s.doTestDepthZeroHAMT(c, w, uint(6))
 }
 
 func (s *XLSuite) doTestDepthZeroHAMT(c *C, w, t uint) {
@@ -102,16 +102,19 @@ func (s *XLSuite) TestHAMTInsertsOfRandomishValues(c *C) {
 	if VERBOSITY > 0 {
 		fmt.Println("\nTEST_HAMT_INSERT_OF_RANDOMISH_VALUES")
 	}
-	t := uint(0)
-	s.doTestHAMTInsertsOfRandomishValues(c, uint(4), t)
-	s.doTestHAMTInsertsOfRandomishValues(c, uint(5), t)
-	s.doTestHAMTInsertsOfRandomishValues(c, uint(6), t)
+	w := uint(5)
+	s.doTestHAMTInsertsOfRandomishValues(c, w, uint(4))
+	s.doTestHAMTInsertsOfRandomishValues(c, w, uint(5))
+	s.doTestHAMTInsertsOfRandomishValues(c, w, uint(6))
 
 }
 func (s *XLSuite) doTestHAMTInsertsOfRandomishValues(c *C, w, t uint) {
 	const KEY_COUNT = 1024
 	var err error
 
+	// DEBUG
+	fmt.Printf("HAMT Randomish: w = %d, t = %d\n", w, t)
+	// END
 	rng := xr.MakeSimpleRNG()
 	h32 := NewHAMT(w, t)
 	c.Assert(h32, NotNil)
@@ -164,6 +167,9 @@ func (s *XLSuite) doTestHAMTInsertsOfRandomishValues(c *C, w, t uint) {
 	// Delete the KEY_COUNT entries
 	for i := uint(0); i < KEY_COUNT; i++ {
 		key64 := key64s[i]
+		// DEBUG
+		fmt.Printf("verifying that key %d is still present\n", i)
+		// END
 		// confirm again that the entry is present
 		_, err = h32.Find(key64)
 		c.Assert(err, IsNil)

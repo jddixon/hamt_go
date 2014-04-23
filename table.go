@@ -10,10 +10,11 @@ import (
 
 var _ = fmt.Print
 
+// This is a non-root table; depth is guaranteed never to be zero.
 type Table struct {
 	depth    uint // only here for use in development and debugging !
-	w        uint // non-root tables have 2^n slots
-	t        uint // root table have 2^(t+n) slots
+	w        uint // non-root tables have 2^w slots
+	t        uint // root table has 2^t slots
 	maxDepth uint
 	maxSlots uint // maximum slots for table at this depth
 	mask     uint64
@@ -27,21 +28,12 @@ func NewTable(depth, w, t uint) (table *Table, err error) {
 	table.depth = depth
 	table.w = w
 	table.t = t
-	var exp uint // power of 2
-	if depth == 0 {
-		exp = t + w
-	} else {
-		exp = w
-	}
+
 	flag := uint64(1)
-	flag <<= exp
+	flag <<= w
 	table.mask = flag - 1
-	table.maxDepth = (64 / w) // rounds down	XXX NO ALLOWANCE FOR t
-	if depth == 0 {
-		table.maxSlots = maxSlots(t + w)
-	} else {
-		table.maxSlots = maxSlots(w)
-	}
+	table.maxDepth = (64 / w) // rounds down	XXX WRONG: NO ALLOWANCE FOR t
+	table.maxSlots = maxSlots(w)
 
 	// DEBUG
 	//fmt.Printf("NewTable: depth %d/%d, w %d, t %d, maxSlots %d\n",

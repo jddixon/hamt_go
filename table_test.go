@@ -33,15 +33,14 @@ func (s *XLSuite) doTestTableCtor(c *C, w uint) {
 }
 
 // ------------------------------------------------------------------
+// XXX This is now somewhat nonsensical: the root table is of a
+// different type.
 
 func (s *XLSuite) TestTableDepthZeroInserts(c *C) {
 
 	if VERBOSITY > 0 {
 		fmt.Println("\nTEST_TABLE_DEPTH_ZERO_INSERTS")
 	}
-	// with the current logic, this should produce a 32-slot root table
-	s.doTestTableDepthZeroInserts(c, 4, 2)
-
 	s.doTestTableDepthZeroInserts(c, 4, 0)
 	s.doTestTableDepthZeroInserts(c, 5, 0)
 	s.doTestTableDepthZeroInserts(c, 6, 0)
