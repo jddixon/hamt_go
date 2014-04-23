@@ -13,7 +13,7 @@ var _ = fmt.Print
 
 func (s *XLSuite) TestTableCtor(c *C) {
 	if VERBOSITY > 0 {
-		fmt.Println("\nTEST_TABLE_CTOR")
+		fmt.Println("TEST_TABLE_CTOR")
 	}
 	s.doTestTableCtor(c, uint(4))
 	s.doTestTableCtor(c, uint(5))
@@ -22,7 +22,7 @@ func (s *XLSuite) TestTableCtor(c *C) {
 func (s *XLSuite) doTestTableCtor(c *C, w uint) {
 
 	rng := xr.MakeSimpleRNG()
-	depth := uint(rng.Intn(7)) // WHY ???
+	depth := 1 + uint(rng.Intn(7))
 	t := uint(0)
 	table, err := NewTable(depth, w, t)
 	c.Assert(err, IsNil)
@@ -39,7 +39,7 @@ func (s *XLSuite) doTestTableCtor(c *C, w uint) {
 func (s *XLSuite) TestTableDepthZeroInserts(c *C) {
 
 	if VERBOSITY > 0 {
-		fmt.Println("\nTEST_TABLE_DEPTH_ZERO_INSERTS")
+		fmt.Println("TEST_TABLE_DEPTH_ZERO_INSERTS")
 	}
 	s.doTestTableDepthZeroInserts(c, 4, 0)
 	s.doTestTableDepthZeroInserts(c, 5, 0)
@@ -51,7 +51,7 @@ func (s *XLSuite) doTestTableDepthZeroInserts(c *C, w, t uint) {
 		bitmap, flag, idx, mask uint64
 		pos                     uint
 	)
-	depth := uint(0)
+	depth := uint(1)
 
 	table, err := NewTable(depth, w, t)
 	c.Assert(err, IsNil)
@@ -92,7 +92,7 @@ func (s *XLSuite) doTestTableDepthZeroInserts(c *C, w, t uint) {
 		c.Assert(err, IsNil)
 		c.Assert(hc, Equals, uint64(ndx))
 
-		_, err = table.findEntry(hc, 0, key64)
+		_, err = table.findEntry(hc, depth, key64)
 		c.Assert(err, Equals, NotFound)
 
 		leaf, err := NewLeaf(key64, &rawKey)
@@ -128,7 +128,7 @@ func (s *XLSuite) doTestTableDepthZeroInserts(c *C, w, t uint) {
 		c.Assert(table.bitmap, Equals, bitmap)
 		c.Assert(uint(pos), Equals, slotNbr)
 
-		v, err := table.findEntry(hc, 0, key64)
+		v, err := table.findEntry(hc, depth, key64)
 		c.Assert(err, IsNil)
 		vBytes := v.(*[]byte)
 		c.Assert(bytes.Equal(*vBytes, rawKey), Equals, true)
@@ -167,7 +167,7 @@ func (s *XLSuite) doTestTableDepthZeroInserts(c *C, w, t uint) {
 		c.Assert(key64, NotNil)
 		hc, err := key64.Hashcode()
 		c.Assert(err, IsNil)
-		v, err := table.findEntry(hc, 0, key64)
+		v, err := table.findEntry(hc, depth, key64)
 		c.Assert(err, IsNil)
 		c.Assert(v, NotNil)
 		vAsKey := v.(*[]byte)
@@ -176,12 +176,12 @@ func (s *XLSuite) doTestTableDepthZeroInserts(c *C, w, t uint) {
 		// delete it ------------------------------------------------
 		// depth is zero, so hc unshifted
 		//fmt.Printf("  %d DELETING: idx %02x\n", i, idx)
-		err = table.deleteEntry(hc, 0, key64)
+		err = table.deleteEntry(hc, depth, key64)
 		c.Assert(err, IsNil)
 
 		// verify that it is gone -----------------------------------
 		//fmt.Printf("  %d CHECKING NOT PRESENT AFTER DELETE: idx %02x\n", i, idx)
-		v, err = table.findEntry(hc, 0, key64)
+		v, err = table.findEntry(hc, depth, key64)
 
 		c.Assert(err, Equals, NotFound)
 		c.Assert(v, IsNil)
@@ -197,11 +197,11 @@ func (s *XLSuite) doTestTableDepthZeroInserts(c *C, w, t uint) {
 
 func (s *XLSuite) TestTableEntrySplittingInserts(c *C) {
 	if VERBOSITY > 0 {
-		fmt.Println("\nTEST_TABLE_ENTRY_SPLITTING_INSERTS")
+		fmt.Println("TEST_TABLE_ENTRY_SPLITTING_INSERTS")
 	}
 	rng := xr.MakeSimpleRNG()
 	perm := rng.Perm(32) // a random permutation of [0..32)
-	depth := uint(0)
+	depth := uint(1)
 	w := uint(5)
 	t := uint(0)
 
@@ -263,7 +263,7 @@ func (s *XLSuite) TestTableEntrySplittingInserts(c *C) {
 
 		// expect that no entry with this key can be found ----------
 		key64 := key64s[i]
-		_, err = table.findEntry(hc, 0, key64)
+		_, err = table.findEntry(hc, depth, key64)
 		c.Assert(err, Equals, NotFound)
 
 		// insert the entry -----------------------------------------
@@ -279,7 +279,7 @@ func (s *XLSuite) TestTableEntrySplittingInserts(c *C) {
 		c.Assert(e.Node.IsLeaf(), Equals, true)
 		c.Assert(e.GetIndex(), Equals, ndx)
 
-		slotNbr, err := table.insertEntry(hc, 0, e) // depth == 0
+		slotNbr, err := table.insertEntry(hc, depth, e)
 		c.Assert(err, IsNil)
 		// in this test, only one entry at the top level, so slotNbr always zero
 		c.Assert(slotNbr, Equals, uint(0))
@@ -293,7 +293,7 @@ func (s *XLSuite) TestTableEntrySplittingInserts(c *C) {
 		// DEBUG
 		//fmt.Printf("--- verifying new entry is present after insertion -----\n")
 		// END
-		_, err = table.findEntry(hc, 0, key64)
+		_, err = table.findEntry(hc, depth, key64)
 		c.Assert(err, IsNil)
 	}
 	//fmt.Println("\nDELETION LOOP") // DEBUG
@@ -308,17 +308,17 @@ func (s *XLSuite) TestTableEntrySplittingInserts(c *C) {
 
 		key64 := key64s[i]
 		// confirm again that the entry is present ------------------
-		_, err = table.findEntry(hc, 0, key64)
+		_, err = table.findEntry(hc, depth, key64)
 		c.Assert(err, IsNil)
 		//fmt.Printf("    key %2d is present before deletion\n", i) // DEBUG
 
 		// delete the entry -----------------------------------------
-		err = table.deleteEntry(hc, 0, key64)
+		err = table.deleteEntry(hc, depth, key64)
 		c.Assert(err, IsNil)
 		//fmt.Printf("    key %2d has been deleted\n", i) // DEBUG
 
 		// confirm that it is gone ----------------------------------
-		_, err = table.findEntry(hc, 0, key64)
+		_, err = table.findEntry(hc, depth, key64)
 		c.Assert(err, Equals, NotFound)
 		//fmt.Printf("    key %2d gone after deletion\n\n", i) // DEBUG
 	}
@@ -333,10 +333,10 @@ func (s *XLSuite) TestTableEntrySplittingInserts(c *C) {
 
 func (s *XLSuite) TestTableInsertsOfRandomishValues(c *C) {
 	if VERBOSITY > 0 {
-		fmt.Println("\nTEST_TABLE_INSERTS_OF_RANDOMISH_VALUES")
+		fmt.Println("TEST_TABLE_INSERTS_OF_RANDOMISH_VALUES")
 	}
 	rng := xr.MakeSimpleRNG()
-	depth := uint(0)
+	depth := uint(1)
 	w := uint(5)
 	t := uint(0)
 
@@ -386,7 +386,7 @@ func (s *XLSuite) TestTableInsertsOfRandomishValues(c *C) {
 
 		// expect that no entry with this key can be found ----------
 		key64 := key64s[i]
-		_, err = table.findEntry(hc, 0, key64)
+		_, err = table.findEntry(hc, depth, key64)
 		c.Assert(err, Equals, NotFound)
 
 		// insert the entry -----------------------------------------
@@ -415,7 +415,7 @@ func (s *XLSuite) TestTableInsertsOfRandomishValues(c *C) {
 		// DEBUG
 		//fmt.Printf("--- verifying new entry is present after insertion -----\n")
 		// END
-		_, err = table.findEntry(hc, 0, key64)
+		_, err = table.findEntry(hc, depth, key64)
 		c.Assert(err, IsNil)
 	}
 	//fmt.Println("\nDELETION LOOP") // DEBUG
@@ -430,17 +430,17 @@ func (s *XLSuite) TestTableInsertsOfRandomishValues(c *C) {
 
 		key64 := key64s[i]
 		// confirm again that the entry is present ------------------
-		_, err = table.findEntry(hc, 0, key64)
+		_, err = table.findEntry(hc, depth, key64)
 		c.Assert(err, IsNil)
 		//fmt.Printf("    key %2d is present before deletion\n", i) // DEBUG
 
 		// delete the entry -----------------------------------------
-		err = table.deleteEntry(hc, 0, key64)
+		err = table.deleteEntry(hc, depth, key64)
 		c.Assert(err, IsNil)
 		//fmt.Printf("    key %2d has been deleted\n", i) // DEBUG
 
 		// confirm that it is gone ----------------------------------
-		_, err = table.findEntry(hc, 0, key64)
+		_, err = table.findEntry(hc, depth, key64)
 		c.Assert(err, Equals, NotFound)
 		//fmt.Printf("    key %2d gone after deletion\n\n", i) // DEBUG
 	}

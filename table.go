@@ -33,7 +33,7 @@ func NewTable(depth, w, t uint) (table *Table, err error) {
 	flag <<= w
 	table.mask = flag - 1
 	table.maxDepth = (64 / w) // rounds down	XXX WRONG: NO ALLOWANCE FOR t
-	table.maxSlots = maxSlots(w)
+	table.maxSlots = powerOfTwo(w)
 
 	// DEBUG
 	//fmt.Printf("NewTable: depth %d/%d, w %d, t %d, maxSlots %d\n",
@@ -313,7 +313,7 @@ func (table *Table) insertIntoOccupiedSlot(newHC uint64, depth uint,
 		)
 
 		depth++
-		tableDeeper, err = NewTable(depth, table.w, 0)
+		tableDeeper, err = NewTable(depth, table.w, table.t)
 		if err == nil {
 			newHC >>= table.w // this is hc for the NEW entry
 
@@ -322,7 +322,8 @@ func (table *Table) insertIntoOccupiedSlot(newHC uint64, depth uint,
 			oldHC, err = oldLeaf.Key.Hashcode()
 		}
 		if err == nil {
-			oldHC >>= depth * table.w
+			oldHC >>= table.t + (depth-1)*table.w
+
 			// indexes for this depth
 
 			// put the existing leaf into the new table

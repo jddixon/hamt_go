@@ -1,5 +1,8 @@
 hamt_go/TODO
 
+2014-04-23
+    * clean up code: find MERGE THIS and do it
+
 2014-04-22
     * change logic so that root table has 2^t slots, with no            * DONE
         compression (ie, we don't use popcount at the root)             * DONE

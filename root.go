@@ -20,7 +20,7 @@ type Root struct {
 func NewRoot(w, t uint) (root *Root) {
 	flag := uint64(1)
 	flag <<= t
-	slocCount := maxSlots(t)
+	slocCount := powerOfTwo(t)
 	root = &Root{
 		w:        w,
 		t:        t,
@@ -118,16 +118,25 @@ func (root *Root) findEntry(hc uint64, key KeyI) (
 func (root *Root) insertEntry(hc uint64, entry *Entry) (
 	slotNbr uint, err error) {
 
-	ndx64 := hc & root.mask
+	ndx := hc & root.mask
 
-	if root.slots[ndx64] == nil {
-		root.slots[ndx64] = entry
+	// DEBUG
+	// fmt.Printf("insert root slot %4d (0x%03x)", ndx, ndx)
+	// END
+	if root.slots[ndx] == nil {
+		root.slots[ndx] = entry
 	} else {
 		// WORKING HERE
+		// DEBUG
+		// fmt.Printf(" already occupied")
+		// END
 
 		// there is already something in this slot
-		err = root.insertIntoOccupiedSlot(hc, entry, ndx64)
+		err = root.insertIntoOccupiedSlot(hc, entry, ndx)
 	}
+	// DEBUG
+	// fmt.Println()
+	// END
 	return
 }
 
