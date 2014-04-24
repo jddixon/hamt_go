@@ -2,6 +2,13 @@ hamt_go/TODO
 
 2014-04-23
     * clean up code: find MERGE THIS and do it
+    * powerOfTwo() is a bit silly (panics if n too large); could make 
+        it lazy ;-)
+    * need performance test which runs as a command, always does same
+        number of ops
+    * need performance test which is say 1% inserts, 99% finds, 
+        and so forth
+    * same test but with varying degrees of concurrency
 
 2014-04-22
     * change logic so that root table has 2^t slots, with no            * DONE

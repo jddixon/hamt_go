@@ -10,33 +10,37 @@ import (
 var _ = fmt.Print
 
 type Root struct {
-	w        uint // non-root tables have 2^w slots
-	t        uint // root table has 2^t slots
-	maxSlots uint // maximum slots for the root table
-	mask     uint64
-	slots    []*Entry // each nil or a pointer to either a leaf or a table
+	w         uint // non-root tables have 2^w slots
+	t         uint // root table has 2^t slots
+	slotCount uint // maximum slots for the root table
+	mask      uint64
+	slots     []*Entry // each nil or a pointer to either a leaf or a table
 }
 
 func NewRoot(w, t uint) (root *Root) {
 	flag := uint64(1)
 	flag <<= t
-	slocCount := powerOfTwo(t)
+	slotCount := powerOfTwo(t)
 	root = &Root{
-		w:        w,
-		t:        t,
-		mask:     flag - 1,
-		slots:    make([]*Entry, slocCount),
-		maxSlots: slocCount,
+		w:         w,
+		t:         t,
+		mask:      flag - 1,
+		slots:     make([]*Entry, slotCount),
+		slotCount: slotCount,
 	}
 	return
 }
 
 // Return a count of leaf nodes in the root
 func (root *Root) GetLeafCount() (count uint) {
-	for i := 0; i < len(root.slots); i++ {
-		node := root.slots[i].Node
-		if node != nil && node.IsLeaf() {
-			count++
+	if root.slots != nil {
+		for i := uint(0); i < root.slotCount; i++ {
+			if root.slots[i] != nil {
+				node := root.slots[i].Node
+				if node != nil && node.IsLeaf() {
+					count++
+				}
+			}
 		}
 	}
 	return
@@ -45,11 +49,15 @@ func (root *Root) GetLeafCount() (count uint) {
 //
 func (root *Root) GetTableCount() (count uint) {
 	count = 1 // we include the root in the count
-	for i := 0; i < len(root.slots); i++ {
-		node := root.slots[i].Node
-		if node != nil && !node.IsLeaf() {
-			tDeeper := node.(*Table)
-			count += tDeeper.GetTableCount()
+	if root.slots != nil {
+		for i := uint(0); i < root.slotCount; i++ {
+			if root.slots[i] != nil {
+				node := root.slots[i].Node
+				if node != nil && !node.IsLeaf() {
+					tDeeper := node.(*Table)
+					count += tDeeper.GetTableCount()
+				}
+			}
 		}
 	}
 	return

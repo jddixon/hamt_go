@@ -40,23 +40,29 @@ func makeSomeMoreKeys(N, K int) (rawKeys [][]byte, bKeys []*BytesKey) {
 
 // -- tests proper --------------------------------------------------
 
+func (s *XLSuite) BenchmarkHAMT_3(c *C) {
+	if VERBOSITY > 0 {
+		fmt.Println("\nBenchmarkHAMT_3")
+	}
+	s.doBenchmark(c, uint(3), 19)
+}
 func (s *XLSuite) BenchmarkHAMT_4(c *C) {
 	if VERBOSITY > 0 {
 		fmt.Println("\nBenchmarkHAMT_4")
 	}
-	s.doBenchmark(c, uint(4), 0)
+	s.doBenchmark(c, uint(4), 19)
 }
 func (s *XLSuite) BenchmarkHAMT_5(c *C) {
 	if VERBOSITY > 0 {
 		fmt.Println("\nBenchmarkHAMT_5")
 	}
-	s.doBenchmark(c, uint(5), 0)
+	s.doBenchmark(c, uint(5), 19)
 }
 func (s *XLSuite) BenchmarkHAMT_6(c *C) {
 	if VERBOSITY > 0 {
 		fmt.Println("\nBenchmarkHAMT_6")
 	}
-	s.doBenchmark(c, uint(6), 0)
+	s.doBenchmark(c, uint(6), 19)
 }
 func (s *XLSuite) doBenchmark(c *C, w, t uint) {
 	// build an array of N random-ish K-byte rawKeys
@@ -92,9 +98,16 @@ func (s *XLSuite) doBenchmark(c *C, w, t uint) {
 	}
 	// rough measure of resource consumption
 	tableCount := m.root.GetTableCount()
-	slotCount := m.root.maxSlots * tableCount
-	byteCount := slotCount * 8
+	slotsPerChild := powerOfTwo(m.root.w)
+	// the slots in the root table plus those in child tables
+	slotCount := m.root.slotCount + slotsPerChild*(tableCount-1)
+	byteCount := slotCount * 8 // assume 64-bit architecture
 	megabytes := float32(byteCount) / (1000 * 1000)
 	fmt.Printf("%6d tables, %8d slots, %5.2f megabytes\n",
 		tableCount, slotCount, megabytes)
+
+	// SAY AGAIN ???
+	fmt.Printf("t %2d, slotsInRoot %7d, w %d, slotsPerChild %2d\n",
+		t, m.root.slotCount,
+		w, slotsPerChild)
 }

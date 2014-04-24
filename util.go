@@ -48,7 +48,7 @@ var POWERS_OF_TWO []uint
 
 func init() {
 	POWERS_OF_TWO = append(POWERS_OF_TWO, uint(1))
-	for i := 1; i < 16; i++ {
+	for i := 1; i < 32; i++ {
 		POWERS_OF_TWO = append(POWERS_OF_TWO, 2*POWERS_OF_TWO[i-1])
 	}
 }
