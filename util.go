@@ -60,10 +60,12 @@ func dumpTable(title string, dTable *Table) string {
 }
 
 // build 2^w keys, each differing from the preceding by w bits
-func (s *XLSuite) makePermutedKeys(rng *xr.PRNG, w uint) (keys [][]byte) {
+func (s *XLSuite) makePermutedKeys(rng *xr.PRNG, w uint) (
+	fields []int, // FOR DEBUGGING ONLY
+	keys [][]byte) {
 
-	fieldCount := (1 << w) - 1     // we don't want the zero value
-	fields := rng.Perm(fieldCount) // so 2^w distinct values
+	fieldCount := (1 << w) - 1    // we don't want the zero value
+	fields = rng.Perm(fieldCount) // so 2^w distinct values
 	for i := 0; i < len(fields); i++ {
 		fields[i] += 1
 	}
@@ -71,12 +73,15 @@ func (s *XLSuite) makePermutedKeys(rng *xr.PRNG, w uint) (keys [][]byte) {
 	keyCount := uint(fieldCount)
 	keys = make([][]byte, keyCount)
 
-	fmt.Printf("w = %d, fieldCount = keyCount = %d, keyLen = %d\n",
-		w, fieldCount, keyLen)
-
-	// DEBUG
-	fmt.Printf("DUMP KEYS FOR w = %d\n", w)
-	// END
+	//// DEBUG
+	//fmt.Printf("\nw = %d, fieldCount = keyCount = %d, keyLen = %d\n",
+	//	w, fieldCount, keyLen)
+	//fmt.Printf("fields: ")
+	//for i := uint(0); i < uint(len(fields)); i++ {
+	//	fmt.Printf(" %02x", fields[i])
+	//}
+	//fmt.Printf("\nDUMP KEYS FOR w = %d\n", w)
+	//// END
 
 	for i := uint(0); i < keyCount; i++ {
 		key := make([]byte, keyLen) // all zeroes
@@ -90,12 +95,12 @@ func (s *XLSuite) makePermutedKeys(rng *xr.PRNG, w uint) (keys [][]byte) {
 
 		// lower half of the field
 		key[whichByte] |= byte(fields[i] << whichBit)
-		if whichBit+w > 8 {
-			key[whichByte+1] |= byte(fields[i] >> whichBit)
+		if whichBit+w >= 8 {
+			key[whichByte+1] |= byte(fields[i] >> (8 - whichBit))
 		}
 		keys[i] = key
 		// DEBUG
-		fmt.Printf("%2d, %02x: %s\n", i, fields[i], dumpByteSlice(keys[i]))
+		// fmt.Printf("%2d, %02x: %s\n", i, fields[i], dumpByteSlice(keys[i]))
 		// END
 	}
 

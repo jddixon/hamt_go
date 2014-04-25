@@ -8,8 +8,8 @@ hamt_go/TODO
         exact match on key
     * test insertion of dupe keys
     * consider merging Table.insertEntry and insertIntoOccupiedSlot
-    * modify TestTableEntrySplittingInserts to verify that table count
-        is as expected
+    * modify TestTableEntrySplittingInserts to verify that table count  * DONE
+        is as expected                                                  * DONE
     * create TestHAMTEntrySplittingInserts modeled on the above
         - verify that table count is as expected
 
@@ -18,7 +18,7 @@ hamt_go/TODO
     * powerOfTwo() is a bit silly (panics if n too large); could make   * GONE
         it lazy ;-)                                                     * GONE
     * need performance test which runs as a command, always does same
-        number of ops
+        number of ops (eg 10^6)
     * need performance test which is say 1% inserts, 99% finds, 
         and so forth
     * same test but with varying degrees of concurrency

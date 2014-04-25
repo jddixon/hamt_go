@@ -212,8 +212,8 @@ func (s *XLSuite) doTestEntrySplittingInserts(c *C, rng *xr.PRNG, w uint) {
 	table, err := NewTable(depth, w, t)
 
 	// DEBUG
-	var depthNTables []*Table
-	tSoFar := uint(0)
+	//var depthNTables []*Table
+	//tSoFar := uint(0)
 	// END
 
 	c.Assert(err, IsNil)
@@ -229,10 +229,8 @@ func (s *XLSuite) doTestEntrySplittingInserts(c *C, rng *xr.PRNG, w uint) {
 	c.Assert(table.mask, Equals, expectedMask)
 	c.Assert(table.maxDepth, Equals, 64/w)
 
-	rawKeys := s.makePermutedKeys(rng, w)
-	KEY_COUNT := uint(len(rawKeys))
-
-	//fmt.Printf("KEY_COUNT = %d\n", KEY_COUNT) // DEBUG
+	_, rawKeys := s.makePermutedKeys(rng, w) // XXX fields ignored
+	KEY_COUNT := table.maxDepth              // some keys ignored
 
 	key64s := make([]*BytesKey, KEY_COUNT)
 	hashcodes := make([]uint64, KEY_COUNT)
@@ -296,53 +294,53 @@ func (s *XLSuite) doTestEntrySplittingInserts(c *C, rng *xr.PRNG, w uint) {
 		_, err = table.findEntry(hc, depth, key64)
 		c.Assert(err, IsNil)
 
-		// DEBUG depthN -- WORKING HERE
-		tCount := table.GetTableCount()
-		fmt.Printf("  insertion %2d count %2d: %s\n",
-			i, tCount, dumpByteSlice(rawKeys[i]))
+		//// DEBUG depthN -- WORKING HERE
+		//tCount := table.GetTableCount()
+		//fmt.Printf("  insertion %2d count %2d: %s\n",
+		//	i, tCount, dumpByteSlice(rawKeys[i]))
 
-		if tSoFar <= i {
-			var dTable *Table
-			if i == 0 {
-				dTable = table
-				depthNTables = append(depthNTables, dTable) // just a pointer
-				tSoFar++
-				fmt.Printf("  dTable %2d, depth %2d: %s\n",
-					tSoFar,
-					dTable.depth,
-					dumpByteSlice(dTable.indices))
-			} else {
-				for tSoFar < tCount {
-					var slot *Entry
-					dTable = depthNTables[len(depthNTables)-1]
-					slotCount := len(dTable.slots)
-					if slotCount == 1 {
-						slot = dTable.slots[0]
-					} else {
-						slot = dTable.slots[1]
-					}
-					c.Assert(slot.Node.IsLeaf(), Equals, false)
-					dTable = slot.Node.(*Table)
+		//if tSoFar <= i {
+		//	var dTable *Table
+		//	if i == 0 {
+		//		dTable = table
+		//		depthNTables = append(depthNTables, dTable) // just a pointer
+		//		tSoFar++
+		//		fmt.Printf("  dTable %2d, depth %2d: %s\n",
+		//			tSoFar,
+		//			dTable.depth,
+		//			dumpByteSlice(dTable.indices))
+		//	} else {
+		//		for tSoFar < tCount {
+		//			var slot *Entry
+		//			dTable = depthNTables[len(depthNTables)-1]
+		//			slotCount := len(dTable.slots)
+		//			if slotCount == 1 {
+		//				slot = dTable.slots[0]
+		//			} else {
+		//				slot = dTable.slots[1]
+		//			}
+		//			c.Assert(slot.Node.IsLeaf(), Equals, false)
+		//			dTable = slot.Node.(*Table)
 
-					depthNTables = append(depthNTables, dTable)
-					tSoFar++
-					fmt.Printf("    dTable %2d: %s\n",
-						tSoFar, dumpByteSlice(dTable.indices))
-				}
-			}
-		}
-		// END
+		//			depthNTables = append(depthNTables, dTable)
+		//			tSoFar++
+		//			fmt.Printf("    dTable %2d: %s\n",
+		//				tSoFar, dumpByteSlice(dTable.indices))
+		//		}
+		//	}
+		//}
+		//// END
 
 		// c.Assert(table.GetTableCount(), Equals, i + 1)	// FAILS XXX
 	}
-	// DEBUG
-	fmt.Println("DUMP OF DEPTH-N TABLES")
-	for i := uint(0); i < uint(len(depthNTables)); i++ {
-		lineNo := fmt.Sprintf("%2d ", i)
-		tDump := dumpTable(lineNo, depthNTables[i])
-		fmt.Println(tDump)
-	}
-	// END
+	//// DEBUG
+	//fmt.Println("DUMP OF DEPTH-N TABLES")
+	//for i := uint(0); i < uint(len(depthNTables)); i++ {
+	//	lineNo := fmt.Sprintf("%2d ", i)
+	//	tDump := dumpTable(lineNo, depthNTables[i])
+	//	fmt.Println(tDump)
+	//}
+	//// END
 	//fmt.Println("\nDELETION LOOP") // DEBUG
 	for i := uint(0); i < KEY_COUNT; i++ {
 		hc := hashcodes[i]
