@@ -35,11 +35,6 @@ func NewTable(depth, w, t uint) (table *Table, err error) {
 	table.maxDepth = (64 / w) // rounds down	XXX WRONG: NO ALLOWANCE FOR t
 	table.maxSlots = 1 << w
 
-	// DEBUG
-	//fmt.Printf("NewTable: depth %d/%d, w %d, t %d, maxSlots %d\n",
-	//	depth, table.maxDepth, w, t, table.maxSlots)
-	// END
-
 	err = table.CheckTableDepth(depth)
 	if err != nil {
 		table = nil
@@ -192,9 +187,7 @@ func (table *Table) findEntry(hc uint64, depth uint, key KeyI) (
 			searchKey := key.(*BytesKey)
 			if bytes.Equal(searchKey.Slice, myKey.Slice) {
 				value = myLeaf.Value
-				// fmt.Printf("    FOUND, slot %d\n", i) // DEBUG
 			} else {
-				//fmt.Printf("    LEAF, NO MATCH\n") // DEBUG
 				err = NotFound
 			}
 		} else {
@@ -203,13 +196,6 @@ func (table *Table) findEntry(hc uint64, depth uint, key KeyI) (
 			hc >>= table.w
 			depth++
 			value, err = tDeeper.findEntry(hc, depth, key)
-			// DEBUG
-			// if err != nil {
-			//	fmt.Printf(
-			//	"    findEntry depth %d BACK FROM RECURSION: err %v\n",
-			//		depth-1, err)
-			// }
-			// END
 		}
 	}
 	return
@@ -245,10 +231,6 @@ func (table *Table) insertEntry(hc uint64, depth uint, entry *Entry) (
 	}
 
 	if sliceSize == 0 {
-		// DEBUG
-		//fmt.Printf("  insert into empty table: depth %d ndx64 %02x\n",
-		//	depth, ndx64)
-		// END
 		table.slots = append(table.slots, entry)
 		table.indices = append(table.indices, byte(ndx64))
 	} else {
@@ -301,45 +283,50 @@ func (table *Table) insertIntoOccupiedSlot(newHC uint64, depth uint,
 
 	if e.Node.IsLeaf() {
 		// if it's a leaf, we replace the value iff the keys match
+		curLeaf := e.Node.(*Leaf)
+		curKey := curLeaf.Key.(*BytesKey)
+		entryAsLeaf := entry.Node.(*Leaf)
+		newKey := entryAsLeaf.Key.(*BytesKey)
+		if bytes.Equal(curKey.Slice, newKey.Slice) {
+			// the keys match, so we replace the value
+			newLeaf := entry.Node.(*Leaf)
+			curLeaf.Value = newLeaf.Value
+		} else {
+			var (
+				tableDeeper *Table
+				oldEntry    *Entry
+				oldHC       uint64
+			)
 
-		//////////////////////////////////////
-		// XXX NOT CHECKING FOR DUPLICATE KEYS
-		//////////////////////////////////////
-
-		var (
-			tableDeeper *Table
-			oldEntry    *Entry
-			oldHC       uint64
-		)
-
-		depth++
-		tableDeeper, err = NewTable(depth, table.w, table.t)
-		if err == nil {
-			newHC >>= table.w // this is hc for the NEW entry
-
-			oldEntry = e
-			oldLeaf := e.Node.(*Leaf)
-			oldHC, err = oldLeaf.Key.Hashcode()
-		}
-		if err == nil {
-			oldHC >>= table.t + (depth-1)*table.w
-
-			// indexes for this depth
-
-			// put the existing leaf into the new table
-			_, err = tableDeeper.insertEntry(oldHC, depth, oldEntry)
+			depth++
+			tableDeeper, err = NewTable(depth, table.w, table.t)
 			if err == nil {
-				// then put the new entry in the new table
-				_, err = tableDeeper.insertEntry(newHC, depth, entry)
+				newHC >>= table.w // this is hc for the NEW entry
+
+				oldEntry = e
+				oldLeaf := e.Node.(*Leaf)
+				oldHC, err = oldLeaf.Key.Hashcode()
+			}
+			if err == nil {
+				oldHC >>= table.t + (depth-1)*table.w
+
+				// indexes for this depth
+
+				// put the existing leaf into the new table
+				_, err = tableDeeper.insertEntry(oldHC, depth, oldEntry)
 				if err == nil {
-					// the new table replaces the existing leaf
-					var eTab *Entry
-					eTab, err = NewEntry(ndx, tableDeeper)
+					// then put the new entry in the new table
+					_, err = tableDeeper.insertEntry(newHC, depth, entry)
 					if err == nil {
-						table.slots[slotNbr] = eTab
+						// the new table replaces the existing leaf
+						var eTab *Entry
+						eTab, err = NewEntry(ndx, tableDeeper)
+						if err == nil {
+							table.slots[slotNbr] = eTab
+						}
 					}
 				}
-			}
+			} // FOO
 		}
 	} else {
 		// otherwise it's a table, so recurse

@@ -6,7 +6,16 @@ type HAMT struct {
 	root *Root // could be EntryI
 }
 
+// Create a new HAMT with 2^t slots in its root table and 2^w slots in
+// all lower-level tables.  If t equals zero, it defaults to w.  If
+// both t and w are zero, it panics.
 func NewHAMT(w, t uint) (h *HAMT) {
+	if t == 0 && w == 0 {
+		panic("cannot create HAMT with no slots in tables")
+	}
+	if t == 0 {
+		t = w
+	}
 	root := NewRoot(w, t)
 	h = &HAMT{
 		root: root,
@@ -14,16 +23,23 @@ func NewHAMT(w, t uint) (h *HAMT) {
 	return
 }
 
+// Return t which determiens the size of the root table (2^t).
 func (h *HAMT) GetT() uint {
 	return h.root.t
 }
+
+// Return w which determiens the size of lower-level tables (2^w).
 func (h *HAMT) GetW() uint {
 	return h.root.w
 }
+
+// Return the number of tables, including the root table, in the HAMT.
 func (h *HAMT) GetTableCount() uint {
 	return h.root.GetTableCount()
 }
 
+// If there is an entry with the key k in the HAMT, remove it.  If
+// there is no such entry, return NotFound.
 func (h *HAMT) Delete(k KeyI) (err error) {
 
 	var hc uint64
@@ -34,6 +50,8 @@ func (h *HAMT) Delete(k KeyI) (err error) {
 	return
 }
 
+// If there is an entry with the key k in the HAMT, return the value
+// associated with the key.  If there is no such entry, return NotFound.
 func (h *HAMT) Find(k KeyI) (v interface{}, err error) {
 
 	var hc uint64
@@ -44,6 +62,9 @@ func (h *HAMT) Find(k KeyI) (v interface{}, err error) {
 	return
 }
 
+// Store the value v in the table keyed by k.  If there is already
+// an entry in the trie with this key, then replace the associated
+// value.  This is not an error condition.
 func (h *HAMT) Insert(k KeyI, v interface{}) (err error) {
 
 	hc, err := k.Hashcode()

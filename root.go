@@ -127,9 +127,6 @@ func (root *Root) insertEntry(newHC uint64, entry *Entry) (
 
 	ndx := newHC & root.mask
 
-	// DEBUG
-	// fmt.Printf("insert root slot %4d (0x%03x)", ndx, ndx)
-	// END
 	if root.slots[ndx] == nil {
 		root.slots[ndx] = entry
 	} else {
@@ -138,39 +135,44 @@ func (root *Root) insertEntry(newHC uint64, entry *Entry) (
 
 		if e.Node.IsLeaf() {
 			// if it's a leaf, we replace the value iff the keys match
-
-			//////////////////////////////////////
-			// XXX NOT CHECKING FOR DUPLICATE KEYS
-			//////////////////////////////////////
-
-			var (
-				tableDeeper *Table
-				oldEntry    *Entry
-				oldHC       uint64
-			)
-
-			tableDeeper, err = NewTable(1, root.w, root.t)
-			if err == nil {
-				newHC >>= root.t // this is hc for the NEW entry
-
-				oldEntry = e
-				oldLeaf := e.Node.(*Leaf)
-				oldHC, err = oldLeaf.Key.Hashcode()
-			}
-			if err == nil {
-				oldHC >>= root.t
-
-				// put the existing leaf into the new table
-				_, err = tableDeeper.insertEntry(oldHC, 1, oldEntry)
+			curLeaf := e.Node.(*Leaf)
+			curKey := curLeaf.Key.(*BytesKey)
+			entryAsLeaf := entry.Node.(*Leaf)
+			newKey := entryAsLeaf.Key.(*BytesKey)
+			if bytes.Equal(curKey.Slice, newKey.Slice) {
+				// the keys match, so we replace the value
+				newLeaf := entry.Node.(*Leaf)
+				curLeaf.Value = newLeaf.Value
+			} else {
+				// keys differ, so we need to replace the leaf with a table
+				var (
+					tableDeeper *Table
+					oldEntry    *Entry
+					oldHC       uint64
+				)
+				tableDeeper, err = NewTable(1, root.w, root.t)
 				if err == nil {
-					// then put the new entry in the new table
-					_, err = tableDeeper.insertEntry(newHC, 1, entry)
+					newHC >>= root.t // this is hc for the NEW entry
+
+					oldEntry = e
+					oldLeaf := e.Node.(*Leaf)
+					oldHC, err = oldLeaf.Key.Hashcode()
+				}
+				if err == nil {
+					oldHC >>= root.t
+
+					// put the existing leaf into the new table
+					_, err = tableDeeper.insertEntry(oldHC, 1, oldEntry)
 					if err == nil {
-						// the new table replaces the existing leaf
-						var eTab *Entry
-						eTab, err = NewEntry(byte(ndx), tableDeeper)
+						// then put the new entry in the new table
+						_, err = tableDeeper.insertEntry(newHC, 1, entry)
 						if err == nil {
-							root.slots[ndx] = eTab
+							// the new table replaces the existing leaf
+							var eTab *Entry
+							eTab, err = NewEntry(byte(ndx), tableDeeper)
+							if err == nil {
+								root.slots[ndx] = eTab
+							}
 						}
 					}
 				}
@@ -183,9 +185,6 @@ func (root *Root) insertEntry(newHC uint64, entry *Entry) (
 
 		}
 	}
-	// DEBUG
-	// fmt.Println()
-	// END
 	return
 }
 

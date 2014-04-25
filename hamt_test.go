@@ -50,11 +50,6 @@ func (s *XLSuite) doTestDepthZeroHAMT(c *C, w, t uint) {
 	KEY_COUNT := uint(1 << t) // fill all slots
 
 	h := NewHAMT(w, t)
-	// DEBUG
-	//flag := uint64(1 << t)
-	//mask := flag - 1
-	// END
-
 	rawKeys, bKeys, hashcodes, values := s.uniqueKeyMaker(
 		c, rng, t, KEY_COUNT, KEY_LEN)
 
@@ -69,10 +64,6 @@ func (s *XLSuite) doTestDepthZeroHAMT(c *C, w, t uint) {
 		c.Assert(err, Equals, NotFound)
 
 		// insert the key and value
-		// DEBUG
-		//ndx := hashcodes[i] & mask
-		//fmt.Printf("%2d: ndx 0x%03x, key %s\n", i, ndx, dumpByteSlice(key))
-		// END
 		err = h.Insert(bKey, values[i])
 		c.Assert(err, IsNil)
 
@@ -81,13 +72,34 @@ func (s *XLSuite) doTestDepthZeroHAMT(c *C, w, t uint) {
 		c.Assert(err, IsNil)
 		vBytes := v.(*[]byte)
 		c.Assert(bytes.Equal(*vBytes, key), Equals, true)
+
+		// replace the value associated with this key
+		newValue := rng.Int63() // a random 64-bit value
+		err = h.Insert(bKey, &newValue)
+		c.Assert(err, IsNil)
+
+		// verify that Find returns the new value
+		ret, err := h.Find(bKey)
+		c.Assert(err, IsNil)
+		returned := *(ret.(*int64))
+		c.Assert(returned, Equals, newValue)
+
+		// put the old value back
+		err = h.Insert(bKey, values[i])
+		c.Assert(err, IsNil)
+
+		// verify that Find now returns the old value
+		v, err = h.Find(bKey)
+		c.Assert(err, IsNil)
+		vBytes = v.(*[]byte)
+		c.Assert(bytes.Equal(*vBytes, key), Equals, true)
+
 	}
 	// remove each key, then verify that it is in fact gone =========
 	for i := uint(0); i < KEY_COUNT; i++ {
 		key := rawKeys[i]
 
 		// verify it is present
-		//fmt.Printf("%d VERIFYING PRESENT BEFORE DELETE: idx %02x\n", i, idx)
 		bKey, err := NewBytesKey(key)
 		c.Assert(err, IsNil)
 		c.Assert(bKey, NotNil)
@@ -167,46 +179,49 @@ func (s *XLSuite) doTestHAMTInsertsOfRandomishValues(c *C, w, t uint) {
 		bKey := bKeys[i]
 		_, err = h.Find(bKey)
 		c.Assert(err, Equals, NotFound)
-		//// DEBUG
-		//if i == 0 {
-		//	fmt.Printf("after insertion key 0: %s\n", dumpByteSlice(bKey.Slice))
-		//}
-		//// END
 
 		err = h.Insert(bKey, values[i])
 		c.Assert(err, IsNil)
 
-		// confirm that the new entry is now present
-		_, err = h.Find(bKey)
+		key := keys[i]
+		// verify that the key is now present
+		v, err := h.Find(bKey)
 		c.Assert(err, IsNil)
-		// DEBUG
-		//if i == 0 {
-		//	fmt.Printf("after insertion key 0: %s\n", dumpByteSlice(bKey.Slice))
-		//}
-		// END
+		vBytes := v.(*[]byte)
+		c.Assert(bytes.Equal(*vBytes, key), Equals, true)
+
+		// replace the value associated with this key
+		newValue := rng.Int63() // a random 64-bit value
+		err = h.Insert(bKey, &newValue)
+		c.Assert(err, IsNil)
+
+		// verify that Find returns the new value
+		ret, err := h.Find(bKey)
+		c.Assert(err, IsNil)
+		returned := *(ret.(*int64))
+		c.Assert(returned, Equals, newValue)
+
+		// put the old value back
+		err = h.Insert(bKey, values[i])
+		c.Assert(err, IsNil)
+
+		// verify that Find now returns the old value
+		v, err = h.Find(bKey)
+		c.Assert(err, IsNil)
+		vBytes = v.(*[]byte)
+		c.Assert(bytes.Equal(*vBytes, key), Equals, true)
 	}
 	// SIMPLE SCAN
 	for i := uint(0); i < KEY_COUNT; i++ {
 		// expect that entry with this key can be found
 		bKey := bKeys[i]
 		_, err = h.Find(bKey)
-		// DEBUG
-		if err != nil {
-			fmt.Printf("simple scan, slot %4d: ERROR: %s\n", i, err.Error())
-		}
-		// END
 	}
 	// END SIMPLE
 
 	// Delete the KEY_COUNT entries
 	for i := uint(0); i < KEY_COUNT; i++ {
 		bKey := bKeys[i]
-		// DEBUG
-		//if i == 0 {
-		//	fmt.Printf("before deletion key 0: %s\n", dumpByteSlice(bKey.Slice))
-		//}
-		// fmt.Printf("verifying that key %d is still present\n", i)
-		// END
 		// confirm again that the entry is present
 		_, err = h.Find(bKey)
 		c.Assert(err, IsNil)

@@ -73,16 +73,6 @@ func (s *XLSuite) makePermutedKeys(rng *xr.PRNG, w uint) (
 	keyCount := uint(fieldCount)
 	keys = make([][]byte, keyCount)
 
-	//// DEBUG
-	//fmt.Printf("\nw = %d, fieldCount = keyCount = %d, keyLen = %d\n",
-	//	w, fieldCount, keyLen)
-	//fmt.Printf("fields: ")
-	//for i := uint(0); i < uint(len(fields)); i++ {
-	//	fmt.Printf(" %02x", fields[i])
-	//}
-	//fmt.Printf("\nDUMP KEYS FOR w = %d\n", w)
-	//// END
-
 	for i := uint(0); i < keyCount; i++ {
 		key := make([]byte, keyLen) // all zeroes
 		if i != uint(0) {
@@ -99,9 +89,6 @@ func (s *XLSuite) makePermutedKeys(rng *xr.PRNG, w uint) (
 			key[whichByte+1] |= byte(fields[i] >> (8 - whichBit))
 		}
 		keys[i] = key
-		// DEBUG
-		// fmt.Printf("%2d, %02x: %s\n", i, fields[i], dumpByteSlice(keys[i]))
-		// END
 	}
 
 	return

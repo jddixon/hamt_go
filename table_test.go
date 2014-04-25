@@ -72,11 +72,6 @@ func (s *XLSuite) doTestTableDepthZeroInserts(c *C, w, t uint) {
 
 	SLOT_COUNT := table.maxSlots
 
-	// DEBUG
-	//fmt.Printf("doTest: w = %d, t = %d, mask = 0x%02x, maxSlots = %3d\n",
-	//	w, t, table.mask, SLOT_COUNT)
-	// END
-
 	rng := xr.MakeSimpleRNG()
 	perm := rng.Perm(int(SLOT_COUNT)) // a random permutation of [0..SLOT_COUNT)
 	rawKeys := make([][]byte, SLOT_COUNT)
@@ -125,11 +120,6 @@ func (s *XLSuite) doTestTableDepthZeroInserts(c *C, w, t uint) {
 		occupied := uint64(1 << idx)
 		bitmap |= occupied
 
-		// DEBUG
-		//fmt.Printf("%02d: hc %02x, idx %02x, mask 0x%08x, bitmap 0x%08x, pos %02d slotNbr %02d\n\n",
-		//	i, hc, idx, mask, bitmap, pos, slotNbr)
-		// END
-
 		c.Assert(table.bitmap, Equals, bitmap)
 		c.Assert(uint(pos), Equals, slotNbr)
 
@@ -166,7 +156,6 @@ func (s *XLSuite) doTestTableDepthZeroInserts(c *C, w, t uint) {
 		key := rawKeys[i]
 
 		// verify it is present -------------------------------------
-		//fmt.Printf("%d VERIFYING PRESENT BEFORE DELETE: idx %02x\n", i, idx)
 		key64, err := NewBytesKey(key)
 		c.Assert(err, IsNil)
 		c.Assert(key64, NotNil)
@@ -180,12 +169,10 @@ func (s *XLSuite) doTestTableDepthZeroInserts(c *C, w, t uint) {
 
 		// delete it ------------------------------------------------
 		// depth is zero, so hc unshifted
-		//fmt.Printf("  %d DELETING: idx %02x\n", i, idx)
 		err = table.deleteEntry(hc, depth, key64)
 		c.Assert(err, IsNil)
 
 		// verify that it is gone -----------------------------------
-		//fmt.Printf("  %d CHECKING NOT PRESENT AFTER DELETE: idx %02x\n", i, idx)
 		v, err = table.findEntry(hc, depth, key64)
 
 		c.Assert(err, Equals, NotFound)
@@ -220,12 +207,6 @@ func (s *XLSuite) doTestEntrySplittingInserts(c *C, rng *xr.PRNG, w uint) {
 	t := uint(0)
 
 	table, err := NewTable(depth, w, t)
-
-	// DEBUG
-	//var depthNTables []*Table
-	//tSoFar := uint(0)
-	// END
-
 	c.Assert(err, IsNil)
 	c.Assert(table, NotNil)
 	c.Assert(table.GetDepth(), Equals, depth)
@@ -263,9 +244,7 @@ func (s *XLSuite) doTestEntrySplittingInserts(c *C, rng *xr.PRNG, w uint) {
 	}
 	c.Assert(table.GetTableCount(), Equals, uint(1))
 
-	// fmt.Printf("\nINSERTION LOOP\n")
 	for i := uint(0); i < KEY_COUNT; i++ {
-		//fmt.Printf("\nINSERTING KEY %d: %s\n", i, dumpByteSlice(rawKeys[i]))
 		hc := hashcodes[i]
 		ndx := byte(hc & table.mask) // depth 0, so no shift
 
@@ -292,92 +271,28 @@ func (s *XLSuite) doTestEntrySplittingInserts(c *C, rng *xr.PRNG, w uint) {
 		// in this test, only one entry at the top level, so slotNbr always zero
 		c.Assert(slotNbr, Equals, uint(0))
 
-		// DEBUG
-		//fmt.Printf("inserted i = %2d, hc 0x%x, ndx 0x%02x; slotNbr => %d\n",
-		//	i, hc, ndx, slotNbr)
-		// END
-
 		// confirm that the new entry is now present ----------------
-		// DEBUG
-		//fmt.Printf("--- verifying new entry is present after insertion -----\n")
-		// END
 		_, err = table.findEntry(hc, depth, key64)
 		c.Assert(err, IsNil)
 
-		//// DEBUG depthN -- WORKING HERE
-		//tCount := table.GetTableCount()
-		//fmt.Printf("  insertion %2d count %2d: %s\n",
-		//	i, tCount, dumpByteSlice(rawKeys[i]))
-
-		//if tSoFar <= i {
-		//	var dTable *Table
-		//	if i == 0 {
-		//		dTable = table
-		//		depthNTables = append(depthNTables, dTable) // just a pointer
-		//		tSoFar++
-		//		fmt.Printf("  dTable %2d, depth %2d: %s\n",
-		//			tSoFar,
-		//			dTable.depth,
-		//			dumpByteSlice(dTable.indices))
-		//	} else {
-		//		for tSoFar < tCount {
-		//			var slot *Entry
-		//			dTable = depthNTables[len(depthNTables)-1]
-		//			slotCount := len(dTable.slots)
-		//			if slotCount == 1 {
-		//				slot = dTable.slots[0]
-		//			} else {
-		//				slot = dTable.slots[1]
-		//			}
-		//			c.Assert(slot.Node.IsLeaf(), Equals, false)
-		//			dTable = slot.Node.(*Table)
-
-		//			depthNTables = append(depthNTables, dTable)
-		//			tSoFar++
-		//			fmt.Printf("    dTable %2d: %s\n",
-		//				tSoFar, dumpByteSlice(dTable.indices))
-		//		}
-		//	}
-		//}
-		//// END
-
 		// c.Assert(table.GetTableCount(), Equals, i + 1)
 	}
-	//// DEBUG
-	//fmt.Println("DUMP OF DEPTH-N TABLES")
-	//for i := uint(0); i < uint(len(depthNTables)); i++ {
-	//	lineNo := fmt.Sprintf("%2d ", i)
-	//	tDump := dumpTable(lineNo, depthNTables[i])
-	//	fmt.Println(tDump)
-	//}
-	//// END
-	//fmt.Println("\nDELETION LOOP") // DEBUG
 	for i := uint(0); i < KEY_COUNT; i++ {
 		hc := hashcodes[i]
-
-		// DEBUG
-		//if err != nil {
-		//	fmt.Printf("  deleting key %2d, hc 0x%x\n", i, hc)
-		//}
-		// END
-
 		key64 := key64s[i]
 		// confirm again that the entry is present ------------------
 		_, err = table.findEntry(hc, depth, key64)
 		c.Assert(err, IsNil)
-		//fmt.Printf("    key %2d is present before deletion\n", i) // DEBUG
 
 		// delete the entry -----------------------------------------
 		err = table.deleteEntry(hc, depth, key64)
 		c.Assert(err, IsNil)
-		//fmt.Printf("    key %2d has been deleted\n", i) // DEBUG
 
 		// confirm that it is gone ----------------------------------
 		_, err = table.findEntry(hc, depth, key64)
 		c.Assert(err, Equals, NotFound)
-		//fmt.Printf("    key %2d gone after deletion\n\n", i) // DEBUG
 	}
-} // GEEP
+}
 
 // ------------------------------------------------------------------
 
@@ -433,9 +348,7 @@ func (s *XLSuite) TestTableInsertsOfRandomishValues(c *C) {
 		hashcodes[i] = hc
 
 	}
-	//fmt.Printf("\nINSERTION LOOP\n")
 	for i := uint(0); i < KEY_COUNT; i++ {
-		//fmt.Printf("\nINSERTING KEY %d: %s\n", i, dumpByteSlice(rawKeys[i]))
 		hc := hashcodes[i]
 		ndx := byte(hc & table.mask) // depth 0, so no shift
 
@@ -457,46 +370,55 @@ func (s *XLSuite) TestTableInsertsOfRandomishValues(c *C) {
 		c.Assert(e.Node.IsLeaf(), Equals, true)
 		c.Assert(e.GetIndex(), Equals, ndx)
 
-		slotNbr, err := table.insertEntry(hc, depth, e)
-		_ = slotNbr // DEBUG
+		_, err = table.insertEntry(hc, depth, e)
 		c.Assert(err, IsNil)
-
-		// DEBUG
-		//fmt.Printf("inserted i = %2d, hc 0x%x, ndx 0x%02x; slotNbr => %d\n",
-		//	i, hc, ndx, slotNbr)
-		// END
 
 		// confirm that the new entry is now present ----------------
-		// DEBUG
-		//fmt.Printf("--- verifying new entry is present after insertion -----\n")
-		// END
 		_, err = table.findEntry(hc, depth, key64)
 		c.Assert(err, IsNil)
+
+		// TEST HANDLING OF DUPLICATE KEYS ----------------
+		// replace the value associated with this key
+		newValue := rng.Int63() // a random 64-bit value
+		leaf2, err := NewLeaf(key64, &newValue)
+		c.Assert(err, IsNil)
+		c.Assert(leaf2, NotNil)
+		c.Assert(leaf2.IsLeaf(), Equals, true)
+
+		e2, err := NewEntry(ndx, leaf2)
+		c.Assert(err, IsNil)
+		c.Assert(e2, NotNil)
+		c.Assert(e2.GetIndex(), Equals, ndx)
+		c.Assert(e2.Node.IsLeaf(), Equals, true)
+		c.Assert(e2.GetIndex(), Equals, ndx)
+
+		_, err = table.insertEntry(hc, depth, e2)
+		c.Assert(err, IsNil)
+
+		// make sure that a Find returns the new value
+		ret, err := table.findEntry(hc, depth, key64)
+		c.Assert(err, IsNil)
+		retPtr := ret.(*int64)
+		c.Assert(*retPtr, Equals, newValue)
+
+		// put the old value back
+		_, err = table.insertEntry(hc, depth, e)
+		c.Assert(err, IsNil)
+
 	}
-	//fmt.Println("\nDELETION LOOP") // DEBUG
 	for i := uint(0); i < KEY_COUNT; i++ {
 		hc := hashcodes[i]
-
-		// DEBUG
-		//if err != nil {
-		//	fmt.Printf("  deleting key %2d, hc 0x%x\n", i, hc)
-		//}
-		// END
-
 		key64 := key64s[i]
 		// confirm again that the entry is present ------------------
 		_, err = table.findEntry(hc, depth, key64)
 		c.Assert(err, IsNil)
-		//fmt.Printf("    key %2d is present before deletion\n", i) // DEBUG
 
 		// delete the entry -----------------------------------------
 		err = table.deleteEntry(hc, depth, key64)
 		c.Assert(err, IsNil)
-		//fmt.Printf("    key %2d has been deleted\n", i) // DEBUG
 
 		// confirm that it is gone ----------------------------------
 		_, err = table.findEntry(hc, depth, key64)
 		c.Assert(err, Equals, NotFound)
-		//fmt.Printf("    key %2d gone after deletion\n\n", i) // DEBUG
 	}
 }

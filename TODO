@@ -4,12 +4,13 @@ hamt_go/TODO
     * determine why table_test fails with w > 6 but hamt_test succeeds
 
 2014-04-24
-    * modify Root.insertEntry to replace values where there is an
-        exact match on key ('DUPLICATE KEYS')
-    * test insertion of dupe keys
-    * modify Table.insertEntry to replace values where there is an
-        exact match on key
-    * test insertion of dupe keys
+    * modify Root.insertEntry to replace values where there is an       * DONE
+        exact match on key                                              * DONE 
+    * test HAMT insertion of dupe keys                                  * DONE
+    * modify Table.insertEntry to replace values where there is an      * DONE
+        exact match on key                                              * DONE
+    * test Table-level insertion of dupe keys                           * DONE
+
     * consider merging Table.insertEntry and insertIntoOccupiedSlot
     * modify TestTableEntrySplittingInserts to verify that table count  * DONE
         is as expected                                                  * DONE
