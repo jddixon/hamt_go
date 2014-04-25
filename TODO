@@ -1,5 +1,8 @@
 hamt_go/TODO
 
+2014-04-25
+    * determine why table_test fails with w > 6 but hamt_test succeeds
+
 2014-04-24
     * modify Root.insertEntry to replace values where there is an
         exact match on key ('DUPLICATE KEYS')
@@ -10,8 +13,8 @@ hamt_go/TODO
     * consider merging Table.insertEntry and insertIntoOccupiedSlot
     * modify TestTableEntrySplittingInserts to verify that table count  * DONE
         is as expected                                                  * DONE
-    * create TestHAMTEntrySplittingInserts modeled on the above
-        - verify that table count is as expected
+    * create TestHAMTEntrySplittingInserts modeled on the above         * DONE
+        - verify that table count is as expected                        * DONE
 
 2014-04-23
     * clean up code: find MERGE THIS and do it (Table.insertEntry)      * DONE

@@ -39,6 +39,8 @@ func (s *XLSuite) TestDepthZeroHAMT(c *C) {
 	s.doTestDepthZeroHAMT(c, w, uint(4))
 	s.doTestDepthZeroHAMT(c, w, uint(5))
 	s.doTestDepthZeroHAMT(c, w, uint(6))
+	s.doTestDepthZeroHAMT(c, w, uint(7))
+	s.doTestDepthZeroHAMT(c, w, uint(8))
 }
 
 func (s *XLSuite) doTestDepthZeroHAMT(c *C, w, t uint) {
@@ -102,7 +104,7 @@ func (s *XLSuite) doTestDepthZeroHAMT(c *C, w, t uint) {
 		c.Assert(err, Equals, NotFound)
 		c.Assert(v, IsNil)
 	}
-} // GEEP
+}
 
 func (s *XLSuite) TestHAMTInsertsOfRandomishValues(c *C) {
 	if VERBOSITY > 0 {
@@ -112,6 +114,8 @@ func (s *XLSuite) TestHAMTInsertsOfRandomishValues(c *C) {
 	s.doTestHAMTInsertsOfRandomishValues(c, w, uint(4))
 	s.doTestHAMTInsertsOfRandomishValues(c, w, uint(5))
 	s.doTestHAMTInsertsOfRandomishValues(c, w, uint(6))
+	s.doTestHAMTInsertsOfRandomishValues(c, w, uint(7))
+	s.doTestHAMTInsertsOfRandomishValues(c, w, uint(8))
 
 }
 func (s *XLSuite) doTestHAMTInsertsOfRandomishValues(c *C, w, t uint) {
@@ -205,13 +209,99 @@ func (s *XLSuite) doTestHAMTInsertsOfRandomishValues(c *C, w, t uint) {
 		// END
 		// confirm again that the entry is present
 		_, err = h.Find(bKey)
-		c.Assert(err, IsNil) // FAILS XXX
+		c.Assert(err, IsNil)
 
 		// delete the entry
 		err = h.Delete(bKey)
 		c.Assert(err, IsNil)
 
 		// confirm that it is gone
+		_, err = h.Find(bKey)
+		c.Assert(err, Equals, NotFound)
+	}
+}
+
+// Insert a series of entries, each of which should replace a leaf with
+// a table.
+
+func (s *XLSuite) TestHamtEntrySplittingInserts(c *C) {
+	if VERBOSITY > 0 {
+		fmt.Println("TEST_HAMT_ENTRY_SPLITTING_INSERTS")
+	}
+	rng := xr.MakeSimpleRNG()
+
+	s.doTestHamtEntrySplittingInserts(c, rng, 5, 5)
+}
+
+func (s *XLSuite) doTestHamtEntrySplittingInserts(c *C, rng *xr.PRNG,
+	t, w uint) {
+
+	var err error
+
+	h := NewHAMT(w, t)
+	c.Assert(h, NotNil)
+	c.Assert(h.GetW(), Equals, w)
+	c.Assert(h.GetT(), Equals, t)
+
+	_, rawKeys := s.makePermutedKeys(rng, w) // XXX fields ignored
+	KEY_COUNT := 64 / w                      // some keys may be ignored
+
+	bKeys := make([]*BytesKey, KEY_COUNT)
+	hashcodes := make([]uint64, KEY_COUNT)
+	values := make([]interface{}, KEY_COUNT)
+
+	for i := uint(0); i < KEY_COUNT; i++ {
+		key := rawKeys[i]
+
+		bKey, err := NewBytesKey(key)
+		c.Assert(err, IsNil)
+		c.Assert(bKey, NotNil)
+		bKeys[i] = bKey
+
+		values[i] = &key
+
+		hc, err := bKey.Hashcode()
+		c.Assert(err, IsNil)
+		hashcodes[i] = hc
+
+	}
+	tCount := h.GetTableCount()
+	c.Assert(tCount, Equals, uint(1))
+
+	// insertion loop -----------------------------------------------
+	for i := uint(0); i < KEY_COUNT; i++ {
+		// expect that no entry with this key can be found
+		bKey := bKeys[i]
+		_, err = h.Find(bKey)
+		c.Assert(err, Equals, NotFound)
+
+		// insert the entry -------------------------------
+		err = h.Insert(bKey, values[i])
+		c.Assert(err, IsNil)
+
+		// confirm the entry is present -------------------
+		_, err = h.Find(bKey)
+		c.Assert(err, IsNil)
+
+		// all insertions except the first split the entry
+		if i != 0 {
+			c.Assert(h.GetTableCount(), Equals, tCount+1)
+			tCount++
+		}
+	}
+	// deletion loop ------------------------------------------------
+	for i := uint(0); i < KEY_COUNT; i++ {
+		bKey := bKeys[i]
+
+		// confirm again that the entry is present --------
+		_, err = h.Find(bKey)
+		c.Assert(err, IsNil)
+
+		// delete the entry -------------------------------
+		err = h.Delete(bKey)
+		c.Assert(err, IsNil)
+
+		// confirm that it is gone ------------------------
 		_, err = h.Find(bKey)
 		c.Assert(err, Equals, NotFound)
 	}

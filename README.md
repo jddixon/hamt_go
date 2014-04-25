@@ -9,13 +9,31 @@ fixed length unsigned integers. In this implementation these are 64 bits
 long, Go `uint64`s.  The **value** may be of any type but typically is a 
 pointer to a data structure of interest.
 
-The HAMT trie is essentially a prefix trie.  At each level
-there is a table with `2^w` slots.  The next `w` bits of the hash 
-derived from the key are construed as
-an index into that table.  The current implementation allows values of
-`4, 5, 6, 7,` or `8` for `w`.  Preliminary performance tests indicate 
+The HAMT trie is essentially a prefix trie where the nodes in the tree
+are either tables or leaf entries.
+
+In a simpler implementation at each level there is either a leaf node
+or a table with up to `2^w` slots, where w is a small 
+integer.  The next `w` bits of the hash 
+derived from the key are construed as an index into that table.  The
+table grows dynamically as entries are added.  Whenever there is a 
+collision at a given level, a child table replaces the current entry,
+and both new and old entries move to the child table, possibly 
+recursing in the process.
+
+The current implementation has been tested with values of
+3, 4, 5, and 6 for `w`.  Preliminary performance tests indicate 
 that `w=5` is optimal.  That is, a table with 32 slots gives the best
 performance.  
+
+An enhancement introduces a fixed size table at the root.  This is
+characterized by another small integer t: the root has 2^t entries
+and the table at the root is indexed by the first t bits of the
+key's hashcode.  Performance tests show that for optimal performance
+the root table should approach the total number of entries in size.
+
+A further enhancement would allow dynamic resizing of the root table.
+This has not yet been implemented.
 
 Whereas a normal hash table would be quite large and might
 require expensive resizing periodically, the HAMT data structure is roughly 
@@ -35,9 +53,7 @@ implementation of hamt_go emulates this in software using the
 slower than the machine instruction.  
 *In practice POPCNT emulation might slow down accesses by something like 10%, 
 because the emulation code simply is not run all that often.*
-
-This is of course not actually a limitation, but rather an observation:
-the HAMT alorithm runs faster with hardware support.
+*This is of course not actually a limitation, but rather an observation: the HAMT alorithm runs faster with hardware support.*
 
 ## Project Status
 
@@ -45,7 +61,10 @@ The code works and is reasonably well-tested.
 `Insert`, `Find`, and `Delete` operations, while not yet thoroughly optimized, 
 take on the order of 1.3 microseconds each on a lightly-loaded server 
 (about 2.6us each to insert a million values and verify that the 
-value can be found using the key).
+value can be found using the key).  As the root table approaches the 
+number of entries in size, this falls to about 1.2 us, or 600ns/op.
+
+These figures were obtained from *single-threaded* tests.
 
 ## References
 

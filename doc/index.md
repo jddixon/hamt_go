@@ -21,8 +21,8 @@ collision at a given level, a child table replaces the current entry,
 and both new and old entries move to the child table, possibly 
 recursing in the process.
 
-The current implementation allows values of
-3, 4, 5, or 6 for `w`.  Preliminary performance tests indicate 
+The current implementation has been tested with values of
+3, 4, 5, and 6 for `w`.  Preliminary performance tests indicate 
 that `w=5` is optimal.  That is, a table with 32 slots gives the best
 performance.  
 
@@ -53,9 +53,7 @@ implementation of hamt_go emulates this in software using the
 slower than the machine instruction.  
 *In practice POPCNT emulation might slow down accesses by something like 10%, 
 because the emulation code simply is not run all that often.*
-
-This is of course not actually a limitation, but rather an observation:
-the HAMT alorithm runs faster with hardware support.
+*This is of course not actually a limitation, but rather an observation: the HAMT alorithm runs faster with hardware support.*
 
 ## Project Status
 
@@ -66,7 +64,7 @@ take on the order of 1.3 microseconds each on a lightly-loaded server
 value can be found using the key).  As the root table approaches the 
 number of entries in size, this falls to about 1.2 us, or 600ns/op.
 
-These figures were obtained from single-threaded tests.
+These figures were obtained from *single-threaded* tests.
 
 ## References
 

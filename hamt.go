@@ -2,14 +2,6 @@ package hamt_go
 
 // hamt_go/hamt.go
 
-// global variables with default values
-// XXX DROP THESE
-var (
-	W          = uint(5)
-	MAX_DEPTH  = uint(64 / W)
-	LEVEL_MASK = uint64(0x1f) // masks off W bits
-)
-
 type HAMT struct {
 	root *Root // could be EntryI
 }
@@ -20,6 +12,16 @@ func NewHAMT(w, t uint) (h *HAMT) {
 		root: root,
 	}
 	return
+}
+
+func (h *HAMT) GetT() uint {
+	return h.root.t
+}
+func (h *HAMT) GetW() uint {
+	return h.root.w
+}
+func (h *HAMT) GetTableCount() uint {
+	return h.root.GetTableCount()
 }
 
 func (h *HAMT) Delete(k KeyI) (err error) {

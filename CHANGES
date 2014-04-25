@@ -5,6 +5,8 @@ v0.4.0
         * introduced root with 2^t entries and no use of POPCOUNT   * SLOC 1183
     2014-04-23
         * perf tests debugged                                       * SLOC 1248
+    2014-04-25
+        * added HAMT entry splitting test                           * SLOC 1351
 v0.3.0
     2014-04-21
         * debugged HAMT that actually uses SWAR code                * SLOC 2793

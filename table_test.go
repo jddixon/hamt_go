@@ -45,6 +45,11 @@ func (s *XLSuite) TestTableDepthZeroInserts(c *C) {
 	s.doTestTableDepthZeroInserts(c, 5, 0)
 	s.doTestTableDepthZeroInserts(c, 6, 0)
 
+	// XXX These fail for unknown reasons - whereas hamt_test equivalents
+	// succeed.
+	//s.doTestTableDepthZeroInserts(c, 7, 0)
+	//s.doTestTableDepthZeroInserts(c, 8, 0)
+
 }
 func (s *XLSuite) doTestTableDepthZeroInserts(c *C, w, t uint) {
 	var (
@@ -68,7 +73,7 @@ func (s *XLSuite) doTestTableDepthZeroInserts(c *C, w, t uint) {
 	SLOT_COUNT := table.maxSlots
 
 	// DEBUG
-	//fmt.Printf("doTest: w = %d, t = %d, mask = 0x%x, maxSlots = %d\n",
+	//fmt.Printf("doTest: w = %d, t = %d, mask = 0x%02x, maxSlots = %3d\n",
 	//	w, t, table.mask, SLOT_COUNT)
 	// END
 
@@ -201,7 +206,12 @@ func (s *XLSuite) TestEntrySplittingInserts(c *C) {
 	}
 	rng := xr.MakeSimpleRNG()
 
+	// s.doTestEntrySplittingInserts(c, rng, uint(3))	// key too short
+	// s.doTestEntrySplittingInserts(c, rng, uint(4))	// index out of range
 	s.doTestEntrySplittingInserts(c, rng, uint(5))
+	s.doTestEntrySplittingInserts(c, rng, uint(6))
+	// s.doTestEntrySplittingInserts(c, rng, uint(7))	// entry not found
+	// s.doTestEntrySplittingInserts(c, rng, uint(8))	// index out of range
 }
 
 func (s *XLSuite) doTestEntrySplittingInserts(c *C, rng *xr.PRNG, w uint) {
@@ -331,7 +341,7 @@ func (s *XLSuite) doTestEntrySplittingInserts(c *C, rng *xr.PRNG, w uint) {
 		//}
 		//// END
 
-		// c.Assert(table.GetTableCount(), Equals, i + 1)	// FAILS XXX
+		// c.Assert(table.GetTableCount(), Equals, i + 1)
 	}
 	//// DEBUG
 	//fmt.Println("DUMP OF DEPTH-N TABLES")
@@ -367,7 +377,7 @@ func (s *XLSuite) doTestEntrySplittingInserts(c *C, rng *xr.PRNG, w uint) {
 		c.Assert(err, Equals, NotFound)
 		//fmt.Printf("    key %2d gone after deletion\n\n", i) // DEBUG
 	}
-}
+} // GEEP
 
 // ------------------------------------------------------------------
 
