@@ -57,11 +57,11 @@ func (s *XLSuite) TestSWAR64(c *C) {
 	}
 }
 
-func (s *XLSuite) TestMaxSlots(c *C) {
+func (s *XLSuite) TestMakingPermutedKeys(c *C) {
 
-	n := uint(1)
-	for i := uint(0); i < 16; i++ {
-		c.Assert(powerOfTwo(i), Equals, n)
-		n *= 2
-	}
+	rng := xr.MakeSimpleRNG()
+
+	s.makePermutedKeys(rng, uint(4))
+	s.makePermutedKeys(rng, uint(5))
+	// s.makePermutedKeys(rng, uint(6))
 }

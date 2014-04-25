@@ -45,7 +45,7 @@ func (s *XLSuite) doTestDepthZeroHAMT(c *C, w, t uint) {
 	rng := xr.MakeSimpleRNG()
 
 	KEY_LEN := uint(16)
-	KEY_COUNT := powerOfTwo(t) // fill all slots
+	KEY_COUNT := uint(1 << t) // fill all slots
 
 	h := NewHAMT(w, t)
 	// DEBUG

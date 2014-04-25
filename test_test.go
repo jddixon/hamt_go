@@ -14,7 +14,8 @@ import (
 func (s *XLSuite) uniqueKeyMaker(c *C, rng *xr.PRNG, w, keyCount, keyLen uint) (
 	rawKeys [][]byte, bKeys []*BytesKey, hashcodes []uint64, values []interface{}) {
 
-	if keyCount > powerOfTwo(w) {
+	maxCount := uint(1 << w)
+	if keyCount > maxCount {
 		msg := fmt.Sprintf(
 			"too few bits in %d: cannot guarantee uniqueness of %d keys",
 			w, keyCount)

@@ -20,13 +20,13 @@ type Root struct {
 func NewRoot(w, t uint) (root *Root) {
 	flag := uint64(1)
 	flag <<= t
-	slotCount := powerOfTwo(t)
+	count := uint(1 << t) // number of slots
 	root = &Root{
 		w:         w,
 		t:         t,
 		mask:      flag - 1,
-		slots:     make([]*Entry, slotCount),
-		slotCount: slotCount,
+		slots:     make([]*Entry, count),
+		slotCount: count,
 	}
 	return
 }
@@ -122,11 +122,10 @@ func (root *Root) findEntry(hc uint64, key KeyI) (
 	return
 }
 
-// XXX MERGE THESE
-func (root *Root) insertEntry(hc uint64, entry *Entry) (
+func (root *Root) insertEntry(newHC uint64, entry *Entry) (
 	slotNbr uint, err error) {
 
-	ndx := hc & root.mask
+	ndx := newHC & root.mask
 
 	// DEBUG
 	// fmt.Printf("insert root slot %4d (0x%03x)", ndx, ndx)
@@ -134,73 +133,59 @@ func (root *Root) insertEntry(hc uint64, entry *Entry) (
 	if root.slots[ndx] == nil {
 		root.slots[ndx] = entry
 	} else {
-		// WORKING HERE
-		// DEBUG
-		// fmt.Printf(" already occupied")
-		// END
-
 		// there is already something in this slot
-		err = root.insertIntoOccupiedSlot(hc, entry, ndx)
+		e := root.slots[ndx]
+
+		if e.Node.IsLeaf() {
+			// if it's a leaf, we replace the value iff the keys match
+
+			//////////////////////////////////////
+			// XXX NOT CHECKING FOR DUPLICATE KEYS
+			//////////////////////////////////////
+
+			var (
+				tableDeeper *Table
+				oldEntry    *Entry
+				oldHC       uint64
+			)
+
+			tableDeeper, err = NewTable(1, root.w, root.t)
+			if err == nil {
+				newHC >>= root.t // this is hc for the NEW entry
+
+				oldEntry = e
+				oldLeaf := e.Node.(*Leaf)
+				oldHC, err = oldLeaf.Key.Hashcode()
+			}
+			if err == nil {
+				oldHC >>= root.t
+
+				// put the existing leaf into the new table
+				_, err = tableDeeper.insertEntry(oldHC, 1, oldEntry)
+				if err == nil {
+					// then put the new entry in the new table
+					_, err = tableDeeper.insertEntry(newHC, 1, entry)
+					if err == nil {
+						// the new table replaces the existing leaf
+						var eTab *Entry
+						eTab, err = NewEntry(byte(ndx), tableDeeper)
+						if err == nil {
+							root.slots[ndx] = eTab
+						}
+					}
+				}
+			}
+		} else {
+			// otherwise it's a table, so recurse
+			tDeeper := e.Node.(*Table)
+			newHC >>= root.t
+			_, err = tDeeper.insertEntry(newHC, 1, entry)
+
+		}
 	}
 	// DEBUG
 	// fmt.Println()
 	// END
-	return
-}
-
-// Insert a new entry into a slot which is already occupied.
-//
-func (root *Root) insertIntoOccupiedSlot(newHC uint64,
-	entry *Entry, ndx uint64) (err error) {
-
-	e := root.slots[ndx]
-
-	if e.Node.IsLeaf() {
-		// if it's a leaf, we replace the value iff the keys match
-
-		//////////////////////////////////////
-		// XXX NOT CHECKING FOR DUPLICATE KEYS
-		//////////////////////////////////////
-
-		var (
-			tableDeeper *Table
-			oldEntry    *Entry
-			oldHC       uint64
-		)
-
-		tableDeeper, err = NewTable(1, root.w, root.t)
-		if err == nil {
-			newHC >>= root.t // this is hc for the NEW entry
-
-			oldEntry = e
-			oldLeaf := e.Node.(*Leaf)
-			oldHC, err = oldLeaf.Key.Hashcode()
-		}
-		if err == nil {
-			oldHC >>= root.t
-
-			// put the existing leaf into the new table
-			_, err = tableDeeper.insertEntry(oldHC, 1, oldEntry)
-			if err == nil {
-				// then put the new entry in the new table
-				_, err = tableDeeper.insertEntry(newHC, 1, entry)
-				if err == nil {
-					// the new table replaces the existing leaf
-					var eTab *Entry
-					eTab, err = NewEntry(byte(ndx), tableDeeper)
-					if err == nil {
-						root.slots[ndx] = eTab
-					}
-				}
-			}
-		}
-	} else {
-		// otherwise it's a table, so recurse
-		tDeeper := e.Node.(*Table)
-		newHC >>= root.t
-		_, err = tDeeper.insertEntry(newHC, 1, entry)
-
-	}
 	return
 }
 

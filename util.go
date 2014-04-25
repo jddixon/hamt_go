@@ -2,6 +2,7 @@ package hamt_go
 
 import (
 	"fmt"
+	xr "github.com/jddixon/xlattice_go/rnglib"
 	"strings"
 )
 
@@ -44,20 +45,59 @@ func dumpByteSlice(sl []byte) string {
 	return strings.Join(ss, "")
 }
 
-var POWERS_OF_TWO []uint
-
-func init() {
-	POWERS_OF_TWO = append(POWERS_OF_TWO, uint(1))
-	for i := 1; i < 32; i++ {
-		POWERS_OF_TWO = append(POWERS_OF_TWO, 2*POWERS_OF_TWO[i-1])
+func dumpTable(title string, dTable *Table) string {
+	var ss []string
+	ss = append(ss, fmt.Sprintf("    dTable %s:", title))
+	for j := 0; j < len(dTable.indices); j++ {
+		if dTable.slots[j].Node.IsLeaf() {
+			ss = append(ss, " L")
+		} else {
+			ss = append(ss, " T")
+		}
+		ss = append(ss, fmt.Sprintf("%02x", dTable.indices[j]))
 	}
+	return strings.Join(ss, "")
 }
 
-// n represents the number of bits in a prefix (so w or t); return
-// 2^n.
-func powerOfTwo(n uint) uint {
-	if n > uint(len(POWERS_OF_TWO)) {
-		panic("powerOfTwo parameter out of range")
+// build 2^w keys, each differing from the preceding by w bits
+func (s *XLSuite) makePermutedKeys(rng *xr.PRNG, w uint) (keys [][]byte) {
+
+	fieldCount := (1 << w) - 1     // we don't want the zero value
+	fields := rng.Perm(fieldCount) // so 2^w distinct values
+	for i := 0; i < len(fields); i++ {
+		fields[i] += 1
 	}
-	return POWERS_OF_TWO[n]
+	keyLen := uint((int(w)*fieldCount + 7) / 8) // in bytes, rounded up
+	keyCount := uint(fieldCount)
+	keys = make([][]byte, keyCount)
+
+	fmt.Printf("w = %d, fieldCount = keyCount = %d, keyLen = %d\n",
+		w, fieldCount, keyLen)
+
+	// DEBUG
+	fmt.Printf("DUMP KEYS FOR w = %d\n", w)
+	// END
+
+	for i := uint(0); i < keyCount; i++ {
+		key := make([]byte, keyLen) // all zeroes
+		if i != uint(0) {
+			copy(key, keys[i-1])
+		}
+		// OR the field into the appropriate byte(s) of the key
+		bitOffset := w * i
+		whichByte := bitOffset / uint(8)
+		whichBit := bitOffset % uint(8)
+
+		// lower half of the field
+		key[whichByte] |= byte(fields[i] << whichBit)
+		if whichBit+w > 8 {
+			key[whichByte+1] |= byte(fields[i] >> whichBit)
+		}
+		keys[i] = key
+		// DEBUG
+		fmt.Printf("%2d, %02x: %s\n", i, fields[i], dumpByteSlice(keys[i]))
+		// END
+	}
+
+	return
 }

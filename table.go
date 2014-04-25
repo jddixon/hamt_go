@@ -33,7 +33,7 @@ func NewTable(depth, w, t uint) (table *Table, err error) {
 	flag <<= w
 	table.mask = flag - 1
 	table.maxDepth = (64 / w) // rounds down	XXX WRONG: NO ALLOWANCE FOR t
-	table.maxSlots = powerOfTwo(w)
+	table.maxSlots = 1 << w
 
 	// DEBUG
 	//fmt.Printf("NewTable: depth %d/%d, w %d, t %d, maxSlots %d\n",

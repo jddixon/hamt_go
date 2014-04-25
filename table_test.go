@@ -195,53 +195,51 @@ func (s *XLSuite) doTestTableDepthZeroInserts(c *C, w, t uint) {
 // Insert a series of entries, each of which should replace a leaf with
 // a table.
 
-func (s *XLSuite) TestTableEntrySplittingInserts(c *C) {
+func (s *XLSuite) TestEntrySplittingInserts(c *C) {
 	if VERBOSITY > 0 {
 		fmt.Println("TEST_TABLE_ENTRY_SPLITTING_INSERTS")
 	}
 	rng := xr.MakeSimpleRNG()
-	perm := rng.Perm(32) // a random permutation of [0..32)
+
+	s.doTestEntrySplittingInserts(c, rng, uint(5))
+}
+
+func (s *XLSuite) doTestEntrySplittingInserts(c *C, rng *xr.PRNG, w uint) {
+
 	depth := uint(1)
-	w := uint(5)
 	t := uint(0)
 
 	table, err := NewTable(depth, w, t)
+
+	// DEBUG
+	var depthNTables []*Table
+	tSoFar := uint(0)
+	// END
+
 	c.Assert(err, IsNil)
 	c.Assert(table, NotNil)
 	c.Assert(table.GetDepth(), Equals, depth)
 
 	c.Assert(table.w, Equals, w)
 	c.Assert(table.t, Equals, t)
+
 	flag := uint64(1)
 	flag <<= (t + w)
 	expectedMask := flag - 1
 	c.Assert(table.mask, Equals, expectedMask)
 	c.Assert(table.maxDepth, Equals, 64/w)
-	KEY_COUNT := uint(8) // XXX SILLINESS
+
+	rawKeys := s.makePermutedKeys(rng, w)
+	KEY_COUNT := uint(len(rawKeys))
 
 	//fmt.Printf("KEY_COUNT = %d\n", KEY_COUNT) // DEBUG
 
-	rawKeys := make([][]byte, KEY_COUNT)
 	key64s := make([]*BytesKey, KEY_COUNT)
 	hashcodes := make([]uint64, KEY_COUNT)
 	values := make([]interface{}, KEY_COUNT)
 
-	// Build KEY_COUNT rawKeys of length 16, each with i+1 non-zero bytes on the
-	// left, and zero bytes on the right.  Each key duplicates the
-	// previous key except that a non-zero byte is introduced in the
-	// i-th position.
 	for i := uint(0); i < KEY_COUNT; i++ {
-		key := make([]byte, 16)
-		var j uint
-		if i > 0 {
-			lastKey := rawKeys[i-1]
-			for j < i {
-				key[j] = lastKey[j]
-				j++
-			}
-		}
-		key[i] = byte(perm[i] + 1)
-		rawKeys[i] = key
+		key := rawKeys[i]
 
 		key64, err := NewBytesKey(key)
 		c.Assert(err, IsNil)
@@ -255,6 +253,8 @@ func (s *XLSuite) TestTableEntrySplittingInserts(c *C) {
 		hashcodes[i] = hc
 
 	}
+	c.Assert(table.GetTableCount(), Equals, uint(1))
+
 	// fmt.Printf("\nINSERTION LOOP\n")
 	for i := uint(0); i < KEY_COUNT; i++ {
 		//fmt.Printf("\nINSERTING KEY %d: %s\n", i, dumpByteSlice(rawKeys[i]))
@@ -295,7 +295,54 @@ func (s *XLSuite) TestTableEntrySplittingInserts(c *C) {
 		// END
 		_, err = table.findEntry(hc, depth, key64)
 		c.Assert(err, IsNil)
+
+		// DEBUG depthN -- WORKING HERE
+		tCount := table.GetTableCount()
+		fmt.Printf("  insertion %2d count %2d: %s\n",
+			i, tCount, dumpByteSlice(rawKeys[i]))
+
+		if tSoFar <= i {
+			var dTable *Table
+			if i == 0 {
+				dTable = table
+				depthNTables = append(depthNTables, dTable) // just a pointer
+				tSoFar++
+				fmt.Printf("  dTable %2d, depth %2d: %s\n",
+					tSoFar,
+					dTable.depth,
+					dumpByteSlice(dTable.indices))
+			} else {
+				for tSoFar < tCount {
+					var slot *Entry
+					dTable = depthNTables[len(depthNTables)-1]
+					slotCount := len(dTable.slots)
+					if slotCount == 1 {
+						slot = dTable.slots[0]
+					} else {
+						slot = dTable.slots[1]
+					}
+					c.Assert(slot.Node.IsLeaf(), Equals, false)
+					dTable = slot.Node.(*Table)
+
+					depthNTables = append(depthNTables, dTable)
+					tSoFar++
+					fmt.Printf("    dTable %2d: %s\n",
+						tSoFar, dumpByteSlice(dTable.indices))
+				}
+			}
+		}
+		// END
+
+		// c.Assert(table.GetTableCount(), Equals, i + 1)	// FAILS XXX
 	}
+	// DEBUG
+	fmt.Println("DUMP OF DEPTH-N TABLES")
+	for i := uint(0); i < uint(len(depthNTables)); i++ {
+		lineNo := fmt.Sprintf("%2d ", i)
+		tDump := dumpTable(lineNo, depthNTables[i])
+		fmt.Println(tDump)
+	}
+	// END
 	//fmt.Println("\nDELETION LOOP") // DEBUG
 	for i := uint(0); i < KEY_COUNT; i++ {
 		hc := hashcodes[i]
