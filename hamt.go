@@ -23,19 +23,24 @@ func NewHAMT(w, t uint) (h *HAMT) {
 	return
 }
 
-// Return t which determiens the size of the root table (2^t).
+// Return t which determines the size of the root table (2^t).
 func (h *HAMT) GetT() uint {
 	return h.root.t
 }
 
-// Return w which determiens the size of lower-level tables (2^w).
+// Return w which determines the size of lower-level tables (2^w).
 func (h *HAMT) GetW() uint {
 	return h.root.w
 }
 
+// Return the number of leaf nodes in the HAMT.
+func (h *HAMT) GetLeafCount() uint {
+	return h.root.getLeafCount()
+}
+
 // Return the number of tables, including the root table, in the HAMT.
 func (h *HAMT) GetTableCount() uint {
-	return h.root.GetTableCount()
+	return h.root.getTableCount()
 }
 
 // If there is an entry with the key k in the HAMT, remove it.  If

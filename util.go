@@ -2,7 +2,6 @@ package hamt_go
 
 import (
 	"fmt"
-	xr "github.com/jddixon/xlattice_go/rnglib"
 	"strings"
 )
 
@@ -57,39 +56,4 @@ func dumpTable(title string, dTable *Table) string {
 		ss = append(ss, fmt.Sprintf("%02x", dTable.indices[j]))
 	}
 	return strings.Join(ss, "")
-}
-
-// build 2^w keys, each differing from the preceding by w bits
-func (s *XLSuite) makePermutedKeys(rng *xr.PRNG, w uint) (
-	fields []int, // FOR DEBUGGING ONLY
-	keys [][]byte) {
-
-	fieldCount := (1 << w) - 1    // we don't want the zero value
-	fields = rng.Perm(fieldCount) // so 2^w distinct values
-	for i := 0; i < len(fields); i++ {
-		fields[i] += 1
-	}
-	keyLen := uint((int(w)*fieldCount + 7) / 8) // in bytes, rounded up
-	keyCount := uint(fieldCount)
-	keys = make([][]byte, keyCount)
-
-	for i := uint(0); i < keyCount; i++ {
-		key := make([]byte, keyLen) // all zeroes
-		if i != uint(0) {
-			copy(key, keys[i-1])
-		}
-		// OR the field into the appropriate byte(s) of the key
-		bitOffset := w * i
-		whichByte := bitOffset / uint(8)
-		whichBit := bitOffset % uint(8)
-
-		// lower half of the field
-		key[whichByte] |= byte(fields[i] << whichBit)
-		if whichBit+w >= 8 {
-			key[whichByte+1] |= byte(fields[i] >> (8 - whichBit))
-		}
-		keys[i] = key
-	}
-
-	return
 }

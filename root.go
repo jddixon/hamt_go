@@ -32,13 +32,19 @@ func NewRoot(w, t uint) (root *Root) {
 }
 
 // Return a count of leaf nodes in the root
-func (root *Root) GetLeafCount() (count uint) {
+func (root *Root) getLeafCount() (count uint) {
 	if root.slots != nil {
 		for i := uint(0); i < root.slotCount; i++ {
 			if root.slots[i] != nil {
 				node := root.slots[i].Node
-				if node != nil && node.IsLeaf() {
-					count++
+				if node != nil {
+					if node.IsLeaf() {
+						count++
+					} else {
+						// recurse
+						table := node.(*Table)
+						count += table.getLeafCount()
+					}
 				}
 			}
 		}
@@ -46,8 +52,8 @@ func (root *Root) GetLeafCount() (count uint) {
 	return
 }
 
-//
-func (root *Root) GetTableCount() (count uint) {
+// Return a count of tables (including the root) in the HAMT
+func (root *Root) getTableCount() (count uint) {
 	count = 1 // we include the root in the count
 	if root.slots != nil {
 		for i := uint(0); i < root.slotCount; i++ {
@@ -55,7 +61,7 @@ func (root *Root) GetTableCount() (count uint) {
 				node := root.slots[i].Node
 				if node != nil && !node.IsLeaf() {
 					tDeeper := node.(*Table)
-					count += tDeeper.GetTableCount()
+					count += tDeeper.getTableCount()
 				}
 			}
 		}

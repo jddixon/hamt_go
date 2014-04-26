@@ -11,7 +11,8 @@ import (
 	"bytes"
 	"fmt"
 	xr "github.com/jddixon/xlattice_go/rnglib"
-	. "launchpad.net/gocheck"
+	//. "launchpad.net/gocheck"
+	. "gopkg.in/check.v1"
 	"time"
 )
 
@@ -97,7 +98,7 @@ func (s *XLSuite) doBenchmark(c *C, w, t uint) {
 
 	}
 	// rough measure of resource consumption
-	tableCount := m.root.GetTableCount()
+	tableCount := m.GetTableCount()
 	slotsPerChild := uint(1 << m.root.w)
 	// the slots in the root table plus those in child tables
 	slotCount := m.root.slotCount + slotsPerChild*(tableCount-1)

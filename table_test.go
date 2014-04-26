@@ -6,7 +6,8 @@ import (
 	"bytes"
 	"fmt"
 	xr "github.com/jddixon/xlattice_go/rnglib"
-	. "launchpad.net/gocheck"
+	. "gopkg.in/check.v1"
+	//. "launchpad.net/gocheck"
 )
 
 var _ = fmt.Print
@@ -242,7 +243,7 @@ func (s *XLSuite) doTestEntrySplittingInserts(c *C, rng *xr.PRNG, w uint) {
 		hashcodes[i] = hc
 
 	}
-	c.Assert(table.GetTableCount(), Equals, uint(1))
+	c.Assert(table.getTableCount(), Equals, uint(1))
 
 	for i := uint(0); i < KEY_COUNT; i++ {
 		hc := hashcodes[i]
