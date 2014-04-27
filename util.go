@@ -13,15 +13,15 @@ import (
 // stackoverflow.com/questions/22081738/how-variable-precision-swar-algorithm-workds
 
 const (
-	OCTO_FIVES  = 0x55555555
-	OCTO_THREES = 0x33333333
-	OCTO_ONES   = 0x01010101
-	OCTO_FS     = 0x0f0f0f0f
+	OCTO_FIVES  = uint32(0x55555555)
+	OCTO_THREES = uint32(0x33333333)
+	OCTO_ONES   = uint32(0x01010101)
+	OCTO_FS     = uint32(0x0f0f0f0f)
 
-	HEXI_FIVES  = 0x5555555555555555
-	HEXI_THREES = 0x3333333333333333
-	HEXI_ONES   = 0x0101010101010101
-	HEXI_FS     = 0x0f0f0f0f0f0f0f0f
+	HEXI_FIVES  = uint64(0x5555555555555555)
+	HEXI_THREES = uint64(0x3333333333333333)
+	HEXI_ONES   = uint64(0x0101010101010101)
+	HEXI_FS     = uint64(0x0f0f0f0f0f0f0f0f)
 )
 
 func BitCount32(n uint32) uint {

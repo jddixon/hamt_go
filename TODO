@@ -1,5 +1,11 @@
 hamt_go/TODO
 
+2014-04-26
+    * TestSWAR64 consistently fails on 64-bit Intel CPU laptop
+        - TestSWAR32 succeeds wherever tested
+        - constant declarations changed to uint32, uint64
+    * test on EC2 machines
+
 2014-04-25
     * determine why table_test fails with w > 6 but hamt_test succeeds
     * fix root.GetLeafCount(), which should recurse
