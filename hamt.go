@@ -1,6 +1,11 @@
 package hamt_go
 
 // hamt_go/hamt.go
+import (
+	"fmt"
+)
+
+var _ = fmt.Print
 
 type HAMT struct {
 	root *Root // could be EntryI
@@ -67,9 +72,8 @@ func (h *HAMT) Find(k KeyI) (v interface{}, err error) {
 	return
 }
 
-// Store the value v in the table keyed by k.  If there is already
-// an entry in the trie with this key, then replace the associated
-// value.  This is not an error condition.
+// Try to create an Entry for the key/value pair..  If this succeeds,
+// try to insert the Entry into the root table.
 func (h *HAMT) Insert(k KeyI, v interface{}) (err error) {
 
 	hc, err := k.Hashcode()
@@ -81,7 +85,16 @@ func (h *HAMT) Insert(k KeyI, v interface{}) (err error) {
 			var e *Entry
 			e, err = NewEntry(byte(ndx), leaf)
 			if err == nil {
-				_, err = h.root.insertEntry(hc, e)
+				var slotNbr uint // DEBUG
+				slotNbr, err = h.root.insertEntry(hc, e)
+				// DEBUG - slotNbr is only for debugging
+				fmt.Printf("HAMT inserted entry into slot %d (0x%x)",
+					slotNbr, slotNbr)
+				if err != nil {
+					fmt.Printf(" ERROR %s\n", err.Error())
+				}
+				fmt.Println("")
+				// END
 			}
 		}
 	}

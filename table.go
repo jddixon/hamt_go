@@ -50,6 +50,9 @@ func (table *Table) getLeafCount() (count uint) {
 			count++
 		}
 	}
+	// DEBUG
+	fmt.Printf("Table.getLeafCount() %d\n", count)
+	// END
 	return
 }
 
@@ -159,15 +162,15 @@ func (table *Table) findEntry(hc uint64, depth uint, key KeyI) (
 	value interface{}, err error) {
 
 	var (
-		ndx64, flag, mask uint64
+		ndx, flag, mask uint64
 	)
 	sliceSize := byte(len(table.indices))
 	if sliceSize == 0 {
 		err = NotFound
 	}
 	if err == nil {
-		ndx64 = hc & table.mask
-		flag = uint64(1 << ndx64)
+		ndx = hc & table.mask
+		flag = uint64(1 << ndx)
 		mask = flag - 1
 		if table.bitmap&flag == 0 {
 			err = NotFound
@@ -215,6 +218,12 @@ func (table *Table) CheckTableDepth(depth uint) (err error) {
 func (table *Table) insertEntry(hc uint64, depth uint, entry *Entry) (
 	slotNbr uint, err error) {
 
+	// DEBUG
+	if depth != table.depth {
+		fmt.Printf("INTERNAL ERROR: inserting at depth %d but table depth is %d\n",
+			depth, table.depth)
+	}
+	// END
 	err = table.CheckTableDepth(depth)
 	if err != nil {
 		return

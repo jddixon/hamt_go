@@ -12,7 +12,7 @@ var _ = fmt.Print
 type Root struct {
 	w         uint // non-root tables have 2^w slots
 	t         uint // root table has 2^t slots
-	slotCount uint // maximum slots for the root table
+	slotCount uint // number of slots in the root table
 	mask      uint64
 	slots     []*Entry // each nil or a pointer to either a leaf or a table
 }
@@ -49,6 +49,9 @@ func (root *Root) getLeafCount() (count uint) {
 			}
 		}
 	}
+	// DEBUG
+	fmt.Printf("Root.getLeafCount() returning %d\n", count)
+	// END
 	return
 }
 
@@ -134,12 +137,19 @@ func (root *Root) insertEntry(newHC uint64, entry *Entry) (
 	ndx := newHC & root.mask
 
 	if root.slots[ndx] == nil {
+		// DEBUG
+		fmt.Printf("root: inserting entry into empty slot %d (0x%x)\n", ndx, ndx)
+		// END
 		root.slots[ndx] = entry
 	} else {
 		// there is already something in this slot
 		e := root.slots[ndx]
 
 		if e.Node.IsLeaf() {
+			// DEBUG
+			fmt.Printf("root: inserting entry into empty root slot %d (0x%x)\n",
+				ndx, ndx)
+			// END
 			// if it's a leaf, we replace the value iff the keys match
 			curLeaf := e.Node.(*Leaf)
 			curKey := curLeaf.Key.(*BytesKey)
@@ -167,11 +177,14 @@ func (root *Root) insertEntry(newHC uint64, entry *Entry) (
 				if err == nil {
 					oldHC >>= root.t
 
+					// XXX THE SLOT NBRS ARE FOR DEBUGGING
+					var slotNbrOE, slotNbrNE uint
+
 					// put the existing leaf into the new table
-					_, err = tableDeeper.insertEntry(oldHC, 1, oldEntry)
+					slotNbrOE, err = tableDeeper.insertEntry(oldHC, 1, oldEntry)
 					if err == nil {
 						// then put the new entry in the new table
-						_, err = tableDeeper.insertEntry(newHC, 1, entry)
+						slotNbrNE, err = tableDeeper.insertEntry(newHC, 1, entry)
 						if err == nil {
 							// the new table replaces the existing leaf
 							var eTab *Entry
@@ -181,10 +194,19 @@ func (root *Root) insertEntry(newHC uint64, entry *Entry) (
 							}
 						}
 					}
+					// DEBUG
+					fmt.Printf("root table slot %d (0x%x): replaced entry with table, OE %d (0x%x), NE %d (0x%x)\n",
+						ndx, ndx, slotNbrOE, slotNbrOE, slotNbrNE, slotNbrNE)
+					// END
 				}
 			}
 		} else {
 			// otherwise it's a table, so recurse
+			// DEBUG
+			fmt.Printf(
+				"inserting entry root table slot %d (0x%x) a table, so recursing\n",
+				ndx, ndx)
+			// END
 			tDeeper := e.Node.(*Table)
 			newHC >>= root.t
 			_, err = tDeeper.insertEntry(newHC, 1, entry)
