@@ -85,16 +85,16 @@ func (h *HAMT) Insert(k KeyI, v interface{}) (err error) {
 			var e *Entry
 			e, err = NewEntry(byte(ndx), leaf)
 			if err == nil {
-				var slotNbr uint // DEBUG
-				slotNbr, err = h.root.insertEntry(hc, e)
-				// DEBUG - slotNbr is only for debugging
-				fmt.Printf("HAMT inserted entry into slot %d (0x%x)",
-					slotNbr, slotNbr)
-				if err != nil {
-					fmt.Printf(" ERROR %s\n", err.Error())
-				}
-				fmt.Println("")
-				// END
+				// var slotNbr uint // DEBUG
+				_, err = h.root.insertEntry(hc, e)
+				//// DEBUG - slotNbr is only for debugging
+				//fmt.Printf("HAMT inserted entry into slot %d (0x%x)",
+				//	slotNbr, slotNbr)
+				//if err != nil {
+				//	fmt.Printf(" ERROR %s\n", err.Error())
+				//}
+				//fmt.Println("")
+				//// END
 			}
 		}
 	}

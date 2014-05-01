@@ -46,13 +46,15 @@ func NewTable(depth, w, t uint) (table *Table, err error) {
 func (table *Table) getLeafCount() (count uint) {
 	for i := 0; i < len(table.slots); i++ {
 		node := table.slots[i].Node
-		if node != nil && node.IsLeaf() {
-			count++
+		if node != nil {
+			if node.IsLeaf() {
+				count++
+			} else {
+				tDeeper := node.(*Table)
+				count += tDeeper.getLeafCount()
+			}
 		}
 	}
-	// DEBUG
-	fmt.Printf("Table.getLeafCount() %d\n", count)
-	// END
 	return
 }
 

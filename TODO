@@ -1,10 +1,15 @@
 hamt_go/TODO
 
+2014-04-30
+    * fix: doTestHAMTInsertsOfRandomishValues() fails, returns          * DONE
+        incorrect leaf count line 195 (two leafs missing)               * DONE
+    * fix: doTestHamtEntrySplittingInserts() fails, also                * DONE
+        returns 2 less than correct leaf count (expect 3, obtain 1)     * DONE
 2014-04-27
     * test Root.getTableCount(), getLeafCount()
     * test Table.getTableCount(), getLeafCount()                        * DONE
-        - FIX: TestHamtEntrySplittingInserts GetLeafCount errors :-)
-    * be sure to re-enable tests that are 'commented out'
+        - FIX: TestHamtEntrySplittingInserts GetLeafCount errors :-)    * DONE
+    * be sure to re-enable tests that are 'commented out'               * DONE
 
 2014-04-26
     * TestSWAR64 consistently fails on 64-bit Intel CPU laptop

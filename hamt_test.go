@@ -32,8 +32,7 @@ func (s *XLSuite) doTestHAMTCtor(c *C, w, t uint) {
 
 // ==================================================================
 
-// 'aaa' in effect comments out the test
-func (s *XLSuite) aaaTestDepthZeroHAMT(c *C) {
+func (s *XLSuite) TestDepthZeroHAMT(c *C) {
 	if VERBOSITY > 0 {
 		fmt.Println("TEST_DEPTH_ZERO_HAMT")
 	}
