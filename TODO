@@ -1,5 +1,24 @@
 hamt_go/TODO
 
+2014-05-06
+    * consider removing hc from Entry
+    * if this is feasible, consider replacing Entry with Leaf
+        everywhere (yields v0.7.0
+
+2014-05-06 (from -04-22) 
+    * values in the root table should NOT be entries; the index		    * DONE
+        is known.  Make these Nodes instead.  This may be URGENT.		* DONE
+        - yields v0.6.0		                                            * DONE
+    * root method parameters contain key so should NOT contain hc		* DONE
+        - fix root.findLeaf()		                                    * DONE
+        - fix root.deleteLeaf()		                                    * DONE
+
+2014-05-06 (04-17, edited)
+    * possibly allow dynamic resizing of root table
+        - this might be restricted to tables of N * W nodes
+    * need tools for static analysis of frozen HAMTs
+    * possibly need serialization/deserialization tools
+
 2014-05-05 (04-30 edited)
     * unsuccessful find return nil value, nil error 
         - HAMT                                                          * DONE
@@ -11,20 +30,16 @@ hamt_go/TODO
     * fix: doTestHamtEntrySplittingInserts() fails, also                * DONE
         returns 2 less than correct leaf count (expect 3, obtain 1)     * DONE
 2014-04-27
-    * test Root.getTableCount(), getLeafCount()
-    * test Table.getTableCount(), getLeafCount()                        * DONE
-        - FIX: TestHamtEntrySplittingInserts GetLeafCount errors :-)    * DONE
-    * be sure to re-enable tests that are 'commented out'               * DONE
+    * test Root.getTableCount(), getLeafCount()                         * DONE
 2014-04-26
     * TestSWAR64 consistently fails on 64-bit Intel CPU laptop
         - TestSWAR32 succeeds wherever tested
         - constant declarations changed to uint32, uint64
     * test on EC2 machines - FAILS
 2014-04-25
-    * determine why table_test fails with w > 6 but hamt_test succeeds
+    * determine why table_test fails with w > 6 but hamt_test succeeds  * ????
     * fix root.GetLeafCount(), which should recurse
-    * add hamt.GetLeafCount()                                           * DONE
-    * add test of hamt.GetLeafCount()
+    * add test of hamt.GetLeafCount()                                   * DONE
 2014-04-24
     * consider merging Table.insertEntry and insertIntoOccupiedSlot
 2014-04-23
@@ -35,12 +50,6 @@ hamt_go/TODO
     * same test but with varying degrees of concurrency
 2014-04-22
     * w cannot exceed 6 because POPCOUNT is limited to a 64-bit range   * ????
-    * values in the root table should NOT be entries; the index
-        is known.  Make these Nodes instead.  This may be URGENT.
-    * DEBUG: tests of HAMT using Root largely succeed, except that      *WRONG
-        reconfirmation of presence of root value fails around line      *WRONG
-        175 in hamt_test.go                                             *WRONG 
-
 2014-04-21 
     * FIX: insertIntoOccupiedSlot() does not replace the value 
         where there is an exact match on keys
@@ -48,28 +57,12 @@ hamt_go/TODO
         (however very unlikely such matches may be in actual use)
     * FIX: w=7 and w=8 versions of the HAMT benchmark have stopped
         working
-    * modify code to actually use t (w = 5, t = 5 yield 1K slot root)   *WRONG
 2014-04-20 (rev branch)
-    * investigate: TestTableEntrySplittingInserts creates two tables    * DONE
-        for each key inserted - should create only one                  * DONE
     * investigate: Table.maxSlots never used
 2014-04-18
-    * Need buckets at max depth to do hamt32_perf_test (million-entry   * SKIP
-        trie too deep for HAMT32)                                       * SKIP
-    * Possibly change meaning of 'depth' to bitDepth                    * SKIP
-    * Possibly break connection between wordlenth (32 or 64) and        * SKIP
-        W (log base 2 of number of entries in table)                    * SKIP
-    * Need to test GetLeafCount() and GetTableCount() functions         * DONE
-        for both HAMT32 and HAMT64                                      * DONE
     * Investigate suspicion that while larger root table has a small
         positive effect on performance, larger tables elsewhere cause
         a large increase in memory consumption.
-2014-04-17
-    * consider allowing larger root table of 2^(t + W) entries          * SKIP
-    * then possibly allow dynamic resizing
-        - this might be restricted to tables of 2^(N * W) entries
-    * need tools for static analysis of frozen HAMTs
-    * possibly need serialization/deserialization tools
 2014-04-16
     * to make this thing more useful:
         - where Table32.Delete() leaves empty table, need to remove

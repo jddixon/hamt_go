@@ -88,6 +88,7 @@ func (s *XLSuite) doTestDepthZeroHAMT(c *C, w, t uint) {
 		// verify that Find returns the new value
 		ret, err := h.Find(bKey)
 		c.Assert(err, IsNil)
+		c.Assert(ret, NotNil)
 		returned := *(ret.(*int64))
 		c.Assert(returned, Equals, newValue)
 

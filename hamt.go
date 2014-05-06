@@ -50,53 +50,22 @@ func (h *HAMT) GetTableCount() uint {
 
 // If there is an entry with the key k in the HAMT, remove it.  If
 // there is no such entry, return NotFound.
-func (h *HAMT) Delete(k KeyI) (err error) {
-
-	var hc uint64
-	hc, err = k.Hashcode()
-	if err == nil {
-		err = h.root.deleteEntry(hc, k)
-	}
-	return
+func (h *HAMT) Delete(k KeyI) error {
+	return h.root.deleteLeaf(k)
 }
 
 // If there is an entry with the key k in the HAMT, return the value
 // associated with the key.  If there is no such entry, return nil.
-func (h *HAMT) Find(k KeyI) (v interface{}, err error) {
-
-	var hc uint64
-	hc, err = k.Hashcode()
-	if err == nil {
-		v, err = h.root.findEntry(hc, k)
-	}
-	return
+func (h *HAMT) Find(k KeyI) (interface{}, error) {
+	return h.root.findLeaf(k)
 }
 
-// Try to create an Entry for the key/value pair..  If this succeeds,
-// try to insert the Entry into the root table.
+// Try to create an Leaf for the key/value pair..  If this succeeds,
+// try to insert the Leaf into the root table.
 func (h *HAMT) Insert(k KeyI, v interface{}) (err error) {
-
-	hc, err := k.Hashcode()
+	leaf, err := NewLeaf(k, v)
 	if err == nil {
-		ndx := hc & h.root.mask
-		var leaf *Leaf
-		leaf, err = NewLeaf(k, v)
-		if err == nil {
-			var e *Entry
-			e, err = NewEntry(byte(ndx), leaf)
-			if err == nil {
-				// var slotNbr uint // DEBUG
-				_, err = h.root.insertEntry(hc, e)
-				//// DEBUG - slotNbr is only for debugging
-				//fmt.Printf("HAMT inserted entry into slot %d (0x%x)",
-				//	slotNbr, slotNbr)
-				//if err != nil {
-				//	fmt.Printf(" ERROR %s\n", err.Error())
-				//}
-				//fmt.Println("")
-				//// END
-			}
-		}
+		_, err = h.root.insertLeaf(leaf)
 	}
 	return
 }
