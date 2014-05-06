@@ -11,7 +11,7 @@
 <div class="content">
 <h1>hamt_go</h1>
 
-<p>Go implementation of the HAMT data structure.</p>
+<p>A Go implementation of the HAMT data structure.</p>
 
 <p>A Hash Array Mapped Trie (<a href="http://infoscience.epfl.ch/record/64398/files/idealhashtrees.pdf">HAMT</a>)
 provides fast and memory-efficient access to large amounts of data held
@@ -27,13 +27,15 @@ are either tables or leaf entries.</p>
 or a table with up to <code>2^w</code> slots, where w is a small
 integer.  The next <code>w</code> bits of the hash
 derived from the key are construed as an index into that table.  The
-table grows dynamically as entries are added.  Whenever there is a
-collision at a given level, a child table replaces the current entry,
+table grows dynamically to its maximum number of slots as entries are added.<br />
+Whenever there is a
+collision at a given level, a pointer to a new table replaces the current
+leaf entry,
 and both new and old entries move to the child table, possibly
 recursing in the process.</p>
 
-<p>The current implementation allows values of
-3, 4, 5, or 6 for <code>w</code>.  Preliminary performance tests indicate
+<p>The current implementation has been tested with values of
+3, 4, 5, and 6 for <code>w</code>.  Preliminary performance tests indicate
 that <code>w=5</code> is optimal.  That is, a table with 32 slots gives the best
 performance.</p>
 
@@ -46,8 +48,8 @@ the root table should approach the total number of entries in size.</p>
 <p>A further enhancement would allow dynamic resizing of the root table.
 This has not yet been implemented.</p>
 
-<p>Whereas a normal hash table would be quite large and might
-require expensive resizing periodically, the HAMT data structure is roughly
+<p>Whereas a normal hash table would be quite large and might periodically
+require expensive resizing, the HAMT data structure is roughly
 as fast as a hash table, but starts small and consumes more memory only
 as needed.</p>
 
@@ -64,22 +66,20 @@ implementation of hamt_go emulates this in software using the
 <a href="http://en.wikipedia.org/wiki/SWAR">SWAR</a> algorithm,  The emulation code is on the order of ten times
 slower than the machine instruction.<br />
 <em>In practice POPCNT emulation might slow down accesses by something like 10%,
-because the emulation code simply is not run all that often.</em></p></li>
+because the emulation code simply is not run all that often.</em>
+<em>This is of course not actually a limitation, but rather an observation: the HAMT alorithm runs faster with hardware support.</em></p></li>
 </ul>
-
-<p>This is of course not actually a limitation, but rather an observation:
-the HAMT alorithm runs faster with hardware support.</p>
 
 <h2>Project Status</h2>
 
 <p>The code works and is reasonably well-tested.
-<code>Insert</code>, <code>Find</code>, and <code>Delete</code> operations, while not yet thoroughly optimized,
-take on the order of 1.3 microseconds each on a lightly-loaded server
-(about 2.6us each to insert a million values and verify that the
-value can be found using the key).  As the root table approaches the
+<code>Insert</code>and  <code>Find</code> operations, while not yet thoroughly optimized,
+take approximately of 0.9 microseconds each on a lightly-loaded server
+(about 1.8us each to insert a million values and verify that the
+value can be found using the key, where the root table has <code>2^18</code> slots).  As the root table approaches the
 number of entries in size, this falls to about 1.2 us, or 600ns/op.</p>
 
-<p>These figures were obtained from single-threaded tests.</p>
+<p>These figures were obtained from <em>single-threaded</em> tests.</p>
 
 <h2>References</h2>
 
