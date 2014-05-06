@@ -8,6 +8,8 @@ v0.4.0
     2014-04-25
         * added HAMT entry splitting test                           * SLOC 1351
         * dupe key handling plus tests; plus cleanup                * SLOC 1419
+    2014-04-30
+        * leaf count tests improved, errors corrected               * SLOC 1451
 v0.3.0
     2014-04-21
         * debugged HAMT that actually uses SWAR code                * SLOC 2793

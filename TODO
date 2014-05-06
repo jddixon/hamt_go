@@ -1,6 +1,12 @@
 hamt_go/TODO
 
 2014-04-30
+    * drop NotFound error: finds return nil value, nil error 
+        - Table
+        - Root
+        - HAMT
+
+2014-04-30
     * fix: doTestHAMTInsertsOfRandomishValues() fails, returns          * DONE
         incorrect leaf count line 195 (two leafs missing)               * DONE
     * fix: doTestHamtEntrySplittingInserts() fails, also                * DONE
