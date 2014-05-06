@@ -5,7 +5,6 @@ hamt_go/TODO
         - HAMT                                                          * DONE
         - Root                                                          * DONE
         - Table                                                         * DONE
-
 2014-04-30
     * fix: doTestHAMTInsertsOfRandomishValues() fails, returns          * DONE
         incorrect leaf count line 195 (two leafs missing)               * DONE
@@ -16,29 +15,24 @@ hamt_go/TODO
     * test Table.getTableCount(), getLeafCount()                        * DONE
         - FIX: TestHamtEntrySplittingInserts GetLeafCount errors :-)    * DONE
     * be sure to re-enable tests that are 'commented out'               * DONE
-
 2014-04-26
     * TestSWAR64 consistently fails on 64-bit Intel CPU laptop
         - TestSWAR32 succeeds wherever tested
         - constant declarations changed to uint32, uint64
     * test on EC2 machines - FAILS
-
 2014-04-25
     * determine why table_test fails with w > 6 but hamt_test succeeds
     * fix root.GetLeafCount(), which should recurse
     * add hamt.GetLeafCount()                                           * DONE
     * add test of hamt.GetLeafCount()
-
 2014-04-24
     * consider merging Table.insertEntry and insertIntoOccupiedSlot
-
 2014-04-23
     * need performance test which runs as a command, always does same
         number of ops (eg 10^6)
     * need performance test which is say 1% inserts, 99% finds, 
         and so forth
     * same test but with varying degrees of concurrency
-
 2014-04-22
     * w cannot exceed 6 because POPCOUNT is limited to a 64-bit range   * ????
     * values in the root table should NOT be entries; the index
@@ -55,38 +49,31 @@ hamt_go/TODO
     * FIX: w=7 and w=8 versions of the HAMT benchmark have stopped
         working
     * modify code to actually use t (w = 5, t = 5 yield 1K slot root)   *WRONG
-
 2014-04-20 (rev branch)
     * investigate: TestTableEntrySplittingInserts creates two tables    * DONE
         for each key inserted - should create only one                  * DONE
     * investigate: Table.maxSlots never used
-
 2014-04-18
     * Need buckets at max depth to do hamt32_perf_test (million-entry   * SKIP
         trie too deep for HAMT32)                                       * SKIP
-
-    * Possibly change meaning of 'depth' to bitDepth
+    * Possibly change meaning of 'depth' to bitDepth                    * SKIP
     * Possibly break connection between wordlenth (32 or 64) and        * SKIP
         W (log base 2 of number of entries in table)                    * SKIP
-
     * Need to test GetLeafCount() and GetTableCount() functions         * DONE
         for both HAMT32 and HAMT64                                      * DONE
     * Investigate suspicion that while larger root table has a small
         positive effect on performance, larger tables elsewhere cause
         a large increase in memory consumption.
-
 2014-04-17
-    * consider allowing larger root table of 2^(t + W) entries
+    * consider allowing larger root table of 2^(t + W) entries          * SKIP
     * then possibly allow dynamic resizing
         - this might be restricted to tables of 2^(N * W) entries
     * need tools for static analysis of frozen HAMTs
     * possibly need serialization/deserialization tools
-
 2014-04-16
     * to make this thing more useful:
         - where Table32.Delete() leaves empty table, need to remove
             the table from the data structure - recursively
-
 2014-04-04
     * need perf tests, all 6 variants (32,64 * 3)
         * must clearly identify OS, hardware, Go version

@@ -1,6 +1,6 @@
 # hamt_go
 
-Go implementation of the HAMT data structure.
+A Go implementation of the HAMT data structure.
 
 A Hash Array Mapped Trie ([HAMT][bagwell2001]) 
 provides fast and memory-efficient access to large amounts of data held 
@@ -16,8 +16,10 @@ In a simpler implementation at each level there is either a leaf node
 or a table with up to `2^w` slots, where w is a small 
 integer.  The next `w` bits of the hash 
 derived from the key are construed as an index into that table.  The
-table grows dynamically as entries are added.  Whenever there is a 
-collision at a given level, a child table replaces the current entry,
+table grows dynamically to its maximum number of slots as entries are added.  
+Whenever there is a 
+collision at a given level, a pointer to a new table replaces the current 
+leaf entry,
 and both new and old entries move to the child table, possibly 
 recursing in the process.
 
@@ -35,8 +37,8 @@ the root table should approach the total number of entries in size.
 A further enhancement would allow dynamic resizing of the root table.
 This has not yet been implemented.
 
-Whereas a normal hash table would be quite large and might
-require expensive resizing periodically, the HAMT data structure is roughly 
+Whereas a normal hash table would be quite large and might periodically
+require expensive resizing, the HAMT data structure is roughly 
 as fast as a hash table, but starts small and consumes more memory only 
 as needed.
 
@@ -58,10 +60,10 @@ because the emulation code simply is not run all that often.*
 ## Project Status
 
 The code works and is reasonably well-tested. 
-`Insert`, `Find`, and `Delete` operations, while not yet thoroughly optimized, 
-take on the order of 1.3 microseconds each on a lightly-loaded server 
-(about 2.6us each to insert a million values and verify that the 
-value can be found using the key).  As the root table approaches the 
+`Insert`and  `Find` operations, while not yet thoroughly optimized, 
+take approximately of 0.9 microseconds each on a lightly-loaded server 
+(about 1.8us each to insert a million values and verify that the 
+value can be found using the key, where the root table has `2^18` slots).  As the root table approaches the 
 number of entries in size, this falls to about 1.2 us, or 600ns/op.
 
 These figures were obtained from *single-threaded* tests.

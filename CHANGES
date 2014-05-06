@@ -1,5 +1,8 @@
 hamt_go/CHANGES
 
+v0.5.0
+    2014-05-05
+        * unsuccessful find returns nil value, nil error            * SLOC 1464
 v0.4.0
     2014-04-22
         * introduced root with 2^t entries and no use of POPCOUNT   * SLOC 1183
