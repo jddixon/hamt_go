@@ -98,14 +98,14 @@ func (root *Root) deleteEntry(hc uint64, key KeyI) (err error) {
 	return
 }
 
+// Given a properly shifted hashCode and the full key for any entry,
+// return the value associated with the key, nil if there is no such
+// value, or any error encountered.
 func (root *Root) findEntry(hc uint64, key KeyI) (
 	value interface{}, err error) {
 
 	ndx := hc & root.mask
-	if root.slots[ndx] == nil {
-		err = NotFound
-	}
-	if err == nil {
+	if root.slots[ndx] != nil {
 		// the entry is present
 		entry := root.slots[ndx]
 		// XXX this MUST exist
@@ -116,7 +116,7 @@ func (root *Root) findEntry(hc uint64, key KeyI) (
 			if bytes.Equal(searchKey.Slice, myKey.Slice) {
 				value = myLeaf.Value
 			} else {
-				err = NotFound
+				value = nil
 			}
 		} else {
 			// entry is a table, so recurse

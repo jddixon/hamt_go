@@ -61,7 +61,7 @@ func (h *HAMT) Delete(k KeyI) (err error) {
 }
 
 // If there is an entry with the key k in the HAMT, return the value
-// associated with the key.  If there is no such entry, return NotFound.
+// associated with the key.  If there is no such entry, return nil.
 func (h *HAMT) Find(k KeyI) (v interface{}, err error) {
 
 	var hc uint64

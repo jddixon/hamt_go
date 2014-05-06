@@ -45,6 +45,8 @@ func (s *XLSuite) TestDepthZeroHAMT(c *C) {
 }
 
 func (s *XLSuite) doTestDepthZeroHAMT(c *C, w, t uint) {
+	var err error
+	var value interface{}
 	rng := xr.MakeSimpleRNG()
 
 	KEY_LEN := uint(16)
@@ -63,8 +65,9 @@ func (s *XLSuite) doTestDepthZeroHAMT(c *C, w, t uint) {
 		bKey := bKeys[i]
 
 		// verify the key is not present
-		_, err := h.Find(bKey)
-		c.Assert(err, Equals, NotFound)
+		value, err = h.Find(bKey)
+		c.Assert(err, IsNil)
+		c.Assert(value, IsNil)
 
 		// insert the key and value
 		err = h.Insert(bKey, values[i])
@@ -110,19 +113,19 @@ func (s *XLSuite) doTestDepthZeroHAMT(c *C, w, t uint) {
 		bKey, err := NewBytesKey(key)
 		c.Assert(err, IsNil)
 		c.Assert(bKey, NotNil)
-		v, err := h.Find(bKey)
+		value, err = h.Find(bKey)
 		c.Assert(err, IsNil)
-		c.Assert(v, NotNil)
-		vAsKey := v.(*[]byte)
+		c.Assert(value, NotNil)
+		vAsKey := value.(*[]byte)
 		c.Assert(bytes.Equal(*vAsKey, key), Equals, true)
 
 		// delete it
 		err = h.Delete(bKey)
 		c.Assert(err, IsNil)
 		c.Assert(h.GetLeafCount(), Equals, KEY_COUNT-(i+1))
-		v, err = h.Find(bKey)
-		c.Assert(err, Equals, NotFound)
-		c.Assert(v, IsNil)
+		value, err = h.Find(bKey)
+		c.Assert(err, IsNil)
+		c.Assert(value, IsNil)
 	}
 }
 
@@ -141,8 +144,11 @@ func (s *XLSuite) TestHAMTInsertsOfRandomishValues(c *C) {
 func (s *XLSuite) doTestHAMTInsertsOfRandomishValues(c *C, w, t uint) {
 	KEY_COUNT := uint(32) // 1024)
 	KEY_LEN := uint(16)
-	var err error
-
+	var (
+		bKey  *BytesKey
+		err   error
+		value interface{}
+	)
 	rng := xr.MakeSimpleRNG()
 	h := NewHAMT(w, t)
 	c.Assert(h, NotNil)
@@ -163,7 +169,7 @@ func (s *XLSuite) doTestHAMTInsertsOfRandomishValues(c *C, w, t uint) {
 			rng.NextBytes(key) // fill with quasi-random values
 			keys[i] = key
 
-			bKey, err := NewBytesKey(key)
+			bKey, err = NewBytesKey(key)
 			c.Assert(err, IsNil)
 			c.Assert(bKey, NotNil)
 			bKeys[i] = bKey
@@ -185,9 +191,10 @@ func (s *XLSuite) doTestHAMTInsertsOfRandomishValues(c *C, w, t uint) {
 	c.Assert(h.GetLeafCount(), Equals, uint(0))
 	for i := uint(0); i < KEY_COUNT; i++ {
 		// expect that no entry with this key can be found
-		bKey := bKeys[i]
-		_, err = h.Find(bKey)
-		c.Assert(err, Equals, NotFound)
+		bKey = bKeys[i]
+		value, err = h.Find(bKey)
+		c.Assert(err, IsNil)
+		c.Assert(value, IsNil)
 
 		err = h.Insert(bKey, values[i])
 		c.Assert(err, IsNil)
@@ -243,8 +250,9 @@ func (s *XLSuite) doTestHAMTInsertsOfRandomishValues(c *C, w, t uint) {
 		c.Assert(h.GetLeafCount(), Equals, KEY_COUNT-(i+1))
 
 		// confirm that it is gone
-		_, err = h.Find(bKey)
-		c.Assert(err, Equals, NotFound)
+		value, err = h.Find(bKey)
+		c.Assert(err, IsNil)
+		c.Assert(value, IsNil)
 	}
 }
 
@@ -263,8 +271,11 @@ func (s *XLSuite) TestHamtEntrySplittingInserts(c *C) {
 func (s *XLSuite) doTestHamtEntrySplittingInserts(c *C, rng *xr.PRNG,
 	t, w uint) {
 
-	var err error
-
+	var (
+		bKey  *BytesKey
+		err   error
+		value interface{}
+	)
 	h := NewHAMT(w, t)
 	c.Assert(h, NotNil)
 	c.Assert(h.GetW(), Equals, w)
@@ -280,7 +291,7 @@ func (s *XLSuite) doTestHamtEntrySplittingInserts(c *C, rng *xr.PRNG,
 	for i := uint(0); i < KEY_COUNT; i++ {
 		key := rawKeys[i]
 
-		bKey, err := NewBytesKey(key)
+		bKey, err = NewBytesKey(key)
 		c.Assert(err, IsNil)
 		c.Assert(bKey, NotNil)
 		bKeys[i] = bKey
@@ -300,8 +311,9 @@ func (s *XLSuite) doTestHamtEntrySplittingInserts(c *C, rng *xr.PRNG,
 	for i := uint(0); i < KEY_COUNT; i++ {
 		// expect that no entry with this key can be found
 		bKey := bKeys[i]
-		_, err = h.Find(bKey)
-		c.Assert(err, Equals, NotFound)
+		value, err = h.Find(bKey)
+		c.Assert(err, IsNil)
+		c.Assert(value, IsNil)
 
 		// insert the entry -------------------------------
 		err = h.Insert(bKey, values[i])
@@ -309,8 +321,9 @@ func (s *XLSuite) doTestHamtEntrySplittingInserts(c *C, rng *xr.PRNG,
 		c.Assert(h.GetLeafCount(), Equals, i+1)
 
 		// confirm the entry is present -------------------
-		_, err = h.Find(bKey)
+		value, err = h.Find(bKey)
 		c.Assert(err, IsNil)
+		c.Assert(value, NotNil)
 
 		// all insertions except the first split the entry
 		if i != 0 {
@@ -321,11 +334,12 @@ func (s *XLSuite) doTestHamtEntrySplittingInserts(c *C, rng *xr.PRNG,
 	// deletion loop ------------------------------------------------
 	c.Assert(h.GetLeafCount(), Equals, KEY_COUNT)
 	for i := uint(0); i < KEY_COUNT; i++ {
-		bKey := bKeys[i]
+		bKey = bKeys[i]
 
 		// confirm again that the entry is present --------
-		_, err = h.Find(bKey)
+		value, err = h.Find(bKey)
 		c.Assert(err, IsNil)
+		c.Assert(value, NotNil)
 
 		// delete the entry -------------------------------
 		err = h.Delete(bKey)
@@ -333,7 +347,8 @@ func (s *XLSuite) doTestHamtEntrySplittingInserts(c *C, rng *xr.PRNG,
 		c.Assert(h.GetLeafCount(), Equals, KEY_COUNT-(i+1))
 
 		// confirm that it is gone ------------------------
-		_, err = h.Find(bKey)
-		c.Assert(err, Equals, NotFound)
+		value, err = h.Find(bKey)
+		c.Assert(err, IsNil)
+		c.Assert(value, IsNil)
 	}
 }

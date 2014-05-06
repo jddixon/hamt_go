@@ -1,10 +1,10 @@
 hamt_go/TODO
 
-2014-04-30
-    * drop NotFound error: finds return nil value, nil error 
-        - Table
-        - Root
-        - HAMT
+2014-05-05 (04-30 edited)
+    * unsuccessful find return nil value, nil error 
+        - HAMT                                                          * DONE
+        - Root                                                          * DONE
+        - Table                                                         * DONE
 
 2014-04-30
     * fix: doTestHAMTInsertsOfRandomishValues() fails, returns          * DONE

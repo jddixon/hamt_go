@@ -93,8 +93,9 @@ func (s *XLSuite) doTestTableDepthZeroInserts(c *C, w, t uint) {
 		c.Assert(err, IsNil)
 		c.Assert(hc, Equals, uint64(ndx))
 
-		_, err = table.findEntry(hc, depth, key64)
-		c.Assert(err, Equals, NotFound)
+		value, err := table.findEntry(hc, depth, key64)
+		c.Assert(err, IsNil)
+		c.Assert(value, IsNil)
 
 		leaf, err := NewLeaf(key64, &rawKey)
 		c.Assert(err, IsNil)
@@ -175,8 +176,7 @@ func (s *XLSuite) doTestTableDepthZeroInserts(c *C, w, t uint) {
 
 		// verify that it is gone -----------------------------------
 		v, err = table.findEntry(hc, depth, key64)
-
-		c.Assert(err, Equals, NotFound)
+		c.Assert(err, IsNil)
 		c.Assert(v, IsNil)
 
 		_ = idx // DEBUG
@@ -251,8 +251,9 @@ func (s *XLSuite) doTestEntrySplittingInserts(c *C, rng *xr.PRNG, w uint) {
 
 		// expect that no entry with this key can be found ----------
 		key64 := key64s[i]
-		_, err = table.findEntry(hc, depth, key64)
-		c.Assert(err, Equals, NotFound)
+		value, err := table.findEntry(hc, depth, key64)
+		c.Assert(err, IsNil)
+		c.Assert(value, IsNil)
 
 		// insert the entry -----------------------------------------
 		leaf, err := NewLeaf(key64, values[i])
@@ -290,8 +291,10 @@ func (s *XLSuite) doTestEntrySplittingInserts(c *C, rng *xr.PRNG, w uint) {
 		c.Assert(err, IsNil)
 
 		// confirm that it is gone ----------------------------------
-		_, err = table.findEntry(hc, depth, key64)
-		c.Assert(err, Equals, NotFound)
+		var value interface{}
+		value, err = table.findEntry(hc, depth, key64)
+		c.Assert(err, IsNil)
+		c.Assert(value, IsNil)
 	}
 }
 
@@ -355,8 +358,9 @@ func (s *XLSuite) TestTableInsertsOfRandomishValues(c *C) {
 
 		// expect that no entry with this key can be found ----------
 		key64 := key64s[i]
-		_, err = table.findEntry(hc, depth, key64)
-		c.Assert(err, Equals, NotFound)
+		value, err := table.findEntry(hc, depth, key64)
+		c.Assert(err, IsNil)
+		c.Assert(value, IsNil)
 
 		// insert the entry -----------------------------------------
 		leaf, err := NewLeaf(key64, values[i])
@@ -419,7 +423,9 @@ func (s *XLSuite) TestTableInsertsOfRandomishValues(c *C) {
 		c.Assert(err, IsNil)
 
 		// confirm that it is gone ----------------------------------
-		_, err = table.findEntry(hc, depth, key64)
-		c.Assert(err, Equals, NotFound)
+		var value interface{}
+		value, err = table.findEntry(hc, depth, key64)
+		c.Assert(err, IsNil)
+		c.Assert(value, IsNil)
 	}
 }

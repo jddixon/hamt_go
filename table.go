@@ -158,7 +158,9 @@ func (table *Table) deleteEntry(hc uint64, depth uint, key KeyI) (
 }
 
 // Enter with hc the hashcode for the key shifted appropriately for the
-// current depth.
+// current depth, the depth as a zero-based integer, and the full key.
+// Return nil if no matching entry is found or the value associated with
+// the matching entry or any error encountered.
 //
 func (table *Table) findEntry(hc uint64, depth uint, key KeyI) (
 	value interface{}, err error) {
@@ -167,40 +169,33 @@ func (table *Table) findEntry(hc uint64, depth uint, key KeyI) (
 		ndx, flag, mask uint64
 	)
 	sliceSize := byte(len(table.indices))
-	if sliceSize == 0 {
-		err = NotFound
-	}
-	if err == nil {
+	if sliceSize != 0 {
 		ndx = hc & table.mask
 		flag = uint64(1 << ndx)
 		mask = flag - 1
-		if table.bitmap&flag == 0 {
-			err = NotFound
-		}
-	}
-	if err == nil {
-		// the entry is present; get its position in the slice
-		var pos byte
-		if mask != 0 {
-			pos = byte(BitCount64(table.bitmap & mask))
-		}
-		entry := table.slots[pos]
-		// XXX this MUST exist
-		if entry.Node.IsLeaf() {
-			myLeaf := entry.Node.(*Leaf)
-			myKey := myLeaf.Key.(*BytesKey)
-			searchKey := key.(*BytesKey)
-			if bytes.Equal(searchKey.Slice, myKey.Slice) {
-				value = myLeaf.Value
-			} else {
-				err = NotFound
+		if table.bitmap&flag != 0 {
+			// the entry is present; get its position in the slice
+			var pos byte
+			if mask != 0 {
+				pos = byte(BitCount64(table.bitmap & mask))
 			}
-		} else {
-			// entry is a table, so recurse
-			tDeeper := entry.Node.(*Table)
-			hc >>= table.w
-			depth++
-			value, err = tDeeper.findEntry(hc, depth, key)
+			entry := table.slots[pos]
+			// XXX this MUST exist
+			if entry.Node.IsLeaf() {
+				myLeaf := entry.Node.(*Leaf)
+				myKey := myLeaf.Key.(*BytesKey)
+				searchKey := key.(*BytesKey)
+				if bytes.Equal(searchKey.Slice, myKey.Slice) {
+					value = myLeaf.Value
+				}
+				// otherwise the value returned is nil
+			} else {
+				// entry is a table, so recurse
+				tDeeper := entry.Node.(*Table)
+				hc >>= table.w
+				depth++
+				value, err = tDeeper.findEntry(hc, depth, key)
+			}
 		}
 	}
 	return
