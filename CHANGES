@@ -1,5 +1,12 @@
 hamt_go/CHANGES
 
+v0.7.0
+    2014-05-06
+        * replace *Entry with NodeI in other tables
+        * unique test keys                                          * SLOC 1468
+v0.6.0
+    2014-05-06
+        * replace *Entry with NodeI in root table                   * SLOC 1449
 v0.5.0
     2014-05-05
         * unsuccessful find returns nil value, nil error            * SLOC 1464

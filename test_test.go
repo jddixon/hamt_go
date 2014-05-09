@@ -61,7 +61,7 @@ func (s *XLSuite) uniqueKeyMaker(c *C, rng *xr.PRNG, w, keyCount, keyLen uint) (
 	return
 }
 
-// build 2^w keys, each differing from the preceding by w bits
+// build 2^w keys, each having a unique value in the first w bits
 func (s *XLSuite) makePermutedKeys(rng *xr.PRNG, w uint) (
 	fields []int, // FOR DEBUGGING ONLY
 	keys [][]byte) {

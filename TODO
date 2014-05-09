@@ -1,21 +1,40 @@
 hamt_go/TODO
 
+2014-05-09
+    * blog.golang.org/profiling-go-programs
+
+2014-05-09 (was 04-23)
+    * need performance test which runs as a command, always does same
+        number of ops (eg 10^6)
+    * need performance test which is say 1% inserts, 99% finds, 
+        and so forth
+    * same test but with varying degrees of concurrency
+2014-05-07
+    * modify hamt_perf_test.go to guarantee that the N keys             * DONE
+        generated have unique hashcodes                                 * DONE
+    * correct calculation of table.maxDepth in NewTable()
+    * determine whether Table.indices can be dropped
+
 2014-05-06
-    * consider removing hc from Entry
-    * if this is feasible, consider replacing Entry with Leaf
-        everywhere (yields v0.7.0
+    * remove ndx from Entry (used only in testing)
+    * drop error return from NewEntry()
+    * replace Entry with Node everywhere (yields v0.7.0)
+
+2014-05-06 (04-20, edited)
+    * drop Table.maxSlots, never used
 
 2014-05-06 (from -04-22) 
-    * values in the root table should NOT be entries; the index		    * DONE
-        is known.  Make these Nodes instead.  This may be URGENT.		* DONE
-        - yields v0.6.0		                                            * DONE
-    * root method parameters contain key so should NOT contain hc		* DONE
-        - fix root.findLeaf()		                                    * DONE
-        - fix root.deleteLeaf()		                                    * DONE
+    * values in the root table should NOT be entries; the index         * DONE
+        is known.  Make these Nodes instead.  This may be URGENT.       * DONE
+        - yields v0.6.0                                                 * DONE
+    * root method parameters contain key so should NOT contain hc       * DONE
+        - fix root.findLeaf()                                           * DONE
+        - fix root.deleteLeaf()                                         * DONE
 
 2014-05-06 (04-17, edited)
     * possibly allow dynamic resizing of root table
         - this might be restricted to tables of N * W nodes
+        - probably both N and W restricted to powers of two
     * need tools for static analysis of frozen HAMTs
     * possibly need serialization/deserialization tools
 
@@ -37,28 +56,20 @@ hamt_go/TODO
         - constant declarations changed to uint32, uint64
     * test on EC2 machines - FAILS
 2014-04-25
-    * determine why table_test fails with w > 6 but hamt_test succeeds  * ????
-    * fix root.GetLeafCount(), which should recurse
+    * determine why table_test fails with w > 6 but hamt_test succeeds  * WRONG
+    * fix root.GetLeafCount(), which should recurse                     * DONE
     * add test of hamt.GetLeafCount()                                   * DONE
 2014-04-24
     * consider merging Table.insertEntry and insertIntoOccupiedSlot
-2014-04-23
-    * need performance test which runs as a command, always does same
-        number of ops (eg 10^6)
-    * need performance test which is say 1% inserts, 99% finds, 
-        and so forth
-    * same test but with varying degrees of concurrency
 2014-04-22
-    * w cannot exceed 6 because POPCOUNT is limited to a 64-bit range   * ????
+    * w cannot exceed 6 because POPCOUNT is limited to a 64-bit range   * WRONG
 2014-04-21 
     * FIX: insertIntoOccupiedSlot() does not replace the value 
         where there is an exact match on keys
     * need to add buckets to handle exact matches on 64 bit keys
         (however very unlikely such matches may be in actual use)
-    * FIX: w=7 and w=8 versions of the HAMT benchmark have stopped
-        working
-2014-04-20 (rev branch)
-    * investigate: Table.maxSlots never used
+    * FIX: w=7 and w=8 versions of the HAMT benchmark have stopped      * SILLY
+        working                                                         * SILLY
 2014-04-18
     * Investigate suspicion that while larger root table has a small
         positive effect on performance, larger tables elsewhere cause
@@ -69,7 +80,7 @@ hamt_go/TODO
             the table from the data structure - recursively
 2014-04-04
     * need perf tests, all 6 variants (32,64 * 3)
-        * must clearly identify OS, hardware, Go version
+    * must clearly identify OS, hardware, Go version
     * eventually need option to use hardware POPCNT if available
     * need docs
         - and figures

@@ -10,34 +10,43 @@ import (
 
 var _ = fmt.Print
 
-// This is a non-root table; depth is guaranteed never to be zero.
+// This is a non-root table; depth is guaranteed never to be zero.  We
+// use a uint64 as a bitmap, with a bit being set representing the fact
+// that a slot is in use, so there may not be more than 64 slots, so
+// w may not exceed 6 (2^6==64).
 type Table struct {
-	depth    uint // only here for use in development and debugging !
 	w        uint // non-root tables have 2^w slots
 	t        uint // root table has 2^t slots
 	maxDepth uint
-	maxSlots uint // maximum slots for table at this depth
 	mask     uint64
-	indices  []byte // probably only used in development and debugging
 	bitmap   uint64
 	slots    []*Entry // each nil or a pointer to either a leaf or a table
+
+	indices []byte // slice holding index of each slot in use
+
+	depth    uint // only here for use in development and debugging !
+	maxSlots uint // maximum slots for table at this depth
 }
 
 func NewTable(depth, w, t uint) (table *Table, err error) {
-	table = new(Table)
-	table.depth = depth
-	table.w = w
-	table.t = t
+	if w > 6 {
+		err = MaxTableSizeExceeded
+	} else {
+		table = new(Table)
+		table.depth = depth
+		table.w = w
+		table.t = t
 
-	flag := uint64(1)
-	flag <<= w
-	table.mask = flag - 1
-	table.maxDepth = (64 / w) // rounds down	XXX WRONG: NO ALLOWANCE FOR t
-	table.maxSlots = 1 << w
+		flag := uint64(1)
+		flag <<= w
+		table.mask = flag - 1
+		table.maxDepth = (64 / w) // rounds down	XXX WRONG: NO ALLOWANCE FOR t
+		table.maxSlots = 1 << w
 
-	err = table.CheckTableDepth(depth)
-	if err != nil {
-		table = nil
+		err = table.CheckTableDepth(depth)
+		if err != nil {
+			table = nil
+		}
 	}
 	return
 }

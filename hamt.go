@@ -8,12 +8,13 @@ import (
 var _ = fmt.Print
 
 type HAMT struct {
-	root *Root // could be EntryI
+	root *Root
 }
 
 // Create a new HAMT with 2^t slots in its root table and 2^w slots in
 // all lower-level tables.  If t equals zero, it defaults to w.  If
-// both t and w are zero, it panics.
+// both t and w are zero, it panics.  In lower-level tables, a uint64
+// is used as a bitmap, so w may not exceed 6 (because 2^6 == 64).
 func NewHAMT(w, t uint) (h *HAMT) {
 	if t == 0 && w == 0 {
 		panic("cannot create HAMT with no slots in tables")

@@ -107,7 +107,6 @@ func (s *XLSuite) doTestTableDepthZeroInserts(c *C, w, t uint) {
 		c.Assert(e, NotNil)
 		c.Assert(e.GetIndex(), Equals, ndx)
 		c.Assert(e.Node.IsLeaf(), Equals, true)
-		c.Assert(e.GetIndex(), Equals, ndx)
 
 		slotNbr, err := table.insertEntry(hc, depth, e)
 		c.Assert(err, IsNil)
@@ -266,7 +265,6 @@ func (s *XLSuite) doTestEntrySplittingInserts(c *C, rng *xr.PRNG, w uint) {
 		c.Assert(e, NotNil)
 		c.Assert(e.GetIndex(), Equals, ndx)
 		c.Assert(e.Node.IsLeaf(), Equals, true)
-		c.Assert(e.GetIndex(), Equals, ndx)
 
 		slotNbr, err := table.insertEntry(hc, depth, e)
 		c.Assert(err, IsNil)
@@ -373,7 +371,6 @@ func (s *XLSuite) TestTableInsertsOfRandomishValues(c *C) {
 		c.Assert(e, NotNil)
 		c.Assert(e.GetIndex(), Equals, ndx)
 		c.Assert(e.Node.IsLeaf(), Equals, true)
-		c.Assert(e.GetIndex(), Equals, ndx)
 
 		_, err = table.insertEntry(hc, depth, e)
 		c.Assert(err, IsNil)
@@ -395,7 +392,6 @@ func (s *XLSuite) TestTableInsertsOfRandomishValues(c *C) {
 		c.Assert(e2, NotNil)
 		c.Assert(e2.GetIndex(), Equals, ndx)
 		c.Assert(e2.Node.IsLeaf(), Equals, true)
-		c.Assert(e2.GetIndex(), Equals, ndx)
 
 		_, err = table.insertEntry(hc, depth, e2)
 		c.Assert(err, IsNil)

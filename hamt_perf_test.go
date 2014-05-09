@@ -20,19 +20,29 @@ var _ = fmt.Print
 
 // -- utilities -----------------------------------------------------
 
-// Create N random-ish K-byte values.
+// Create N random-ish K-byte values.  These are to be used as BytesKeys,
+// so the first 64 bits must represent a unique value.
 
-func makeSomeMoreKeys(N, K int) (rawKeys [][]byte, bKeys []*BytesKey) {
+func makeSomeUniqueKeys(N, K int) (rawKeys [][]byte, bKeys []*BytesKey) {
 
 	rng := xr.MakeSimpleRNG()
 	rawKeys = make([][]byte, N)
 	bKeys = make([]*BytesKey, N)
+	keyMap := make(map[uint64]bool)
 
 	for i := 0; i < N; i++ {
+		var bKey *BytesKey
 		key := make([]byte, K)
-		rng.NextBytes(key)
-		bKey, _ := NewBytesKey(key)
-
+		for {
+			rng.NextBytes(key)
+			bKey, _ = NewBytesKey(key)
+			hc, _ := bKey.Hashcode()
+			_, ok := keyMap[hc]
+			if !ok { // value is not in the map
+				keyMap[hc] = true
+				break
+			}
+		}
 		rawKeys[i] = key
 		bKeys[i] = bKey
 	}
@@ -59,6 +69,9 @@ func (s *XLSuite) BenchmarkHAMT_5(c *C) {
 	}
 	s.doBenchmark(c, uint(5), 18)
 }
+
+// 2^6 is 64, so if we are using a 64-bit integer as a bit map into
+// the slots, this is as far as we can go.
 func (s *XLSuite) BenchmarkHAMT_6(c *C) {
 	if VERBOSITY > 0 {
 		fmt.Println("\nBenchmarkHAMT_6")
@@ -70,7 +83,7 @@ func (s *XLSuite) doBenchmark(c *C, w, t uint) {
 	K := 16
 	N := c.N
 	t0 := time.Now()
-	rawKeys, bKeys := makeSomeMoreKeys(N, K)
+	rawKeys, bKeys := makeSomeUniqueKeys(N, K)
 	t1 := time.Now()
 	deltaT := t1.Sub(t0)
 	fmt.Printf("setup time for %d %d-byte rawKeys: %v\n", N, K, deltaT)
@@ -89,10 +102,14 @@ func (s *XLSuite) doBenchmark(c *C, w, t uint) {
 		value, err := m.Find(bKeys[i])
 		// DEBUG
 		if err != nil {
-			fmt.Printf("cannot find key %d: %s\n", i, err.Error())
+			fmt.Printf("error finding key %d\n", i, err.Error())
+		}
+		if value == nil {
+			fmt.Printf("cannot find key %d\n", i)
 		}
 		// END
 		c.Assert(err, IsNil)
+		c.Assert(value, NotNil)
 		val := value.(*[]byte)
 		c.Assert(bytes.Equal(*val, rawKeys[i]), Equals, true)
 
