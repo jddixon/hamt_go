@@ -5,11 +5,8 @@ package hamt_go
 import (
 	"bytes"
 	"fmt"
-	xr "github.com/jddixon/xlattice_go/rnglib"
+	xr "github.com/jddixon/rnglib_go/"
 	. "gopkg.in/check.v1"
-	//. "launchpad.net/gocheck"
-	// "sync/atomic"
-	//"unsafe"
 )
 
 var _ = fmt.Print

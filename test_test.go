@@ -4,9 +4,8 @@ package hamt_go
 
 import (
 	"fmt"
-	xr "github.com/jddixon/xlattice_go/rnglib"
+	xr "github.com/jddixon/rnglib_go/"
 	. "gopkg.in/check.v1"
-	//. "launchpad.net/gocheck"
 )
 
 // Generate keyCount raw keys (byte slices with random content) of length

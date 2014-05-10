@@ -4,6 +4,8 @@ v0.7.0
     2014-05-06
         * replace *Entry with NodeI in other tables
         * unique test keys                                          * SLOC 1468
+    2014-05-10
+        * use rnglib_go instead of xlattice_go/rnglib
 v0.6.0
     2014-05-06
         * replace *Entry with NodeI in root table                   * SLOC 1449
