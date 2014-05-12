@@ -5,7 +5,7 @@ package hamt_go
 import (
 	"code.google.com/p/intmath/intgr"
 	"fmt"
-	xr "github.com/jddixon/rnglib_go/"
+	xr "github.com/jddixon/rnglib_go"
 	. "gopkg.in/check.v1"
 )
 

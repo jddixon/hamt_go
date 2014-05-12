@@ -10,7 +10,7 @@ package hamt_go
 import (
 	"bytes"
 	"fmt"
-	xr "github.com/jddixon/rnglib_go/"
+	xr "github.com/jddixon/rnglib_go"
 	. "gopkg.in/check.v1"
 	"time"
 )

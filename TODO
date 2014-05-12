@@ -1,5 +1,10 @@
 hamt_go/TODO
 
+2014-05-12 (-05-06, edited)
+    * remove ndx from Entry (used only in testing)
+    * drop error return from NewEntry()
+    * replace Entry with Node everywhere (yields v0.8.0)
+
 2014-05-09
     * blog.golang.org/profiling-go-programs
 
@@ -14,11 +19,6 @@ hamt_go/TODO
         generated have unique hashcodes                                 * DONE
     * correct calculation of table.maxDepth in NewTable()
     * determine whether Table.indices can be dropped
-
-2014-05-06
-    * remove ndx from Entry (used only in testing)
-    * drop error return from NewEntry()
-    * replace Entry with Node everywhere (yields v0.7.0)
 
 2014-05-06 (04-20, edited)
     * drop Table.maxSlots, never used
