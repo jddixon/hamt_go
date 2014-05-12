@@ -48,7 +48,7 @@ func dumpTable(title string, dTable *Table) string {
 	var ss []string
 	ss = append(ss, fmt.Sprintf("    dTable %s:", title))
 	for j := 0; j < len(dTable.indices); j++ {
-		if dTable.slots[j].Node.IsLeaf() {
+		if dTable.slots[j].IsLeaf() {
 			ss = append(ss, " L")
 		} else {
 			ss = append(ss, " T")

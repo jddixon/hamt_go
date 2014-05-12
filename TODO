@@ -1,9 +1,9 @@
 hamt_go/TODO
 
 2014-05-12 (-05-06, edited)
-    * remove ndx from Entry (used only in testing)
-    * drop error return from NewEntry()
-    * replace Entry with Node everywhere (yields v0.8.0)
+    * remove ndx from Entry (used only in testing)                      * SKIP
+    * drop error return from NewEntry()                                 * SKIP
+    * replace Entry with Node everywhere (yields v0.8.0)                * DONE
 
 2014-05-09
     * blog.golang.org/profiling-go-programs

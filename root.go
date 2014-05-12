@@ -94,7 +94,7 @@ func (root *Root) deleteLeaf(key KeyI) (err error) {
 				// entry is a table, so recurse
 				tDeeper := node.(*Table)
 				hc >>= root.t
-				err = tDeeper.deleteEntry(hc, 1, key)
+				err = tDeeper.deleteLeaf(hc, 1, key)
 			}
 		}
 	}
@@ -125,7 +125,7 @@ func (root *Root) findLeaf(key KeyI) (value interface{}, err error) {
 				// entry is a table, so recurse
 				tDeeper := node.(*Table)
 				hc >>= root.t
-				value, err = tDeeper.findEntry(hc, 1, key)
+				value, err = tDeeper.findLeaf(hc, 1, key)
 			}
 		}
 	}
@@ -153,27 +153,24 @@ func (root *Root) insertLeaf(leaf *Leaf) (slotNbr uint, err error) {
 					// the keys match, so we replace the value
 					curLeaf.Value = leaf.Value
 				} else {
-					var newEntry *Entry
+					var newNode HTNodeI
 
 					// keys differ, so we need to replace the leaf with a table
 					var (
 						tableDeeper *Table
-						oldEntry    *Entry
+						oldNode     HTNodeI
 						oldHC       uint64
 					)
-					// XXX (byte)newHC serves no purpose
-					newEntry, err = NewEntry(byte(newHC), leaf)
-					if err == nil {
-						tableDeeper, err = NewTable(1, root.w, root.t)
-					}
+					newNode = leaf
+					tableDeeper, err = NewTable(1, root.w, root.t)
+
 					if err == nil {
 						newHC >>= root.t // this is hc for the NEW entry
 
 						oldLeaf := node.(*Leaf)
 						oldHC, err = oldLeaf.Key.Hashcode()
-						// XXX byte(oldHC) serves no purpose
 						if err == nil {
-							oldEntry, err = NewEntry(byte(oldHC), oldLeaf)
+							oldNode = oldLeaf
 						}
 					}
 					if err == nil {
@@ -183,10 +180,10 @@ func (root *Root) insertLeaf(leaf *Leaf) (slotNbr uint, err error) {
 						//var slotNbrOE, slotNbrNE uint
 
 						// put the existing leaf into the new table
-						_, err = tableDeeper.insertEntry(oldHC, 1, oldEntry)
+						_, err = tableDeeper.insertLeaf(oldHC, 1, oldNode)
 						if err == nil {
 							// then put the new entry in the new table
-							_, err = tableDeeper.insertEntry(newHC, 1, newEntry)
+							_, err = tableDeeper.insertLeaf(newHC, 1, newNode)
 							if err == nil {
 								// the new table replaces the existing leaf
 								root.slots[ndx] = tableDeeper
@@ -200,12 +197,9 @@ func (root *Root) insertLeaf(leaf *Leaf) (slotNbr uint, err error) {
 				}
 			} else {
 				// otherwise it's a table, so recurse
-				newEntry, err := NewEntry(byte(newHC), leaf)
-				if err == nil {
-					tDeeper := node.(*Table)
-					newHC >>= root.t
-					_, err = tDeeper.insertEntry(newHC, 1, newEntry)
-				}
+				tDeeper := node.(*Table)
+				newHC >>= root.t
+				_, err = tDeeper.insertLeaf(newHC, 1, leaf)
 
 			}
 		}

@@ -20,7 +20,7 @@ type Table struct {
 	maxDepth uint
 	mask     uint64
 	bitmap   uint64
-	slots    []*Entry // each nil or a pointer to either a leaf or a table
+	slots    []HTNodeI // each nil or a pointer to either a leaf or a table
 
 	indices []byte // slice holding index of each slot in use
 
@@ -54,7 +54,7 @@ func NewTable(depth, w, t uint) (table *Table, err error) {
 // Return a count of leaf nodes in this table.
 func (table *Table) getLeafCount() (count uint) {
 	for i := 0; i < len(table.slots); i++ {
-		node := table.slots[i].Node
+		node := table.slots[i]
 		if node != nil {
 			if node.IsLeaf() {
 				count++
@@ -71,7 +71,7 @@ func (table *Table) getLeafCount() (count uint) {
 func (table *Table) getTableCount() (count uint) {
 	count = 1
 	for i := 0; i < len(table.slots); i++ {
-		node := table.slots[i].Node
+		node := table.slots[i]
 		if node != nil && !node.IsLeaf() {
 			tDeeper := node.(*Table)
 			count += tDeeper.getTableCount()
@@ -118,7 +118,7 @@ func (table *Table) removeFromSlices(offset uint) (err error) {
 // Enter with hc the hashcode for the key shifted appropriately for the
 // current depth.
 //
-func (table *Table) deleteEntry(hc uint64, depth uint, key KeyI) (
+func (table *Table) deleteLeaf(hc uint64, depth uint, key KeyI) (
 	err error) {
 
 	var (
@@ -137,16 +137,16 @@ func (table *Table) deleteEntry(hc uint64, depth uint, key KeyI) (
 		}
 	}
 	if err == nil {
-		// the entry is present; get its position in the slice
+		// the node is present; get its position in the slice
 		var pos byte
 		if mask != 0 {
 			pos = byte(BitCount64(table.bitmap & mask))
 		}
-		entry := table.slots[pos]
+		node := table.slots[pos]
 		// XXX this MUST exist
-		if entry.Node.IsLeaf() {
+		if node.IsLeaf() {
 			// KEYS MUST BE OF THE SAME TYPE
-			myLeaf := entry.Node.(*Leaf)
+			myLeaf := node.(*Leaf)
 			myKey := myLeaf.Key.(*BytesKey)
 			searchKey := key.(*BytesKey)
 			if bytes.Equal(searchKey.Slice, myKey.Slice) {
@@ -156,11 +156,11 @@ func (table *Table) deleteEntry(hc uint64, depth uint, key KeyI) (
 				err = NotFound
 			}
 		} else {
-			// entry is a table, so recurse
-			tDeeper := entry.Node.(*Table)
+			// node is a table, so recurse
+			tDeeper := node.(*Table)
 			hc >>= table.w
 			depth++
-			err = tDeeper.deleteEntry(hc, depth, key)
+			err = tDeeper.deleteLeaf(hc, depth, key)
 		}
 	}
 	return
@@ -171,7 +171,7 @@ func (table *Table) deleteEntry(hc uint64, depth uint, key KeyI) (
 // Return nil if no matching entry is found or the value associated with
 // the matching entry or any error encountered.
 //
-func (table *Table) findEntry(hc uint64, depth uint, key KeyI) (
+func (table *Table) findLeaf(hc uint64, depth uint, key KeyI) (
 	value interface{}, err error) {
 
 	var (
@@ -183,15 +183,15 @@ func (table *Table) findEntry(hc uint64, depth uint, key KeyI) (
 		flag = uint64(1 << ndx)
 		mask = flag - 1
 		if table.bitmap&flag != 0 {
-			// the entry is present; get its position in the slice
+			// the node is present; get its position in the slice
 			var pos byte
 			if mask != 0 {
 				pos = byte(BitCount64(table.bitmap & mask))
 			}
-			entry := table.slots[pos]
+			node := table.slots[pos]
 			// XXX this MUST exist
-			if entry.Node.IsLeaf() {
-				myLeaf := entry.Node.(*Leaf)
+			if node.IsLeaf() {
+				myLeaf := node.(*Leaf)
 				myKey := myLeaf.Key.(*BytesKey)
 				searchKey := key.(*BytesKey)
 				if bytes.Equal(searchKey.Slice, myKey.Slice) {
@@ -199,11 +199,11 @@ func (table *Table) findEntry(hc uint64, depth uint, key KeyI) (
 				}
 				// otherwise the value returned is nil
 			} else {
-				// entry is a table, so recurse
-				tDeeper := entry.Node.(*Table)
+				// node is a table, so recurse
+				tDeeper := node.(*Table)
 				hc >>= table.w
 				depth++
-				value, err = tDeeper.findEntry(hc, depth, key)
+				value, err = tDeeper.findLeaf(hc, depth, key)
 			}
 		}
 	}
@@ -221,7 +221,7 @@ func (table *Table) CheckTableDepth(depth uint) (err error) {
 
 // Enter with hc having been shifted so that the first w bits are ndx.
 //
-func (table *Table) insertEntry(hc uint64, depth uint, entry *Entry) (
+func (table *Table) insertLeaf(hc uint64, depth uint, node HTNodeI) (
 	slotNbr uint, err error) {
 
 	// DEBUG
@@ -246,7 +246,7 @@ func (table *Table) insertEntry(hc uint64, depth uint, entry *Entry) (
 	}
 
 	if sliceSize == 0 {
-		table.slots = append(table.slots, entry)
+		table.slots = append(table.slots, node)
 		table.indices = append(table.indices, byte(ndx64))
 	} else {
 		ndx := byte(ndx64)
@@ -255,25 +255,25 @@ func (table *Table) insertEntry(hc uint64, depth uint, entry *Entry) (
 		}
 		if table.bitmap&flag != 0 {
 			// there is already something at this slotNbrition
-			err = table.insertIntoOccupiedSlot(hc, depth, entry, slotNbr, ndx)
+			err = table.insertIntoOccupiedSlot(hc, depth, node, slotNbr, ndx)
 		} else if slotNbr == 0 {
-			var leftSlots []*Entry
+			var leftSlots []HTNodeI
 			var leftIndices []byte
-			leftSlots = append(leftSlots, entry)
+			leftSlots = append(leftSlots, node)
 			leftSlots = append(leftSlots, table.slots...)
 			table.slots = leftSlots
 			leftIndices = append(leftIndices, ndx)
 			leftIndices = append(leftIndices, table.indices...)
 			table.indices = leftIndices
 		} else if slotNbr == sliceSize {
-			table.slots = append(table.slots, entry)
+			table.slots = append(table.slots, node)
 			table.indices = append(table.indices, ndx)
 		} else {
-			var leftSlots []*Entry
+			var leftSlots []HTNodeI
 			var leftIndices []byte
 
 			leftSlots = append(leftSlots, table.slots[:slotNbr]...)
-			leftSlots = append(leftSlots, entry)
+			leftSlots = append(leftSlots, node)
 			leftSlots = append(leftSlots, table.slots[slotNbr:]...)
 			table.slots = leftSlots
 
@@ -292,34 +292,34 @@ func (table *Table) insertEntry(hc uint64, depth uint, entry *Entry) (
 // Insert a new entry into a slot which is already occupied.
 //
 func (table *Table) insertIntoOccupiedSlot(newHC uint64, depth uint,
-	entry *Entry, slotNbr uint, ndx byte) (err error) {
+	node HTNodeI, slotNbr uint, ndx byte) (err error) {
 
 	e := table.slots[slotNbr]
 
-	if e.Node.IsLeaf() {
+	if e.IsLeaf() {
 		// if it's a leaf, we replace the value iff the keys match
-		curLeaf := e.Node.(*Leaf)
+		curLeaf := e.(*Leaf)
 		curKey := curLeaf.Key.(*BytesKey)
-		entryAsLeaf := entry.Node.(*Leaf)
-		newKey := entryAsLeaf.Key.(*BytesKey)
+		nodeAsLeaf := node.(*Leaf)
+		newKey := nodeAsLeaf.Key.(*BytesKey)
 		if bytes.Equal(curKey.Slice, newKey.Slice) {
 			// the keys match, so we replace the value
-			newLeaf := entry.Node.(*Leaf)
+			newLeaf := node.(*Leaf)
 			curLeaf.Value = newLeaf.Value
 		} else {
 			var (
 				tableDeeper *Table
-				oldEntry    *Entry
+				oldNode     HTNodeI
 				oldHC       uint64
 			)
 
 			depth++
 			tableDeeper, err = NewTable(depth, table.w, table.t)
 			if err == nil {
-				newHC >>= table.w // this is hc for the NEW entry
+				newHC >>= table.w // this is hc for the NEW node
 
-				oldEntry = e
-				oldLeaf := e.Node.(*Leaf)
+				oldNode = e
+				oldLeaf := e.(*Leaf)
 				oldHC, err = oldLeaf.Key.Hashcode()
 			}
 			if err == nil {
@@ -328,27 +328,23 @@ func (table *Table) insertIntoOccupiedSlot(newHC uint64, depth uint,
 				// indexes for this depth
 
 				// put the existing leaf into the new table
-				_, err = tableDeeper.insertEntry(oldHC, depth, oldEntry)
+				_, err = tableDeeper.insertLeaf(oldHC, depth, oldNode)
 				if err == nil {
-					// then put the new entry in the new table
-					_, err = tableDeeper.insertEntry(newHC, depth, entry)
+					// then put the new node in the new table
+					_, err = tableDeeper.insertLeaf(newHC, depth, node)
 					if err == nil {
 						// the new table replaces the existing leaf
-						var eTab *Entry
-						eTab, err = NewEntry(ndx, tableDeeper)
-						if err == nil {
-							table.slots[slotNbr] = eTab
-						}
+						table.slots[slotNbr] = tableDeeper
 					}
 				}
-			} // FOO
+			}
 		}
 	} else {
 		// otherwise it's a table, so recurse
-		tDeeper := e.Node.(*Table)
+		tDeeper := e.(*Table)
 		newHC >>= table.w
 		depth++
-		_, err = tDeeper.insertEntry(newHC, depth, entry)
+		_, err = tDeeper.insertLeaf(newHC, depth, node)
 
 	}
 	return

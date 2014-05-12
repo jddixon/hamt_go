@@ -92,7 +92,7 @@ func (s *XLSuite) doTestTableDepthZeroInserts(c *C, w, t uint) {
 		c.Assert(err, IsNil)
 		c.Assert(hc, Equals, uint64(ndx))
 
-		value, err := table.findEntry(hc, depth, key64)
+		value, err := table.findLeaf(hc, depth, key64)
 		c.Assert(err, IsNil)
 		c.Assert(value, IsNil)
 
@@ -101,13 +101,7 @@ func (s *XLSuite) doTestTableDepthZeroInserts(c *C, w, t uint) {
 		c.Assert(leaf, NotNil)
 		c.Assert(leaf.IsLeaf(), Equals, true)
 
-		e, err := NewEntry(ndx, leaf)
-		c.Assert(err, IsNil)
-		c.Assert(e, NotNil)
-		c.Assert(e.GetIndex(), Equals, ndx)
-		c.Assert(e.Node.IsLeaf(), Equals, true)
-
-		slotNbr, err := table.insertEntry(hc, depth, e)
+		slotNbr, err := table.insertLeaf(hc, depth, leaf)
 		c.Assert(err, IsNil)
 		c.Assert(0 <= slotNbr && slotNbr < SLOT_COUNT, Equals, true)
 
@@ -123,7 +117,7 @@ func (s *XLSuite) doTestTableDepthZeroInserts(c *C, w, t uint) {
 		c.Assert(table.bitmap, Equals, bitmap)
 		c.Assert(uint(pos), Equals, slotNbr)
 
-		v, err := table.findEntry(hc, depth, key64)
+		v, err := table.findLeaf(hc, depth, key64)
 		c.Assert(err, IsNil)
 		vBytes := v.(*[]byte)
 		c.Assert(bytes.Equal(*vBytes, rawKey), Equals, true)
@@ -134,9 +128,7 @@ func (s *XLSuite) doTestTableDepthZeroInserts(c *C, w, t uint) {
 	c.Assert(uint(len(table.slots)), Equals, SLOT_COUNT)
 	for i := uint(0); i < SLOT_COUNT; i++ {
 		idx := table.indices[i]
-		entry := table.slots[i]
-		c.Assert(entry.GetIndex(), Equals, idx)
-		node := entry.Node
+		node := table.slots[i]
 		c.Assert(node.IsLeaf(), Equals, true)
 		leaf := node.(*Leaf)
 		key64 := leaf.Key
@@ -161,7 +153,7 @@ func (s *XLSuite) doTestTableDepthZeroInserts(c *C, w, t uint) {
 		c.Assert(key64, NotNil)
 		hc, err := key64.Hashcode()
 		c.Assert(err, IsNil)
-		v, err := table.findEntry(hc, depth, key64)
+		v, err := table.findLeaf(hc, depth, key64)
 		c.Assert(err, IsNil)
 		c.Assert(v, NotNil)
 		vAsKey := v.(*[]byte)
@@ -169,11 +161,11 @@ func (s *XLSuite) doTestTableDepthZeroInserts(c *C, w, t uint) {
 
 		// delete it ------------------------------------------------
 		// depth is zero, so hc unshifted
-		err = table.deleteEntry(hc, depth, key64)
+		err = table.deleteLeaf(hc, depth, key64)
 		c.Assert(err, IsNil)
 
 		// verify that it is gone -----------------------------------
-		v, err = table.findEntry(hc, depth, key64)
+		v, err = table.findLeaf(hc, depth, key64)
 		c.Assert(err, IsNil)
 		c.Assert(v, IsNil)
 
@@ -245,11 +237,10 @@ func (s *XLSuite) doTestEntrySplittingInserts(c *C, rng *xr.PRNG, w uint) {
 
 	for i := uint(0); i < KEY_COUNT; i++ {
 		hc := hashcodes[i]
-		ndx := byte(hc & table.mask) // depth 0, so no shift
 
 		// expect that no entry with this key can be found ----------
 		key64 := key64s[i]
-		value, err := table.findEntry(hc, depth, key64)
+		value, err := table.findLeaf(hc, depth, key64)
 		c.Assert(err, IsNil)
 		c.Assert(value, IsNil)
 
@@ -259,19 +250,13 @@ func (s *XLSuite) doTestEntrySplittingInserts(c *C, rng *xr.PRNG, w uint) {
 		c.Assert(leaf, NotNil)
 		c.Assert(leaf.IsLeaf(), Equals, true)
 
-		e, err := NewEntry(ndx, leaf)
-		c.Assert(err, IsNil)
-		c.Assert(e, NotNil)
-		c.Assert(e.GetIndex(), Equals, ndx)
-		c.Assert(e.Node.IsLeaf(), Equals, true)
-
-		slotNbr, err := table.insertEntry(hc, depth, e)
+		slotNbr, err := table.insertLeaf(hc, depth, leaf)
 		c.Assert(err, IsNil)
 		// in this test, only one entry at the top level, so slotNbr always zero
 		c.Assert(slotNbr, Equals, uint(0))
 
 		// confirm that the new entry is now present ----------------
-		_, err = table.findEntry(hc, depth, key64)
+		_, err = table.findLeaf(hc, depth, key64)
 		c.Assert(err, IsNil)
 
 		// c.Assert(table.GetTableCount(), Equals, i + 1)
@@ -280,16 +265,16 @@ func (s *XLSuite) doTestEntrySplittingInserts(c *C, rng *xr.PRNG, w uint) {
 		hc := hashcodes[i]
 		key64 := key64s[i]
 		// confirm again that the entry is present ------------------
-		_, err = table.findEntry(hc, depth, key64)
+		_, err = table.findLeaf(hc, depth, key64)
 		c.Assert(err, IsNil)
 
 		// delete the entry -----------------------------------------
-		err = table.deleteEntry(hc, depth, key64)
+		err = table.deleteLeaf(hc, depth, key64)
 		c.Assert(err, IsNil)
 
 		// confirm that it is gone ----------------------------------
 		var value interface{}
-		value, err = table.findEntry(hc, depth, key64)
+		value, err = table.findLeaf(hc, depth, key64)
 		c.Assert(err, IsNil)
 		c.Assert(value, IsNil)
 	}
@@ -351,11 +336,10 @@ func (s *XLSuite) TestTableInsertsOfRandomishValues(c *C) {
 	}
 	for i := uint(0); i < KEY_COUNT; i++ {
 		hc := hashcodes[i]
-		ndx := byte(hc & table.mask) // depth 0, so no shift
 
 		// expect that no entry with this key can be found ----------
 		key64 := key64s[i]
-		value, err := table.findEntry(hc, depth, key64)
+		value, err := table.findLeaf(hc, depth, key64)
 		c.Assert(err, IsNil)
 		c.Assert(value, IsNil)
 
@@ -365,17 +349,11 @@ func (s *XLSuite) TestTableInsertsOfRandomishValues(c *C) {
 		c.Assert(leaf, NotNil)
 		c.Assert(leaf.IsLeaf(), Equals, true)
 
-		e, err := NewEntry(ndx, leaf)
-		c.Assert(err, IsNil)
-		c.Assert(e, NotNil)
-		c.Assert(e.GetIndex(), Equals, ndx)
-		c.Assert(e.Node.IsLeaf(), Equals, true)
-
-		_, err = table.insertEntry(hc, depth, e)
+		_, err = table.insertLeaf(hc, depth, leaf)
 		c.Assert(err, IsNil)
 
 		// confirm that the new entry is now present ----------------
-		_, err = table.findEntry(hc, depth, key64)
+		_, err = table.findLeaf(hc, depth, key64)
 		c.Assert(err, IsNil)
 
 		// TEST HANDLING OF DUPLICATE KEYS ----------------
@@ -386,23 +364,17 @@ func (s *XLSuite) TestTableInsertsOfRandomishValues(c *C) {
 		c.Assert(leaf2, NotNil)
 		c.Assert(leaf2.IsLeaf(), Equals, true)
 
-		e2, err := NewEntry(ndx, leaf2)
-		c.Assert(err, IsNil)
-		c.Assert(e2, NotNil)
-		c.Assert(e2.GetIndex(), Equals, ndx)
-		c.Assert(e2.Node.IsLeaf(), Equals, true)
-
-		_, err = table.insertEntry(hc, depth, e2)
+		_, err = table.insertLeaf(hc, depth, leaf2)
 		c.Assert(err, IsNil)
 
 		// make sure that a Find returns the new value
-		ret, err := table.findEntry(hc, depth, key64)
+		ret, err := table.findLeaf(hc, depth, key64)
 		c.Assert(err, IsNil)
 		retPtr := ret.(*int64)
 		c.Assert(*retPtr, Equals, newValue)
 
 		// put the old value back
-		_, err = table.insertEntry(hc, depth, e)
+		_, err = table.insertLeaf(hc, depth, leaf)
 		c.Assert(err, IsNil)
 
 	}
@@ -410,16 +382,16 @@ func (s *XLSuite) TestTableInsertsOfRandomishValues(c *C) {
 		hc := hashcodes[i]
 		key64 := key64s[i]
 		// confirm again that the entry is present ------------------
-		_, err = table.findEntry(hc, depth, key64)
+		_, err = table.findLeaf(hc, depth, key64)
 		c.Assert(err, IsNil)
 
 		// delete the entry -----------------------------------------
-		err = table.deleteEntry(hc, depth, key64)
+		err = table.deleteLeaf(hc, depth, key64)
 		c.Assert(err, IsNil)
 
 		// confirm that it is gone ----------------------------------
 		var value interface{}
-		value, err = table.findEntry(hc, depth, key64)
+		value, err = table.findLeaf(hc, depth, key64)
 		c.Assert(err, IsNil)
 		c.Assert(value, IsNil)
 	}

@@ -1,11 +1,16 @@
 hamt_go/CHANGES
 
+v0.8.0
+    2014-05-12
+        * replaced Entry with HTNodeI everywhere; dropped Entry     * SLOC 1414
 v0.7.0
     2014-05-06
         * replace *Entry with NodeI in other tables
         * unique test keys                                          * SLOC 1468
     2014-05-10
         * use rnglib_go instead of xlattice_go/rnglib
+    2014-05-12
+        * corrected rnglib_go import
 v0.6.0
     2014-05-06
         * replace *Entry with NodeI in root table                   * SLOC 1449
