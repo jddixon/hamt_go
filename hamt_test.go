@@ -172,8 +172,7 @@ func (s *XLSuite) doTestHAMTInsertsOfRandomishValues(c *C, w, t uint) {
 			c.Assert(bKey, NotNil)
 			bKeys[i] = bKey
 
-			hc, err = bKey.Hashcode()
-			c.Assert(err, IsNil)
+			hc = bKey.Hashcode()
 			_, ok := hcMap[hc]
 			if !ok {
 				hcMap[hc] = true
@@ -296,8 +295,7 @@ func (s *XLSuite) doTestHamtEntrySplittingInserts(c *C, rng *xr.PRNG,
 
 		values[i] = &key
 
-		hc, err := bKey.Hashcode()
-		c.Assert(err, IsNil)
+		hc := bKey.Hashcode()
 		hashcodes[i] = hc
 
 	}

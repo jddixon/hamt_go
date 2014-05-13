@@ -35,7 +35,7 @@ func makeSomeUniqueKeys(N, K int) (rawKeys [][]byte, bKeys []*BytesKey) {
 		for {
 			rng.NextBytes(key)
 			bKey, _ = NewBytesKey(key)
-			hc, _ := bKey.Hashcode()
+			hc := bKey.Hashcode()
 			_, ok := keyMap[hc]
 			if !ok { // value is not in the map
 				keyMap[hc] = true

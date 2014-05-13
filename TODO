@@ -1,12 +1,17 @@
 hamt_go/TODO
 
+2014-05-12 (04-20, re-edited)
+    * convert Table.maxSlots to function MaxSlots()
+
 2014-05-12 (-05-06, edited)
     * remove ndx from Entry (used only in testing)                      * SKIP
     * drop error return from NewEntry()                                 * SKIP
     * replace Entry with Node everywhere (yields v0.8.0)                * DONE
+    * drop entry.go (and so the Entry type)                             * DONE
+    * calculate BytesKey.Hashcode() directly                            * DON
 
 2014-05-09
-    * blog.golang.org/profiling-go-programs
+    * add profileHAMT.go after blog.golang.org/profiling-go-programs    * DONE
 
 2014-05-09 (was 04-23)
     * need performance test which runs as a command, always does same
@@ -14,22 +19,11 @@ hamt_go/TODO
     * need performance test which is say 1% inserts, 99% finds, 
         and so forth
     * same test but with varying degrees of concurrency
+
 2014-05-07
-    * modify hamt_perf_test.go to guarantee that the N keys             * DONE
-        generated have unique hashcodes                                 * DONE
     * correct calculation of table.maxDepth in NewTable()
-    * determine whether Table.indices can be dropped
-
-2014-05-06 (04-20, edited)
-    * drop Table.maxSlots, never used
-
-2014-05-06 (from -04-22) 
-    * values in the root table should NOT be entries; the index         * DONE
-        is known.  Make these Nodes instead.  This may be URGENT.       * DONE
-        - yields v0.6.0                                                 * DONE
-    * root method parameters contain key so should NOT contain hc       * DONE
-        - fix root.findLeaf()                                           * DONE
-        - fix root.deleteLeaf()                                         * DONE
+    * determine whether Table.indices can be dropped                    * DONE
+        - dropped: performance improves 10%                             * DONE
 
 2014-05-06 (04-17, edited)
     * possibly allow dynamic resizing of root table
@@ -38,38 +32,18 @@ hamt_go/TODO
     * need tools for static analysis of frozen HAMTs
     * possibly need serialization/deserialization tools
 
-2014-05-05 (04-30 edited)
-    * unsuccessful find return nil value, nil error 
-        - HAMT                                                          * DONE
-        - Root                                                          * DONE
-        - Table                                                         * DONE
-2014-04-30
-    * fix: doTestHAMTInsertsOfRandomishValues() fails, returns          * DONE
-        incorrect leaf count line 195 (two leafs missing)               * DONE
-    * fix: doTestHamtEntrySplittingInserts() fails, also                * DONE
-        returns 2 less than correct leaf count (expect 3, obtain 1)     * DONE
-2014-04-27
-    * test Root.getTableCount(), getLeafCount()                         * DONE
 2014-04-26
     * TestSWAR64 consistently fails on 64-bit Intel CPU laptop
         - TestSWAR32 succeeds wherever tested
         - constant declarations changed to uint32, uint64
     * test on EC2 machines - FAILS
-2014-04-25
-    * determine why table_test fails with w > 6 but hamt_test succeeds  * WRONG
-    * fix root.GetLeafCount(), which should recurse                     * DONE
-    * add test of hamt.GetLeafCount()                                   * DONE
 2014-04-24
     * consider merging Table.insertEntry and insertIntoOccupiedSlot
-2014-04-22
-    * w cannot exceed 6 because POPCOUNT is limited to a 64-bit range   * WRONG
 2014-04-21 
     * FIX: insertIntoOccupiedSlot() does not replace the value 
         where there is an exact match on keys
     * need to add buckets to handle exact matches on 64 bit keys
         (however very unlikely such matches may be in actual use)
-    * FIX: w=7 and w=8 versions of the HAMT benchmark have stopped      * SILLY
-        working                                                         * SILLY
 2014-04-18
     * Investigate suspicion that while larger root table has a small
         positive effect on performance, larger tables elsewhere cause

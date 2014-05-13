@@ -44,16 +44,16 @@ func dumpByteSlice(sl []byte) string {
 	return strings.Join(ss, "")
 }
 
-func dumpTable(title string, dTable *Table) string {
-	var ss []string
-	ss = append(ss, fmt.Sprintf("    dTable %s:", title))
-	for j := 0; j < len(dTable.indices); j++ {
-		if dTable.slots[j].IsLeaf() {
-			ss = append(ss, " L")
-		} else {
-			ss = append(ss, " T")
-		}
-		ss = append(ss, fmt.Sprintf("%02x", dTable.indices[j]))
-	}
-	return strings.Join(ss, "")
-}
+//func dumpTable(title string, dTable *Table) string {
+//	var ss []string
+//	ss = append(ss, fmt.Sprintf("    dTable %s:", title))
+//	for j := 0; j < len(dTable.slots); j++ {
+//		if dTable.slots[j].IsLeaf() {
+//			ss = append(ss, " L")
+//		} else {
+//			ss = append(ss, " T")
+//		}
+//		ss = append(ss, fmt.Sprintf("%02x", dTable.indices[j]))
+//	}
+//	return strings.Join(ss, "")
+//}

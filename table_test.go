@@ -75,11 +75,9 @@ func (s *XLSuite) doTestTableDepthZeroInserts(c *C, w, t uint) {
 	rng := xr.MakeSimpleRNG()
 	perm := rng.Perm(int(SLOT_COUNT)) // a random permutation of [0..SLOT_COUNT)
 	rawKeys := make([][]byte, SLOT_COUNT)
-	indices := make([]byte, SLOT_COUNT)
 
 	for i := uint(0); i < SLOT_COUNT; i++ {
 		ndx := byte(perm[i])
-		indices[i] = ndx
 
 		rawKey := make([]byte, SLOT_COUNT)
 		rawKey[0] = ndx // all the rest are zeroes
@@ -88,8 +86,7 @@ func (s *XLSuite) doTestTableDepthZeroInserts(c *C, w, t uint) {
 		key64, err := NewBytesKey(rawKey)
 		c.Assert(err, IsNil)
 		c.Assert(key64, NotNil)
-		hc, err := key64.Hashcode()
-		c.Assert(err, IsNil)
+		hc := key64.Hashcode()
 		c.Assert(hc, Equals, uint64(ndx))
 
 		value, err := table.findLeaf(hc, depth, key64)
@@ -124,35 +121,16 @@ func (s *XLSuite) doTestTableDepthZeroInserts(c *C, w, t uint) {
 
 	}
 	// verify that the order of entries in the slots is as expected
-	c.Assert(uint(len(table.indices)), Equals, SLOT_COUNT)
-	c.Assert(uint(len(table.slots)), Equals, SLOT_COUNT)
-	for i := uint(0); i < SLOT_COUNT; i++ {
-		idx := table.indices[i]
-		node := table.slots[i]
-		c.Assert(node.IsLeaf(), Equals, true)
-		leaf := node.(*Leaf)
-		key64 := leaf.Key
-		hc, err := key64.Hashcode()
-		c.Assert(err, IsNil)
-		c.Assert(hc&table.mask, Equals, uint64(idx))
-		value := leaf.Value.(*[]byte)
-
-		keyBytes := key64.(*BytesKey)
-		c.Assert(bytes.Equal((*keyBytes).Slice, *value), Equals, true)
-	}
 	// remove each key, then verify that it is in fact gone
-	c.Assert(uint(len(table.indices)), Equals, SLOT_COUNT)
 	c.Assert(uint(len(table.slots)), Equals, SLOT_COUNT)
 	for i := uint(0); i < SLOT_COUNT; i++ {
-		idx := indices[i]
 		key := rawKeys[i]
 
 		// verify it is present -------------------------------------
 		key64, err := NewBytesKey(key)
 		c.Assert(err, IsNil)
 		c.Assert(key64, NotNil)
-		hc, err := key64.Hashcode()
-		c.Assert(err, IsNil)
+		hc := key64.Hashcode()
 		v, err := table.findLeaf(hc, depth, key64)
 		c.Assert(err, IsNil)
 		c.Assert(v, NotNil)
@@ -228,8 +206,7 @@ func (s *XLSuite) doTestEntrySplittingInserts(c *C, rng *xr.PRNG, w uint) {
 
 		values[i] = &key
 
-		hc, err := key64.Hashcode()
-		c.Assert(err, IsNil)
+		hc := key64.Hashcode()
 		hashcodes[i] = hc
 
 	}
@@ -322,8 +299,7 @@ func (s *XLSuite) TestTableInsertsOfRandomishValues(c *C) {
 			c.Assert(key64, NotNil)
 			key64s[i] = key64
 
-			hc, err = key64.Hashcode()
-			c.Assert(err, IsNil)
+			hc = key64.Hashcode()
 			_, ok := hcMap[hc]
 			if !ok {
 				hcMap[hc] = true

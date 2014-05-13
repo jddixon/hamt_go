@@ -45,9 +45,8 @@ func (s *XLSuite) uniqueKeyMaker(c *C, rng *xr.PRNG, w, keyCount, keyLen uint) (
 			c.Assert(bKey, NotNil)
 			bKeys[i] = bKey
 
-			hc, err = bKey.Hashcode()
+			hc = bKey.Hashcode()
 			ndx := hc & mask
-			c.Assert(err, IsNil)
 			_, ok := ndxMap[ndx]
 			if !ok {
 				ndxMap[ndx] = true

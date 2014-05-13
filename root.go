@@ -71,31 +71,29 @@ func (root *Root) getTableCount() (count uint) {
 
 func (root *Root) deleteLeaf(key KeyI) (err error) {
 
-	hc, err := key.Hashcode()
+	hc := key.Hashcode()
+	ndx := hc & root.mask
+	if root.slots[ndx] == nil {
+		err = NotFound
+	}
 	if err == nil {
-		ndx := hc & root.mask
-		if root.slots[ndx] == nil {
-			err = NotFound
-		}
-		if err == nil {
-			// the entry is present
-			node := root.slots[ndx]
-			if node.IsLeaf() {
-				// KEYS MUST BE OF THE SAME TYPE
-				myLeaf := node.(*Leaf)
-				myKey := myLeaf.Key.(*BytesKey)
-				searchKey := key.(*BytesKey)
-				if bytes.Equal(searchKey.Slice, myKey.Slice) {
-					root.slots[ndx] = nil
-				} else {
-					err = NotFound
-				}
+		// the entry is present
+		node := root.slots[ndx]
+		if node.IsLeaf() {
+			// KEYS MUST BE OF THE SAME TYPE
+			myLeaf := node.(*Leaf)
+			myKey := myLeaf.Key.(*BytesKey)
+			searchKey := key.(*BytesKey)
+			if bytes.Equal(searchKey.Slice, myKey.Slice) {
+				root.slots[ndx] = nil
 			} else {
-				// entry is a table, so recurse
-				tDeeper := node.(*Table)
-				hc >>= root.t
-				err = tDeeper.deleteLeaf(hc, 1, key)
+				err = NotFound
 			}
+		} else {
+			// entry is a table, so recurse
+			tDeeper := node.(*Table)
+			hc >>= root.t
+			err = tDeeper.deleteLeaf(hc, 1, key)
 		}
 	}
 	return
@@ -106,27 +104,25 @@ func (root *Root) deleteLeaf(key KeyI) (err error) {
 // value, or any error encountered.
 func (root *Root) findLeaf(key KeyI) (value interface{}, err error) {
 
-	hc, err := key.Hashcode()
-	if err == nil {
-		ndx := hc & root.mask
-		if root.slots[ndx] != nil {
-			// the entry is present
-			node := root.slots[ndx]
-			if node.IsLeaf() {
-				myLeaf := node.(*Leaf)
-				myKey := myLeaf.Key.(*BytesKey)
-				searchKey := key.(*BytesKey)
-				if bytes.Equal(searchKey.Slice, myKey.Slice) {
-					value = myLeaf.Value
-				} else {
-					value = nil
-				}
+	hc := key.Hashcode()
+	ndx := hc & root.mask
+	if root.slots[ndx] != nil {
+		// the entry is present
+		node := root.slots[ndx]
+		if node.IsLeaf() {
+			myLeaf := node.(*Leaf)
+			myKey := myLeaf.Key.(*BytesKey)
+			searchKey := key.(*BytesKey)
+			if bytes.Equal(searchKey.Slice, myKey.Slice) {
+				value = myLeaf.Value
 			} else {
-				// entry is a table, so recurse
-				tDeeper := node.(*Table)
-				hc >>= root.t
-				value, err = tDeeper.findLeaf(hc, 1, key)
+				value = nil
 			}
+		} else {
+			// entry is a table, so recurse
+			tDeeper := node.(*Table)
+			hc >>= root.t
+			value, err = tDeeper.findLeaf(hc, 1, key)
 		}
 	}
 	return
@@ -134,74 +130,70 @@ func (root *Root) findLeaf(key KeyI) (value interface{}, err error) {
 
 func (root *Root) insertLeaf(leaf *Leaf) (slotNbr uint, err error) {
 
-	newHC, err := leaf.Key.Hashcode()
-	if err == nil {
-		ndx := newHC & root.mask
+	newHC := leaf.Key.Hashcode()
+	ndx := newHC & root.mask
 
-		if root.slots[ndx] == nil {
-			root.slots[ndx] = leaf
-		} else {
-			// there is already something in this slot
-			node := root.slots[ndx]
+	if root.slots[ndx] == nil {
+		root.slots[ndx] = leaf
+	} else {
+		// there is already something in this slot
+		node := root.slots[ndx]
 
-			if node.IsLeaf() {
-				// if it's a leaf, we replace the value iff the keys match
-				curLeaf := node.(*Leaf)
-				curKey := curLeaf.Key.(*BytesKey)
-				newKey := leaf.Key.(*BytesKey)
-				if bytes.Equal(curKey.Slice, newKey.Slice) {
-					// the keys match, so we replace the value
-					curLeaf.Value = leaf.Value
-				} else {
-					var newNode HTNodeI
-
-					// keys differ, so we need to replace the leaf with a table
-					var (
-						tableDeeper *Table
-						oldNode     HTNodeI
-						oldHC       uint64
-					)
-					newNode = leaf
-					tableDeeper, err = NewTable(1, root.w, root.t)
-
-					if err == nil {
-						newHC >>= root.t // this is hc for the NEW entry
-
-						oldLeaf := node.(*Leaf)
-						oldHC, err = oldLeaf.Key.Hashcode()
-						if err == nil {
-							oldNode = oldLeaf
-						}
-					}
-					if err == nil {
-						oldHC >>= root.t
-
-						// XXX THE SLOT NBRS ARE FOR DEBUGGING
-						//var slotNbrOE, slotNbrNE uint
-
-						// put the existing leaf into the new table
-						_, err = tableDeeper.insertLeaf(oldHC, 1, oldNode)
-						if err == nil {
-							// then put the new entry in the new table
-							_, err = tableDeeper.insertLeaf(newHC, 1, newNode)
-							if err == nil {
-								// the new table replaces the existing leaf
-								root.slots[ndx] = tableDeeper
-							}
-						}
-						// DEBUG
-						//fmt.Printf("root table slot %d (0x%x): replaced entry with table, OE %d (0x%x), NE %d (0x%x)\n",
-						//	ndx, ndx, slotNbrOE, slotNbrOE, slotNbrNE, slotNbrNE)
-						// END
-					}
-				}
+		if node.IsLeaf() {
+			// if it's a leaf, we replace the value iff the keys match
+			curLeaf := node.(*Leaf)
+			curKey := curLeaf.Key.(*BytesKey)
+			newKey := leaf.Key.(*BytesKey)
+			if bytes.Equal(curKey.Slice, newKey.Slice) {
+				// the keys match, so we replace the value
+				curLeaf.Value = leaf.Value
 			} else {
-				// otherwise it's a table, so recurse
-				tDeeper := node.(*Table)
-				newHC >>= root.t
-				_, err = tDeeper.insertLeaf(newHC, 1, leaf)
+				var newNode HTNodeI
 
+				// keys differ, so we need to replace the leaf with a table
+				var (
+					tableDeeper *Table
+					oldNode     HTNodeI
+					oldHC       uint64
+				)
+				newNode = leaf
+				tableDeeper, err = NewTable(1, root.w, root.t)
+
+				if err == nil {
+					newHC >>= root.t // this is hc for the NEW entry
+
+					oldLeaf := node.(*Leaf)
+					oldHC = oldLeaf.Key.Hashcode()
+					oldNode = oldLeaf
+				}
+				if err == nil {
+					oldHC >>= root.t
+
+					// XXX THE SLOT NBRS ARE FOR DEBUGGING
+					//var slotNbrOE, slotNbrNE uint
+
+					// put the existing leaf into the new table
+					_, err = tableDeeper.insertLeaf(oldHC, 1, oldNode)
+					if err == nil {
+						// then put the new entry in the new table
+						_, err = tableDeeper.insertLeaf(newHC, 1, newNode)
+						if err == nil {
+							// the new table replaces the existing leaf
+							root.slots[ndx] = tableDeeper
+						}
+					}
+					// DEBUG
+					//fmt.Printf("root table slot %d (0x%x): replaced entry with table, OE %d (0x%x), NE %d (0x%x)\n",
+					//	ndx, ndx, slotNbrOE, slotNbrOE, slotNbrNE, slotNbrNE)
+					// END
+				}
 			}
+		} else {
+			// otherwise it's a table, so recurse
+			tDeeper := node.(*Table)
+			newHC >>= root.t
+			_, err = tDeeper.insertLeaf(newHC, 1, leaf)
+
 		}
 	}
 	return

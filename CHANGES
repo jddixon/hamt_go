@@ -3,6 +3,8 @@ hamt_go/CHANGES
 v0.8.0
     2014-05-12
         * replaced Entry with HTNodeI everywhere; dropped Entry     * SLOC 1414
+        * added profileHAMT, dropped Table.indices                  * SLOC 1463
+        * calculated BytesKey.Hashcode() directly                   * SLOC 1450
 v0.7.0
     2014-05-06
         * replace *Entry with NodeI in other tables

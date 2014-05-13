@@ -74,8 +74,7 @@ func (s *XLSuite) TestMakingPermutedKeys(c *C) {
 		for i := uint(0); i < maxDepth; i++ {
 			bKey, err := NewBytesKey(keys[i])
 			c.Assert(err, IsNil)
-			hc, err := bKey.Hashcode()
-			c.Assert(err, IsNil)
+			hc := bKey.Hashcode()
 			for j := uint(0); j <= i; j++ {
 				ndx := hc & mask
 				if uint(ndx) != uint(fields[j]) {

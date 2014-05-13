@@ -22,8 +22,6 @@ type Table struct {
 	bitmap   uint64
 	slots    []HTNodeI // each nil or a pointer to either a leaf or a table
 
-	indices []byte // slice holding index of each slot in use
-
 	depth    uint // only here for use in development and debugging !
 	maxSlots uint // maximum slots for table at this depth
 }
@@ -87,7 +85,7 @@ func (table *Table) GetDepth() uint {
 // XXX Should modify to remove empty table recursively where this
 // is the last entry in the table
 func (table *Table) removeFromSlices(offset uint) (err error) {
-	curSize := uint(len(table.indices))
+	curSize := uint(len(table.slots))
 	if curSize == 0 {
 		err = DeleteFromEmptyTable
 	} else if offset >= curSize {
@@ -96,18 +94,12 @@ func (table *Table) removeFromSlices(offset uint) (err error) {
 			offset, curSize))
 	} else if curSize == 1 {
 		// XXX LEAVES EMPTY TABLE, WHICH WILL HARM PERFORMANCE
-		table.indices = table.indices[0:0]
 		table.slots = table.slots[0:0]
 	} else if offset == 0 {
-		table.indices = table.indices[1:]
 		table.slots = table.slots[1:]
 	} else if offset == curSize-1 {
-		table.indices = table.indices[0:offset]
 		table.slots = table.slots[0:offset]
 	} else {
-		shorterNdx := table.indices[0:offset]
-		shorterNdx = append(shorterNdx, table.indices[offset+1:]...)
-		table.indices = shorterNdx
 		shorterSlots := table.slots[0:offset]
 		shorterSlots = append(shorterSlots, table.slots[offset+1:]...)
 		table.slots = shorterSlots
@@ -124,7 +116,7 @@ func (table *Table) deleteLeaf(hc uint64, depth uint, key KeyI) (
 	var (
 		ndx64, flag, mask uint64
 	)
-	sliceSize := byte(len(table.indices))
+	sliceSize := byte(len(table.slots))
 	if sliceSize == 0 {
 		err = NotFound
 	}
@@ -177,7 +169,7 @@ func (table *Table) findLeaf(hc uint64, depth uint, key KeyI) (
 	var (
 		ndx, flag, mask uint64
 	)
-	sliceSize := byte(len(table.indices))
+	sliceSize := byte(len(table.slots))
 	if sliceSize != 0 {
 		ndx = hc & table.mask
 		flag = uint64(1 << ndx)
@@ -225,10 +217,11 @@ func (table *Table) insertLeaf(hc uint64, depth uint, node HTNodeI) (
 	slotNbr uint, err error) {
 
 	// DEBUG
-	if depth != table.depth {
-		fmt.Printf("INTERNAL ERROR: inserting at depth %d but table depth is %d\n",
-			depth, table.depth)
-	}
+	//if depth != table.depth {
+	//	fmt.Printf(
+	//		"INTERNAL ERROR: inserting at depth %d but table depth is %d\n",
+	//		depth, table.depth)
+	//}
 	// END
 	err = table.CheckTableDepth(depth)
 	if err != nil {
@@ -238,7 +231,7 @@ func (table *Table) insertLeaf(hc uint64, depth uint, node HTNodeI) (
 	var (
 		ndx64, flag, mask uint64
 	)
-	sliceSize := uint(len(table.indices))
+	sliceSize := uint(len(table.slots))
 	if err == nil {
 		ndx64 = hc & table.mask
 		flag = uint64(1 << ndx64)
@@ -247,7 +240,6 @@ func (table *Table) insertLeaf(hc uint64, depth uint, node HTNodeI) (
 
 	if sliceSize == 0 {
 		table.slots = append(table.slots, node)
-		table.indices = append(table.indices, byte(ndx64))
 	} else {
 		ndx := byte(ndx64)
 		if mask != 0 {
@@ -258,29 +250,20 @@ func (table *Table) insertLeaf(hc uint64, depth uint, node HTNodeI) (
 			err = table.insertIntoOccupiedSlot(hc, depth, node, slotNbr, ndx)
 		} else if slotNbr == 0 {
 			var leftSlots []HTNodeI
-			var leftIndices []byte
+			//var leftIndices []byte
 			leftSlots = append(leftSlots, node)
 			leftSlots = append(leftSlots, table.slots...)
 			table.slots = leftSlots
-			leftIndices = append(leftIndices, ndx)
-			leftIndices = append(leftIndices, table.indices...)
-			table.indices = leftIndices
 		} else if slotNbr == sliceSize {
 			table.slots = append(table.slots, node)
-			table.indices = append(table.indices, ndx)
 		} else {
 			var leftSlots []HTNodeI
-			var leftIndices []byte
+			//var leftIndices []byte
 
 			leftSlots = append(leftSlots, table.slots[:slotNbr]...)
 			leftSlots = append(leftSlots, node)
 			leftSlots = append(leftSlots, table.slots[slotNbr:]...)
 			table.slots = leftSlots
-
-			leftIndices = append(leftIndices, table.indices[:slotNbr]...)
-			leftIndices = append(leftIndices, ndx)
-			leftIndices = append(leftIndices, table.indices[slotNbr:]...)
-			table.indices = leftIndices
 		}
 	}
 	if err == nil {
@@ -320,9 +303,7 @@ func (table *Table) insertIntoOccupiedSlot(newHC uint64, depth uint,
 
 				oldNode = e
 				oldLeaf := e.(*Leaf)
-				oldHC, err = oldLeaf.Key.Hashcode()
-			}
-			if err == nil {
+				oldHC = oldLeaf.Key.Hashcode()
 				oldHC >>= table.t + (depth-1)*table.w
 
 				// indexes for this depth

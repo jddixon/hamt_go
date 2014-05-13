@@ -3,8 +3,6 @@ package hamt_go
 // hamt_go/bytesKey.go
 
 import (
-	"bytes"
-	"encoding/binary"
 	"fmt"
 )
 
@@ -27,14 +25,21 @@ func NewBytesKey(b []byte) (k *BytesKey, err error) {
 
 // KeyI interface ///////////////////////////////////////////////////
 
-// convert the first 8 bytes of the key into an unsigned uint64
-func (b *BytesKey) Hashcode() (hc uint64, err error) {
-	buf := bytes.NewReader(b.Slice)
-	err = binary.Read(buf, binary.LittleEndian, &hc)
-	// DEBUG
-	if err != nil {
-		fmt.Printf("attempt to read key failed: %v\n", err)
-	}
-	// END
+// Convert the first 8 bytes of the key into an unsigned uint64.
+// We are guaranteed that len(b.Slice) is >= 8, so error return is unneeded.
+func (b *BytesKey) Hashcode() (hc uint64) {
+	//buf := bytes.NewReader(b.Slice)
+	// err = binary.Read(buf, binary.LittleEndian, &hc
+	// XXX Calculating this here makes the code run about 10% faster)
+	s := b.Slice
+	hc = uint64(s[0]) +
+		 uint64(s[1]) <<  8 +
+		 uint64(s[2]) << 16 +
+		 uint64(s[3]) << 24 +
+		 uint64(s[4]) << 32 +
+		 uint64(s[5]) << 40 +
+		 uint64(s[6]) << 48 +
+		 uint64(s[7]) << 56 
+		 
 	return
 }

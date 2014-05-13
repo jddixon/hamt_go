@@ -4,5 +4,5 @@ package hamt_go
 
 // A Key is anything that returns an unsigned 64-bit value.
 type KeyI interface {
-	Hashcode() (uint64, error)
+	Hashcode() uint64
 }
