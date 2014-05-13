@@ -100,8 +100,12 @@ func (table *Table) removeFromSlices(offset uint) (err error) {
 	} else if offset == curSize-1 {
 		table.slots = table.slots[0:offset]
 	} else {
-		shorterSlots := table.slots[0:offset]
-		shorterSlots = append(shorterSlots, table.slots[offset+1:]...)
+		// Get rid of expensive appends.
+		// shorterSlots := table.slots[0:offset]
+		// shorterSlots = append(shorterSlots, table.slots[offset+1:]...)
+		shorterSlots := make([]HTNodeI, curSize - 1)
+		copy(shorterSlots[0:offset], table.slots[0:offset])
+		copy(shorterSlots[offset:], table.slots[offset+1:])
 		table.slots = shorterSlots
 	}
 	return
@@ -249,20 +253,27 @@ func (table *Table) insertLeaf(hc uint64, depth uint, node HTNodeI) (
 			// there is already something at this slotNbrition
 			err = table.insertIntoOccupiedSlot(hc, depth, node, slotNbr, ndx)
 		} else if slotNbr == 0 {
-			var leftSlots []HTNodeI
-			//var leftIndices []byte
-			leftSlots = append(leftSlots, node)
-			leftSlots = append(leftSlots, table.slots...)
+			// This change of minor benefit, if any (occurs infrequently)
+			//var leftSlots []HTNodeI
+			//leftSlots = append(leftSlots, node)
+			//leftSlots = append(leftSlots, table.slots...)
+			leftSlots := make([]HTNodeI, sliceSize + 1)
+			leftSlots[0] = node
+			copy(leftSlots[1:], table.slots[:])
 			table.slots = leftSlots
 		} else if slotNbr == sliceSize {
 			table.slots = append(table.slots, node)
 		} else {
-			var leftSlots []HTNodeI
-			//var leftIndices []byte
-
-			leftSlots = append(leftSlots, table.slots[:slotNbr]...)
-			leftSlots = append(leftSlots, node)
-			leftSlots = append(leftSlots, table.slots[slotNbr:]...)
+			// 2014-05-13: append is expensive; tried copy instead.  This
+			// single change cut time by 20 to 50%.
+			//var leftSlots []HTNodeI
+			//leftSlots = append(leftSlots, table.slots[:slotNbr]...)
+			//leftSlots = append(leftSlots, node)
+			//leftSlots = append(leftSlots, table.slots[slotNbr:]...)
+			leftSlots := make([]HTNodeI, sliceSize + 1)
+			copy(leftSlots[:slotNbr], table.slots[:slotNbr])
+			leftSlots[slotNbr] = node
+			copy(leftSlots[slotNbr+1:], table.slots[slotNbr:])
 			table.slots = leftSlots
 		}
 	}
