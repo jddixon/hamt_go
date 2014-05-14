@@ -70,7 +70,7 @@ func (s *XLSuite) doTestTableDepthZeroInserts(c *C, w, t uint) {
 	expectedMask := flag - 1
 	c.Assert(table.mask, Equals, expectedMask)
 
-	SLOT_COUNT := table.maxSlots
+	SLOT_COUNT := table.MaxSlots()
 
 	rng := xr.MakeSimpleRNG()
 	perm := rng.Perm(int(SLOT_COUNT)) // a random permutation of [0..SLOT_COUNT)
@@ -187,10 +187,10 @@ func (s *XLSuite) doTestEntrySplittingInserts(c *C, rng *xr.PRNG, w uint) {
 	flag <<= (t + w)
 	expectedMask := flag - 1
 	c.Assert(table.mask, Equals, expectedMask)
-	c.Assert(table.maxDepth, Equals, 64/w)
+	c.Assert(table.MaxDepth(), Equals, (64-t)/w)
 
 	_, rawKeys := s.makePermutedKeys(rng, w) // XXX fields ignored
-	KEY_COUNT := table.maxDepth              // some keys ignored
+	KEY_COUNT := table.MaxDepth()            // some keys ignored
 
 	key64s := make([]*BytesKey, KEY_COUNT)
 	hashcodes := make([]uint64, KEY_COUNT)

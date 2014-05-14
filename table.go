@@ -15,15 +15,13 @@ var _ = fmt.Print
 // that a slot is in use, so there may not be more than 64 slots, so
 // w may not exceed 6 (2^6==64).
 type Table struct {
-	w        uint // non-root tables have 2^w slots
-	t        uint // root table has 2^t slots
-	maxDepth uint
-	mask     uint64
-	bitmap   uint64
-	slots    []HTNodeI // each nil or a pointer to either a leaf or a table
+	w      uint // non-root tables have 2^w slots
+	t      uint // root table has 2^t slots
+	mask   uint64
+	bitmap uint64
+	slots  []HTNodeI // each nil or a pointer to either a leaf or a table
 
-	depth    uint // only here for use in development and debugging !
-	maxSlots uint // maximum slots for table at this depth
+	depth uint // only here for use in development and debugging !
 }
 
 func NewTable(depth, w, t uint) (table *Table, err error) {
@@ -38,15 +36,24 @@ func NewTable(depth, w, t uint) (table *Table, err error) {
 		flag := uint64(1)
 		flag <<= w
 		table.mask = flag - 1
-		table.maxDepth = (64 / w) // rounds down	XXX WRONG: NO ALLOWANCE FOR t
-		table.maxSlots = 1 << w
-
 		err = table.CheckTableDepth(depth)
 		if err != nil {
 			table = nil
 		}
 	}
 	return
+}
+
+// Return the maximum possible depth for the table, (64 - t)/w.  There are
+// 64 bits available for keys, the root table uses t, each successive
+// table uses w more bits.  The root table is at depth 0.
+func (table *Table) MaxDepth() uint {
+	return (64 - table.t) / table.w
+}
+
+// Return the maximum number of slots in the table, 2^w.
+func (table *Table) MaxSlots() uint {
+	return 1 << table.w
 }
 
 // Return a count of leaf nodes in this table.
@@ -103,7 +110,7 @@ func (table *Table) removeFromSlices(offset uint) (err error) {
 		// Get rid of expensive appends.
 		// shorterSlots := table.slots[0:offset]
 		// shorterSlots = append(shorterSlots, table.slots[offset+1:]...)
-		shorterSlots := make([]HTNodeI, curSize - 1)
+		shorterSlots := make([]HTNodeI, curSize-1)
 		copy(shorterSlots[0:offset], table.slots[0:offset])
 		copy(shorterSlots[offset:], table.slots[offset+1:])
 		table.slots = shorterSlots
@@ -207,31 +214,25 @@ func (table *Table) findLeaf(hc uint64, depth uint, key KeyI) (
 }
 
 func (table *Table) CheckTableDepth(depth uint) (err error) {
-	if depth > table.maxDepth {
+	if depth > table.MaxDepth() {
 		msg := fmt.Sprintf("Table depth is %d but max depth is %d\n",
-			depth, table.maxDepth)
+			depth, table.MaxDepth())
 		err = errors.New(msg)
 	}
 	return
 }
 
 // Enter with hc having been shifted so that the first w bits are ndx.
+// 2014-05-13: Performance of this function was considerably improved (runtime
+// down 25-50%) by replacing slice appends with slice make/copy sequences.
 //
-func (table *Table) insertLeaf(hc uint64, depth uint, node HTNodeI) (
+func (table *Table) insertLeaf(hc uint64, depth uint, leaf *Leaf) (
 	slotNbr uint, err error) {
 
-	// DEBUG
-	//if depth != table.depth {
-	//	fmt.Printf(
-	//		"INTERNAL ERROR: inserting at depth %d but table depth is %d\n",
-	//		depth, table.depth)
-	//}
-	// END
 	err = table.CheckTableDepth(depth)
 	if err != nil {
 		return
 	}
-
 	var (
 		ndx64, flag, mask uint64
 	)
@@ -241,38 +242,26 @@ func (table *Table) insertLeaf(hc uint64, depth uint, node HTNodeI) (
 		flag = uint64(1 << ndx64)
 		mask = flag - 1
 	}
-
 	if sliceSize == 0 {
-		table.slots = append(table.slots, node)
+		table.slots = []HTNodeI{leaf}
 	} else {
-		ndx := byte(ndx64)
 		if mask != 0 {
 			slotNbr = BitCount64(table.bitmap & mask)
 		}
+		// Is there is already something at this slotNbr ?
 		if table.bitmap&flag != 0 {
-			// there is already something at this slotNbrition
-			err = table.insertIntoOccupiedSlot(hc, depth, node, slotNbr, ndx)
+			err = table.insertIntoOccupiedSlot(hc, depth, leaf, slotNbr)
 		} else if slotNbr == 0 {
-			// This change of minor benefit, if any (occurs infrequently)
-			//var leftSlots []HTNodeI
-			//leftSlots = append(leftSlots, node)
-			//leftSlots = append(leftSlots, table.slots...)
-			leftSlots := make([]HTNodeI, sliceSize + 1)
-			leftSlots[0] = node
+			leftSlots := make([]HTNodeI, sliceSize+1)
+			leftSlots[0] = leaf
 			copy(leftSlots[1:], table.slots[:])
 			table.slots = leftSlots
 		} else if slotNbr == sliceSize {
-			table.slots = append(table.slots, node)
+			table.slots = append(table.slots, leaf)
 		} else {
-			// 2014-05-13: append is expensive; tried copy instead.  This
-			// single change cut time by 20 to 50%.
-			//var leftSlots []HTNodeI
-			//leftSlots = append(leftSlots, table.slots[:slotNbr]...)
-			//leftSlots = append(leftSlots, node)
-			//leftSlots = append(leftSlots, table.slots[slotNbr:]...)
-			leftSlots := make([]HTNodeI, sliceSize + 1)
+			leftSlots := make([]HTNodeI, sliceSize+1)
 			copy(leftSlots[:slotNbr], table.slots[:slotNbr])
-			leftSlots[slotNbr] = node
+			leftSlots[slotNbr] = leaf
 			copy(leftSlots[slotNbr+1:], table.slots[slotNbr:])
 			table.slots = leftSlots
 		}
@@ -285,45 +274,36 @@ func (table *Table) insertLeaf(hc uint64, depth uint, node HTNodeI) (
 
 // Insert a new entry into a slot which is already occupied.
 //
-func (table *Table) insertIntoOccupiedSlot(newHC uint64, depth uint,
-	node HTNodeI, slotNbr uint, ndx byte) (err error) {
+func (table *Table) insertIntoOccupiedSlot(hc uint64, depth uint,
+	leaf *Leaf, slotNbr uint) (err error) {
 
-	e := table.slots[slotNbr]
+	entry := table.slots[slotNbr]
 
-	if e.IsLeaf() {
+	if entry.IsLeaf() {
 		// if it's a leaf, we replace the value iff the keys match
-		curLeaf := e.(*Leaf)
+		curLeaf := entry.(*Leaf)
 		curKey := curLeaf.Key.(*BytesKey)
-		nodeAsLeaf := node.(*Leaf)
-		newKey := nodeAsLeaf.Key.(*BytesKey)
+		newKey := leaf.Key.(*BytesKey)
 		if bytes.Equal(curKey.Slice, newKey.Slice) {
 			// the keys match, so we replace the value
-			newLeaf := node.(*Leaf)
-			curLeaf.Value = newLeaf.Value
+			curLeaf.Value = leaf.Value
 		} else {
 			var (
 				tableDeeper *Table
-				oldNode     HTNodeI
 				oldHC       uint64
 			)
-
 			depth++
 			tableDeeper, err = NewTable(depth, table.w, table.t)
 			if err == nil {
-				newHC >>= table.w // this is hc for the NEW node
-
-				oldNode = e
-				oldLeaf := e.(*Leaf)
+				hc >>= table.w // this is hashcode for the NEW leaf
+				oldLeaf := entry.(*Leaf)
 				oldHC = oldLeaf.Key.Hashcode()
 				oldHC >>= table.t + (depth-1)*table.w
-
-				// indexes for this depth
-
 				// put the existing leaf into the new table
-				_, err = tableDeeper.insertLeaf(oldHC, depth, oldNode)
+				_, err = tableDeeper.insertLeaf(oldHC, depth, oldLeaf)
 				if err == nil {
-					// then put the new node in the new table
-					_, err = tableDeeper.insertLeaf(newHC, depth, node)
+					// then put the new leaf in the new table
+					_, err = tableDeeper.insertLeaf(hc, depth, leaf)
 					if err == nil {
 						// the new table replaces the existing leaf
 						table.slots[slotNbr] = tableDeeper
@@ -333,12 +313,11 @@ func (table *Table) insertIntoOccupiedSlot(newHC uint64, depth uint,
 		}
 	} else {
 		// otherwise it's a table, so recurse
-		tDeeper := e.(*Table)
-		newHC >>= table.w
+		tDeeper := entry.(*Table)
+		hc >>= table.w
 		depth++
-		_, err = tDeeper.insertLeaf(newHC, depth, node)
-
-	}
+		_, err = tDeeper.insertLeaf(hc, depth, leaf)
+	} // FOO
 	return
 }
 

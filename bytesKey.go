@@ -33,13 +33,13 @@ func (b *BytesKey) Hashcode() (hc uint64) {
 	// XXX Calculating this here makes the code run about 10% faster)
 	s := b.Slice
 	hc = uint64(s[0]) +
-		 uint64(s[1]) <<  8 +
-		 uint64(s[2]) << 16 +
-		 uint64(s[3]) << 24 +
-		 uint64(s[4]) << 32 +
-		 uint64(s[5]) << 40 +
-		 uint64(s[6]) << 48 +
-		 uint64(s[7]) << 56 
-		 
+		uint64(s[1])<<8 +
+		uint64(s[2])<<16 +
+		uint64(s[3])<<24 +
+		uint64(s[4])<<32 +
+		uint64(s[5])<<40 +
+		uint64(s[6])<<48 +
+		uint64(s[7])<<56
+
 	return
 }

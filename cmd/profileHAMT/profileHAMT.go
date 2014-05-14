@@ -3,9 +3,9 @@ package main
 // hamt_go/cmd/profileHAMT.go
 
 /////////////////////////////////////////////////////////////////////
-// Run this with something similar to 
+// Run this with something similar to
 //   time profileHAMT -c cpu.prof -m mem.prof
-// Then process results with 
+// Then process results with
 //   go tool pprof profileHAMT cpu.prof mem.prof
 /////////////////////////////////////////////////////////////////////
 
@@ -35,9 +35,9 @@ const ()
 
 var (
 	// these need to be referenced as pointers
-	cpuProf		  = flag.String("c", "", "cpuprofile file name")
-	memProf		  = flag.String("m", "", "memprofile file name")
-	
+	cpuProf = flag.String("c", "", "cpuprofile file name")
+	memProf = flag.String("m", "", "memprofile file name")
+
 	justShow      = flag.Bool("j", false, "display option settings and exit")
 	showTimestamp = flag.Bool("t", false, "output UTC timestamp")
 	showVersion   = flag.Bool("V", false, "output package version info")
@@ -77,7 +77,7 @@ func makeSomeUniqueKeys(N, K int) (rawKeys [][]byte, bKeys []*gh.BytesKey) {
 	return
 }
 
-func  doBenchmark(w, t uint, N int, cpuProfFile *os.File) {
+func doBenchmark(w, t uint, N int, cpuProfFile *os.File) {
 	// build an array of N random-ish K-byte rawKeys
 	K := 16
 	// t0 := time.Now()
@@ -108,11 +108,12 @@ func  doBenchmark(w, t uint, N int, cpuProfFile *os.File) {
 
 	//} // GEEP
 }
+
 // MAIN /////////////////////////////////////////////////////////////
 func main() {
 	var (
 		cpuProfFile, memProfFile *os.File
-		err             error
+		err                      error
 	)
 
 	flag.Usage = Usage
@@ -121,7 +122,7 @@ func main() {
 	// FIXUPS ///////////////////////////////////////////////////////
 	if !*justShow {
 		// XXX STUB
-	} 
+	}
 	if *testing {
 	}
 	// SANITY CHECKS ////////////////////////////////////////////////
@@ -150,7 +151,7 @@ func main() {
 		}
 		if err == nil {
 			//         w , t , N
-			doBenchmark(6, 16, 1000000, cpuProfFile) 
+			doBenchmark(6, 16, 2000000, cpuProfFile)
 		}
 		if err == nil {
 			if memProfFile != nil {

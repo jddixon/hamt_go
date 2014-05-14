@@ -1,14 +1,18 @@
 hamt_go/TODO
 
 2014-05-12 (04-20, re-edited)
-    * convert Table.maxSlots to function MaxSlots()
+    * convert Table.maxSlots to function MaxSlots()                     * DONE
+    * convert Table.maxDepth to function MaxDepth()                     * DONE
+
+    * broke something :-(  See junk.diff.  Probably change to
+        root.go or table.go means something not being inserted.
 
 2014-05-12 (-05-06, edited)
     * remove ndx from Entry (used only in testing)                      * SKIP
     * drop error return from NewEntry()                                 * SKIP
     * replace Entry with Node everywhere (yields v0.8.0)                * DONE
     * drop entry.go (and so the Entry type)                             * DONE
-    * calculate BytesKey.Hashcode() directly                            * DON
+    * calculate BytesKey.Hashcode() directly                            * DONE
 
 2014-05-09
     * add profileHAMT.go after blog.golang.org/profiling-go-programs    * DONE
@@ -40,8 +44,8 @@ hamt_go/TODO
 2014-04-24
     * consider merging Table.insertEntry and insertIntoOccupiedSlot
 2014-04-21 
-    * FIX: insertIntoOccupiedSlot() does not replace the value 
-        where there is an exact match on keys
+    * FIX: insertIntoOccupiedSlot() does not replace the value          * DONE
+        where there is an exact match on keys                           * DONE
     * need to add buckets to handle exact matches on 64 bit keys
         (however very unlikely such matches may be in actual use)
 2014-04-18

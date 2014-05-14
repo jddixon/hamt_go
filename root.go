@@ -131,61 +131,42 @@ func (root *Root) findLeaf(key KeyI) (value interface{}, err error) {
 func (root *Root) insertLeaf(leaf *Leaf) (slotNbr uint, err error) {
 
 	newHC := leaf.Key.Hashcode()
-	ndx := newHC & root.mask
+	slotNbr = uint(newHC & root.mask)
 
-	if root.slots[ndx] == nil {
-		root.slots[ndx] = leaf
+	if root.slots[slotNbr] == nil {
+		root.slots[slotNbr] = leaf
 	} else {
 		// there is already something in this slot
-		node := root.slots[ndx]
-
+		node := root.slots[slotNbr]
 		if node.IsLeaf() {
 			// if it's a leaf, we replace the value iff the keys match
-			curLeaf := node.(*Leaf)
-			curKey := curLeaf.Key.(*BytesKey)
+			oldLeaf := node.(*Leaf)
+			curKey := oldLeaf.Key.(*BytesKey)
 			newKey := leaf.Key.(*BytesKey)
 			if bytes.Equal(curKey.Slice, newKey.Slice) {
 				// the keys match, so we replace the value
-				curLeaf.Value = leaf.Value
+				oldLeaf.Value = leaf.Value
 			} else {
-				var newNode HTNodeI
-
 				// keys differ, so we need to replace the leaf with a table
 				var (
 					tableDeeper *Table
-					oldNode     HTNodeI
 					oldHC       uint64
 				)
-				newNode = leaf
 				tableDeeper, err = NewTable(1, root.w, root.t)
-
 				if err == nil {
 					newHC >>= root.t // this is hc for the NEW entry
-
-					oldLeaf := node.(*Leaf)
 					oldHC = oldLeaf.Key.Hashcode()
-					oldNode = oldLeaf
-				}
-				if err == nil {
 					oldHC >>= root.t
-
-					// XXX THE SLOT NBRS ARE FOR DEBUGGING
-					//var slotNbrOE, slotNbrNE uint
-
 					// put the existing leaf into the new table
-					_, err = tableDeeper.insertLeaf(oldHC, 1, oldNode)
+					_, err = tableDeeper.insertLeaf(oldHC, 1, oldLeaf)
 					if err == nil {
 						// then put the new entry in the new table
-						_, err = tableDeeper.insertLeaf(newHC, 1, newNode)
+						_, err = tableDeeper.insertLeaf(newHC, 1, leaf)
 						if err == nil {
 							// the new table replaces the existing leaf
-							root.slots[ndx] = tableDeeper
+							root.slots[slotNbr] = tableDeeper
 						}
 					}
-					// DEBUG
-					//fmt.Printf("root table slot %d (0x%x): replaced entry with table, OE %d (0x%x), NE %d (0x%x)\n",
-					//	ndx, ndx, slotNbrOE, slotNbrOE, slotNbrNE, slotNbrNE)
-					// END
 				}
 			}
 		} else {
@@ -193,7 +174,6 @@ func (root *Root) insertLeaf(leaf *Leaf) (slotNbr uint, err error) {
 			tDeeper := node.(*Table)
 			newHC >>= root.t
 			_, err = tDeeper.insertLeaf(newHC, 1, leaf)
-
 		}
 	}
 	return
