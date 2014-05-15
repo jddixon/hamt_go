@@ -94,6 +94,10 @@ func (s *XLSuite) doBenchmark(c *C, w, t uint) {
 	for i := 0; i < c.N; i++ {
 		_ = m.Insert(bKeys[i], &rawKeys[i])
 	}
+	// MAJOR CHANGE: add this for loop to perf test
+	for i := 0; i < N; i++ {
+		_, _ = m.Find(bKeys[i])
+	}
 	c.StopTimer()
 
 	// verify that the rawKeys are present in the map

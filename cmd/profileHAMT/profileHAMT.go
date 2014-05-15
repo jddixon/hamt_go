@@ -10,17 +10,13 @@ package main
 /////////////////////////////////////////////////////////////////////
 
 import (
-	//"encoding/hex"
 	"errors"
 	"flag"
 	"fmt"
 	gh "github.com/jddixon/hamt_go"
 	xr "github.com/jddixon/rnglib_go"
-	//"io/ioutil"
 	"os"
-	//"path"
 	"runtime/pprof"
-	//"strings"
 )
 
 var _ = errors.New
@@ -94,19 +90,20 @@ func doBenchmark(w, t uint, N int, cpuProfFile *os.File) {
 	}
 
 	// verify that the rawKeys are present in the map
-	//for i := 0; i < N; i++ {
-	//	value, err := m.Find(bKeys[i])
-	//	// DEBUG
-	//	if err != nil {
-	//		fmt.Printf("error finding key %d\n", i, err.Error())
-	//	}
-	//	if value == nil {
-	//		fmt.Printf("cannot find key %d\n", i)
-	//	}
-	//	// END
-	//	val := value.(*[]byte)
+	for i := 0; i < N; i++ {
+		value, err := m.Find(bKeys[i])
+		// DEBUG
+		if err != nil {
+			fmt.Printf("error finding key %d\n", i, err.Error())
+		}
+		if value == nil {
+			fmt.Printf("cannot find key %d\n", i)
+		}
+		// END
+		//val := value.(*[]byte)	// NOT USED
+		_ = value
 
-	//} // GEEP
+	} // GEEP
 }
 
 // MAIN /////////////////////////////////////////////////////////////

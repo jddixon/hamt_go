@@ -4,9 +4,6 @@ hamt_go/TODO
     * convert Table.maxSlots to function MaxSlots()                     * DONE
     * convert Table.maxDepth to function MaxDepth()                     * DONE
 
-    * broke something :-(  See junk.diff.  Probably change to
-        root.go or table.go means something not being inserted.
-
 2014-05-12 (-05-06, edited)
     * remove ndx from Entry (used only in testing)                      * SKIP
     * drop error return from NewEntry()                                 * SKIP

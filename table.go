@@ -177,22 +177,18 @@ func (table *Table) deleteLeaf(hc uint64, depth uint, key KeyI) (
 func (table *Table) findLeaf(hc uint64, depth uint, key KeyI) (
 	value interface{}, err error) {
 
-	var (
-		ndx, flag, mask uint64
-	)
-	sliceSize := byte(len(table.slots))
+	sliceSize := uint(len(table.slots))
 	if sliceSize != 0 {
-		ndx = hc & table.mask
-		flag = uint64(1 << ndx)
-		mask = flag - 1
+		ndx := hc & table.mask
+		flag := uint64(1 << ndx)
+		mask := flag - 1
 		if table.bitmap&flag != 0 {
 			// the node is present; get its position in the slice
-			var pos byte
+			var slotNbr uint
 			if mask != 0 {
-				pos = byte(BitCount64(table.bitmap & mask))
+				slotNbr = uint(BitCount64(table.bitmap & mask))
 			}
-			node := table.slots[pos]
-			// XXX this MUST exist
+			node := table.slots[slotNbr]
 			if node.IsLeaf() {
 				myLeaf := node.(*Leaf)
 				myKey := myLeaf.Key.(*BytesKey)
@@ -250,7 +246,47 @@ func (table *Table) insertLeaf(hc uint64, depth uint, leaf *Leaf) (
 		}
 		// Is there is already something at this slotNbr ?
 		if table.bitmap&flag != 0 {
-			err = table.insertIntoOccupiedSlot(hc, depth, leaf, slotNbr)
+			entry := table.slots[slotNbr]
+
+			if entry.IsLeaf() {
+				// if it's a leaf, we replace the value iff the keys match
+				curLeaf := entry.(*Leaf)
+				curKey := curLeaf.Key.(*BytesKey)
+				newKey := leaf.Key.(*BytesKey)
+				if bytes.Equal(curKey.Slice, newKey.Slice) {
+					// the keys match, so we replace the value
+					curLeaf.Value = leaf.Value
+				} else {
+					var (
+						tableDeeper *Table
+						oldHC       uint64
+					)
+					depth++
+					tableDeeper, err = NewTable(depth, table.w, table.t)
+					if err == nil {
+						hc >>= table.w // this is hashcode for the NEW leaf
+						oldLeaf := entry.(*Leaf)
+						oldHC = oldLeaf.Key.Hashcode()
+						oldHC >>= table.t + (depth-1)*table.w
+						// put the existing leaf into the new table
+						_, err = tableDeeper.insertLeaf(oldHC, depth, oldLeaf)
+						if err == nil {
+							// then put the new leaf in the new table
+							_, err = tableDeeper.insertLeaf(hc, depth, leaf)
+							if err == nil {
+								// the new table replaces the existing leaf
+								table.slots[slotNbr] = tableDeeper
+							}
+						}
+					}
+				}
+			} else {
+				// otherwise it's a table, so recurse
+				tDeeper := entry.(*Table)
+				hc >>= table.w
+				depth++
+				_, err = tDeeper.insertLeaf(hc, depth, leaf)
+			}
 		} else if slotNbr == 0 {
 			leftSlots := make([]HTNodeI, sliceSize+1)
 			leftSlots[0] = leaf
@@ -269,55 +305,6 @@ func (table *Table) insertLeaf(hc uint64, depth uint, leaf *Leaf) (
 	if err == nil {
 		table.bitmap |= flag
 	}
-	return
-}
-
-// Insert a new entry into a slot which is already occupied.
-//
-func (table *Table) insertIntoOccupiedSlot(hc uint64, depth uint,
-	leaf *Leaf, slotNbr uint) (err error) {
-
-	entry := table.slots[slotNbr]
-
-	if entry.IsLeaf() {
-		// if it's a leaf, we replace the value iff the keys match
-		curLeaf := entry.(*Leaf)
-		curKey := curLeaf.Key.(*BytesKey)
-		newKey := leaf.Key.(*BytesKey)
-		if bytes.Equal(curKey.Slice, newKey.Slice) {
-			// the keys match, so we replace the value
-			curLeaf.Value = leaf.Value
-		} else {
-			var (
-				tableDeeper *Table
-				oldHC       uint64
-			)
-			depth++
-			tableDeeper, err = NewTable(depth, table.w, table.t)
-			if err == nil {
-				hc >>= table.w // this is hashcode for the NEW leaf
-				oldLeaf := entry.(*Leaf)
-				oldHC = oldLeaf.Key.Hashcode()
-				oldHC >>= table.t + (depth-1)*table.w
-				// put the existing leaf into the new table
-				_, err = tableDeeper.insertLeaf(oldHC, depth, oldLeaf)
-				if err == nil {
-					// then put the new leaf in the new table
-					_, err = tableDeeper.insertLeaf(hc, depth, leaf)
-					if err == nil {
-						// the new table replaces the existing leaf
-						table.slots[slotNbr] = tableDeeper
-					}
-				}
-			}
-		}
-	} else {
-		// otherwise it's a table, so recurse
-		tDeeper := entry.(*Table)
-		hc >>= table.w
-		depth++
-		_, err = tDeeper.insertLeaf(hc, depth, leaf)
-	} // FOO
 	return
 }
 
