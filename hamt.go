@@ -15,16 +15,21 @@ type HAMT struct {
 // all lower-level tables.  If t equals zero, it defaults to w.  If
 // both t and w are zero, it panics.  In lower-level tables, a uint64
 // is used as a bitmap, so w may not exceed 6 (because 2^6 == 64).
-func NewHAMT(w, t uint) (h *HAMT) {
+func NewHAMT(w, t uint) (h *HAMT, err error) {
 	if t == 0 && w == 0 {
-		panic("cannot create HAMT with no slots in tables")
-	}
-	if t == 0 {
-		t = w
-	}
-	root := NewRoot(w, t)
-	h = &HAMT{
-		root: root,
+		err = ZeroLengthTables
+	} else {
+		if w > 6 {
+			err = MaxTableSizeExceeded
+		} else {
+			if t == 0 {
+				t = w
+			}
+			root := NewRoot(w, t)
+			h = &HAMT{
+				root: root,
+			}
+		}
 	}
 	return
 }

@@ -87,7 +87,8 @@ func (s *XLSuite) doBenchmark(c *C, w, t uint) {
 	deltaT := t1.Sub(t0)
 	fmt.Printf("setup time for %d %d-byte rawKeys: %v\n", N, K, deltaT)
 
-	m := NewHAMT(w, t)
+	m, err := NewHAMT(w, t)
+	c.Assert(err, IsNil)
 
 	c.ResetTimer()
 	c.StartTimer()

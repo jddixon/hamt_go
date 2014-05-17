@@ -1,8 +1,11 @@
 hamt_go/CHANGES
 
+v0.9.0
+    2014-05-16
+        * 5-10% faster with NewTableWithLeaf                        * SLOC 1489
 v0.8.1
     2014-05-15
-        performance enhancements, then added findLeaf to test loop  * SLOC 1446
+        * performance enhancements, then add findLeaf to test loop  * SLOC 1446
 v0.8.0
     2014-05-12
         * replaced Entry with HTNodeI everywhere; dropped Entry     * SLOC 1414

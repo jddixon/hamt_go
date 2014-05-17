@@ -83,7 +83,8 @@ func doBenchmark(w, t uint, N int, cpuProfFile *os.File) {
 	//fmt.Printf("setup time for %d %d-byte rawKeys: %v\n", N, K, deltaT)
 
 	pprof.StartCPUProfile(cpuProfFile)
-	m := gh.NewHAMT(w, t)
+	// XXX we ignore any possible errors
+	m, _ := gh.NewHAMT(w, t)
 
 	for i := 0; i < N; i++ {
 		_ = m.Insert(bKeys[i], &rawKeys[i])

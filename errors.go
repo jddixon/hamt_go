@@ -11,4 +11,5 @@ var (
 	NilValue             = e.New("nil value parameter")
 	NotFound             = e.New("entry not found")
 	ShortKey             = e.New("Bytes*Key is too short")
+	ZeroLengthTables     = e.New("Cannot create: zero length tables")
 )

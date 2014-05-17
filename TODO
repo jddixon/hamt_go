@@ -1,5 +1,15 @@
 hamt_go/TODO
 
+2014-05-15
+    * modify NewHAMT() to add add error return, to deal with w > 6      * DONE
+        and w = t = 0                                                   * DONE
+    * possible optimization: first Leaf to be inserted parameter to     * DONE
+        NewTable                                                        * DONE
+    * possible optimization: maxDepth a parameter to insert/find/delete
+        Leaf, gets decremented at each iteration, error if 0
+    * then Root is responsible for calculating root.MaxDepth (once 
+        and only once)
+
 2014-05-12 (04-20, re-edited)
     * convert Table.maxSlots to function MaxSlots()                     * DONE
     * convert Table.maxDepth to function MaxDepth()                     * DONE

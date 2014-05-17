@@ -148,24 +148,16 @@ func (root *Root) insertLeaf(leaf *Leaf) (slotNbr uint, err error) {
 				oldLeaf.Value = leaf.Value
 			} else {
 				// keys differ, so we need to replace the leaf with a table
-				var (
-					tableDeeper *Table
-					oldHC       uint64
-				)
-				tableDeeper, err = NewTable(1, root.w, root.t)
+				// Create a new Table containing the existing leaf
+				var tableDeeper *Table
+				tableDeeper, err = NewTableWithLeaf(1, root.w, root.t, oldLeaf)
 				if err == nil {
 					newHC >>= root.t // this is hc for the NEW entry
-					oldHC = oldLeaf.Key.Hashcode()
-					oldHC >>= root.t
-					// put the existing leaf into the new table
-					_, err = tableDeeper.insertLeaf(oldHC, 1, oldLeaf)
+					// then put the new entry in the new table
+					_, err = tableDeeper.insertLeaf(newHC, 1, leaf)
 					if err == nil {
-						// then put the new entry in the new table
-						_, err = tableDeeper.insertLeaf(newHC, 1, leaf)
-						if err == nil {
-							// the new table replaces the existing leaf
-							root.slots[slotNbr] = tableDeeper
-						}
+						// the new table replaces the existing leaf
+						root.slots[slotNbr] = tableDeeper
 					}
 				}
 			}

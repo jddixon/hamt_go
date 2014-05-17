@@ -44,59 +44,90 @@ func (s *XLSuite) TestTableDepthZeroInserts(c *C) {
 	s.doTestTableDepthZeroInserts(c, 4, 0)
 	s.doTestTableDepthZeroInserts(c, 5, 0)
 	s.doTestTableDepthZeroInserts(c, 6, 0)
-
-	// XXX These fail for unknown reasons - whereas hamt_test equivalents
-	// succeed.
-	//s.doTestTableDepthZeroInserts(c, 7, 0)
-	//s.doTestTableDepthZeroInserts(c, 8, 0)
-
 }
+
+// Create a quasi-random key of length keyLen for testing.  The first
+// byte of the key is ndx; the rest are zeroes.  Return the raw key,
+// its BytesKey, its hashcode, and a leaf whose key is the BytesKey
+// and whose value is a pointer to the raw key.
+func (s *XLSuite) makeNthKey(c *C, ndx byte, keyLen uint) (
+	rawKey []byte, bKey *BytesKey, hc uint64, leaf *Leaf) {
+
+	var err error
+	rawKey = make([]byte, keyLen)
+	rawKey[0] = ndx // all the rest are zeroes
+
+	bKey, err = NewBytesKey(rawKey)
+	c.Assert(err, IsNil)
+	c.Assert(bKey, NotNil)
+	hc = bKey.Hashcode()
+	c.Assert(hc, Equals, uint64(ndx))
+
+	leaf, err = NewLeaf(bKey, &rawKey)
+	c.Assert(err, IsNil)
+	c.Assert(leaf, NotNil)
+	c.Assert(leaf.IsLeaf(), Equals, true)
+	return rawKey, bKey, hc, leaf
+}
+
 func (s *XLSuite) doTestTableDepthZeroInserts(c *C, w, t uint) {
 	var (
+		err                     error
 		bitmap, flag, idx, mask uint64
 		pos                     uint
 	)
 	depth := uint(1)
+	SLOT_COUNT := uint(1 << w)
+	// create that many quasi-random keys
+	rng := xr.MakeSimpleRNG()
+	perm := rng.Perm(int(SLOT_COUNT)) // a random permutation of [0..SLOT_COUNT)
+	rawKeys := make([][]byte, SLOT_COUNT)
 
-	table, err := NewTable(depth, w, t)
+	// create the first leaf ----------------------------------------
+	ndx := byte(perm[0])
+	rawKey, bKey, hc, firstLeaf := s.makeNthKey(c, ndx, SLOT_COUNT)
+	rawKeys[0] = rawKey
+	c.Assert(err, IsNil)
+
+	table, err := NewTableWithLeaf(depth, w, t, firstLeaf)
 	c.Assert(err, IsNil)
 	c.Assert(table, NotNil)
 	c.Assert(table.GetDepth(), Equals, depth)
+	c.Assert(table.getLeafCount(), Equals, uint(1))
 
+	// verify that the first leaf is in the table -------------------
+	value, err := table.findLeaf(hc, depth, bKey)
+	c.Assert(err, IsNil)
+	c.Assert(value, NotNil)
+	p := value.(*[]byte)
+	c.Assert(bytes.Equal(rawKey, *p), Equals, true)
+
+	// check table attributes ---------------------------------------
 	c.Assert(table.w, Equals, w)
 	c.Assert(table.t, Equals, t)
 	flag = uint64(1)
 	flag <<= (t + w)
 	expectedMask := flag - 1
 	c.Assert(table.mask, Equals, expectedMask)
+	c.Assert(table.MaxSlots(), Equals, SLOT_COUNT)
 
-	SLOT_COUNT := table.MaxSlots()
+	// verify bit mask is as expected, firstLeaf having been inserted
+	idx = hc & table.mask
+	flag = 1 << idx
+	mask = flag - 1
+	pos = BitCount64(bitmap & mask)
+	occupied := uint64(1 << idx)
+	bitmap |= occupied
 
-	rng := xr.MakeSimpleRNG()
-	perm := rng.Perm(int(SLOT_COUNT)) // a random permutation of [0..SLOT_COUNT)
-	rawKeys := make([][]byte, SLOT_COUNT)
+	// insert the rest of the leaves --------------------------------
+	for i := uint(1); i < SLOT_COUNT; i++ {
 
-	for i := uint(0); i < SLOT_COUNT; i++ {
 		ndx := byte(perm[i])
-
-		rawKey := make([]byte, SLOT_COUNT)
-		rawKey[0] = ndx // all the rest are zeroes
+		rawKey, bKey, hc, leaf := s.makeNthKey(c, ndx, SLOT_COUNT)
 		rawKeys[i] = rawKey
-
-		key64, err := NewBytesKey(rawKey)
-		c.Assert(err, IsNil)
-		c.Assert(key64, NotNil)
-		hc := key64.Hashcode()
-		c.Assert(hc, Equals, uint64(ndx))
-
-		value, err := table.findLeaf(hc, depth, key64)
+		value, err := table.findLeaf(hc, depth, bKey)
 		c.Assert(err, IsNil)
 		c.Assert(value, IsNil)
-
-		leaf, err := NewLeaf(key64, &rawKey)
-		c.Assert(err, IsNil)
-		c.Assert(leaf, NotNil)
-		c.Assert(leaf.IsLeaf(), Equals, true)
 
 		slotNbr, err := table.insertLeaf(hc, depth, leaf)
 		c.Assert(err, IsNil)
@@ -114,7 +145,7 @@ func (s *XLSuite) doTestTableDepthZeroInserts(c *C, w, t uint) {
 		c.Assert(table.bitmap, Equals, bitmap)
 		c.Assert(uint(pos), Equals, slotNbr)
 
-		v, err := table.findLeaf(hc, depth, key64)
+		v, err := table.findLeaf(hc, depth, bKey)
 		c.Assert(err, IsNil)
 		vBytes := v.(*[]byte)
 		c.Assert(bytes.Equal(*vBytes, rawKey), Equals, true)
@@ -127,11 +158,11 @@ func (s *XLSuite) doTestTableDepthZeroInserts(c *C, w, t uint) {
 		key := rawKeys[i]
 
 		// verify it is present -------------------------------------
-		key64, err := NewBytesKey(key)
+		bKey, err := NewBytesKey(key)
 		c.Assert(err, IsNil)
-		c.Assert(key64, NotNil)
-		hc := key64.Hashcode()
-		v, err := table.findLeaf(hc, depth, key64)
+		c.Assert(bKey, NotNil)
+		hc := bKey.Hashcode()
+		v, err := table.findLeaf(hc, depth, bKey)
 		c.Assert(err, IsNil)
 		c.Assert(v, NotNil)
 		vAsKey := v.(*[]byte)
@@ -139,11 +170,11 @@ func (s *XLSuite) doTestTableDepthZeroInserts(c *C, w, t uint) {
 
 		// delete it ------------------------------------------------
 		// depth is zero, so hc unshifted
-		err = table.deleteLeaf(hc, depth, key64)
+		err = table.deleteLeaf(hc, depth, bKey)
 		c.Assert(err, IsNil)
 
 		// verify that it is gone -----------------------------------
-		v, err = table.findLeaf(hc, depth, key64)
+		v, err = table.findLeaf(hc, depth, bKey)
 		c.Assert(err, IsNil)
 		c.Assert(v, IsNil)
 

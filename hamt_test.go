@@ -23,7 +23,8 @@ func (s *XLSuite) TestHAMTCtor(c *C) {
 	s.doTestHAMTCtor(c, uint(6), t)
 }
 func (s *XLSuite) doTestHAMTCtor(c *C, w, t uint) {
-	h := NewHAMT(w, t)
+	h, err := NewHAMT(w, t)
+	c.Assert(err, IsNil)
 	c.Assert(h, NotNil)
 }
 
@@ -49,7 +50,8 @@ func (s *XLSuite) doTestDepthZeroHAMT(c *C, w, t uint) {
 	KEY_LEN := uint(16)
 	KEY_COUNT := uint(1 << t) // fill all slots
 
-	h := NewHAMT(w, t)
+	h, err := NewHAMT(w, t)
+	c.Assert(err, IsNil)
 	rawKeys, bKeys, hashcodes, values := s.uniqueKeyMaker(
 		c, rng, t, KEY_COUNT, KEY_LEN)
 
@@ -148,7 +150,8 @@ func (s *XLSuite) doTestHAMTInsertsOfRandomishValues(c *C, w, t uint) {
 		value interface{}
 	)
 	rng := xr.MakeSimpleRNG()
-	h := NewHAMT(w, t)
+	h, err := NewHAMT(w, t)
+	c.Assert(err, IsNil)
 	c.Assert(h, NotNil)
 
 	// BEGIN KEY_MAKER ==============================================
@@ -273,7 +276,8 @@ func (s *XLSuite) doTestHamtEntrySplittingInserts(c *C, rng *xr.PRNG,
 		err   error
 		value interface{}
 	)
-	h := NewHAMT(w, t)
+	h, err := NewHAMT(w, t)
+	c.Assert(err, IsNil)
 	c.Assert(h, NotNil)
 	c.Assert(h.GetW(), Equals, w)
 	c.Assert(h.GetT(), Equals, t)
