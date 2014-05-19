@@ -65,19 +65,20 @@ can be done using a specific machine-language instruction, POPCNT.  The current
 implementation of hamt_go emulates this in software using the
 <a href="http://en.wikipedia.org/wiki/SWAR">SWAR</a> algorithm,  The emulation code is on the order of ten times
 slower than the machine instruction.<br />
-<em>In practice POPCNT emulation might slow down accesses by something like 10%,
+<em>In practice, as measured by the Golang pprof profiler,
+POPCNT emulation is not significantly slower,
 because the emulation code simply is not run all that often.</em>
-<em>This is of course not actually a limitation, but rather an observation: the HAMT alorithm runs faster with hardware support.</em></p></li>
+<em>This is in any case not actually a limitation, but rather an observation: the HAMT alorithm runs faster with hardware support.</em></p></li>
 </ul>
 
 <h2>Project Status</h2>
 
 <p>The code works and is reasonably well-tested.
 <code>Insert</code>and  <code>Find</code> operations, while not yet thoroughly optimized,
-take approximately of 0.9 microseconds each on a lightly-loaded server
-(about 1.8us each to insert a million values and verify that the
+take approximately  0.5 to 0.6 microseconds each on a lightly-loaded server
+(about 1.1us each to insert a million values and verify that the
 value can be found using the key, where the root table has <code>2^18</code> slots).  As the root table approaches the
-number of entries in size, this falls to about 1.2 us, or 600ns/op.</p>
+number of entries in size, this falls to about 1.0 us, or 500ns/op.</p>
 
 <p>These figures were obtained from <em>single-threaded</em> tests.</p>
 
