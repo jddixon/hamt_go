@@ -24,11 +24,12 @@ func (s *XLSuite) doTestTableCtor(c *C, w uint) {
 	rng := xr.MakeSimpleRNG()
 	depth := 1 + uint(rng.Intn(7))
 	t := uint(0)
-	table, err := NewTable(depth, w, t)
+	dummyRoot, err := NewRoot(w, t)
+	c.Assert(err, IsNil)
+	table, err := NewTable(depth, dummyRoot)
 	c.Assert(err, IsNil)
 	c.Assert(table, NotNil)
-	c.Assert(table.GetDepth(), Equals, depth)
-
+	c.Assert(table.GetRoot(), Equals, dummyRoot)
 	c.Assert(table.slots, IsNil)
 }
 
@@ -76,6 +77,10 @@ func (s *XLSuite) doTestTableDepthZeroInserts(c *C, w, t uint) {
 		bitmap, flag, idx, mask uint64
 		pos                     uint
 	)
+	dummyRoot, err := NewRoot(w, t)
+	c.Assert(err, IsNil)
+	c.Assert(dummyRoot.maxTableDepth, Equals, (64-t)/w)
+
 	depth := uint(1)
 	SLOT_COUNT := uint(1 << w)
 	// create that many quasi-random keys
@@ -89,10 +94,10 @@ func (s *XLSuite) doTestTableDepthZeroInserts(c *C, w, t uint) {
 	rawKeys[0] = rawKey
 	c.Assert(err, IsNil)
 
-	table, err := NewTableWithLeaf(depth, w, t, firstLeaf)
+	table, err := NewTableWithLeaf(depth, dummyRoot, firstLeaf)
 	c.Assert(err, IsNil)
 	c.Assert(table, NotNil)
-	c.Assert(table.GetDepth(), Equals, depth)
+	//c.Assert(table.GetDepth(), Equals, depth)
 	c.Assert(table.getLeafCount(), Equals, uint(1))
 
 	// verify that the first leaf is in the table -------------------
@@ -205,11 +210,14 @@ func (s *XLSuite) doTestEntrySplittingInserts(c *C, rng *xr.PRNG, w uint) {
 
 	depth := uint(1)
 	t := uint(0)
+	maxDepth := (64 - t) / w
 
-	table, err := NewTable(depth, w, t)
+	dummyRoot, err := NewRoot(w, t)
+	c.Assert(err, IsNil)
+	table, err := NewTable(depth, dummyRoot)
 	c.Assert(err, IsNil)
 	c.Assert(table, NotNil)
-	c.Assert(table.GetDepth(), Equals, depth)
+	//c.Assert(table.GetDepth(), Equals, depth)
 
 	c.Assert(table.w, Equals, w)
 	c.Assert(table.t, Equals, t)
@@ -218,10 +226,9 @@ func (s *XLSuite) doTestEntrySplittingInserts(c *C, rng *xr.PRNG, w uint) {
 	flag <<= (t + w)
 	expectedMask := flag - 1
 	c.Assert(table.mask, Equals, expectedMask)
-	c.Assert(table.MaxDepth(), Equals, (64-t)/w)
 
 	_, rawKeys := s.makePermutedKeys(rng, w) // XXX fields ignored
-	KEY_COUNT := table.MaxDepth()            // some keys ignored
+	KEY_COUNT := maxDepth                    // some keys ignored
 
 	key64s := make([]*BytesKey, KEY_COUNT)
 	hashcodes := make([]uint64, KEY_COUNT)
@@ -304,10 +311,16 @@ func (s *XLSuite) TestTableInsertsOfRandomishValues(c *C) {
 	w := uint(5)
 	t := uint(0)
 
-	table, err := NewTable(depth, w, t)
+	dummyRoot, err := NewRoot(w, t)
+	c.Assert(err, IsNil)
+	c.Assert(dummyRoot.w, Equals, w)
+	c.Assert(dummyRoot.t, Equals, t)
+	c.Assert(dummyRoot.maxTableDepth, Equals, (64-t)/w)
+
+	table, err := NewTable(depth, dummyRoot)
 	c.Assert(err, IsNil)
 	c.Assert(table, NotNil)
-	c.Assert(table.GetDepth(), Equals, depth)
+	//c.Assert(table.GetDepth(), Equals, depth)
 
 	const KEY_COUNT = 16 * 1024
 

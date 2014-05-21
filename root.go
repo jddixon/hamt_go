@@ -10,23 +10,35 @@ import (
 var _ = fmt.Print
 
 type Root struct {
-	w         uint // non-root tables have 2^w slots
-	t         uint // root table has 2^t slots
-	slotCount uint // number of slots in the root table
-	mask      uint64
-	slots     []HTNodeI // each nil or a pointer to either a leaf or a table
+	w             uint // non-root tables have 2^w slots
+	t             uint // root table has 2^t slots
+	maxTableDepth uint // max depth of descendent Tables
+	slotCount     uint // number of slots in the root table
+	mask          uint64
+	slots         []HTNodeI // each nil or a pointer to either a leaf or a table
 }
 
-func NewRoot(w, t uint) (root *Root) {
-	flag := uint64(1)
-	flag <<= t
-	count := uint(1 << t) // number of slots
-	root = &Root{
-		w:         w,
-		t:         t,
-		mask:      flag - 1,
-		slots:     make([]HTNodeI, count),
-		slotCount: count,
+func NewRoot(w, t uint) (root *Root, err error) {
+	if w > 6 {
+		err = MaxTableSizeExceeded
+	} else if t > 64 { // very generous!
+		err = MaxRootTableSizeExceeded
+	} else {
+		flag := uint64(1)
+		flag <<= t
+		count := uint(1 << t) // number of slots
+		root = &Root{
+			w: w,
+			t: t,
+			// The maximum possible depth for any table below the root, (64 - t)/w.
+			// There are 64 bits available for keys, the root table uses t, each
+			// successive Table uses w more bits.  The root table (of type Root)
+			// is at depth 0;  all Tables at at depth >= 1.
+			maxTableDepth: (64 - t) / w,
+			slotCount:     count,
+			mask:          flag - 1,
+			slots:         make([]HTNodeI, count),
+		}
 	}
 	return
 }
@@ -91,9 +103,13 @@ func (root *Root) deleteLeaf(key KeyI) (err error) {
 			}
 		} else {
 			// entry is a table, so recurse
-			tDeeper := node.(*Table)
-			hc >>= root.t
-			err = tDeeper.deleteLeaf(hc, 1, key)
+			if 1 > root.maxTableDepth {
+				err = NotFound
+			} else {
+				tDeeper := node.(*Table)
+				hc >>= root.t
+				err = tDeeper.deleteLeaf(hc, 1, key)
+			}
 		}
 	}
 	return
@@ -119,10 +135,12 @@ func (root *Root) findLeaf(key KeyI) (value interface{}, err error) {
 				value = nil
 			}
 		} else {
-			// entry is a table, so recurse
-			tDeeper := node.(*Table)
-			hc >>= root.t
-			value, err = tDeeper.findLeaf(hc, 1, key)
+			if 1 <= root.maxTableDepth {
+				// entry is a table, so recurse
+				tDeeper := node.(*Table)
+				hc >>= root.t
+				value, err = tDeeper.findLeaf(hc, 1, key)
+			}
 		}
 	}
 	return
@@ -150,22 +168,31 @@ func (root *Root) insertLeaf(leaf *Leaf) (slotNbr uint, err error) {
 				// keys differ, so we need to replace the leaf with a table
 				// Create a new Table containing the existing leaf
 				var tableDeeper *Table
-				tableDeeper, err = NewTableWithLeaf(1, root.w, root.t, oldLeaf)
+				tableDeeper, err = NewTableWithLeaf(1, root, oldLeaf)
 				if err == nil {
-					newHC >>= root.t // this is hc for the NEW entry
-					// then put the new entry in the new table
-					_, err = tableDeeper.insertLeaf(newHC, 1, leaf)
-					if err == nil {
-						// the new table replaces the existing leaf
-						root.slots[slotNbr] = tableDeeper
+					if 1 > root.maxTableDepth {
+						err = MaxTableDepthExceeded
+					} else {
+						newHC >>= root.t // this is hc for the NEW entry
+						// then put the new entry in the new table
+						_, err = tableDeeper.insertLeaf(
+							newHC, 1, leaf)
+						if err == nil {
+							// the new table replaces the existing leaf
+							root.slots[slotNbr] = tableDeeper
+						}
 					}
 				}
 			}
 		} else {
-			// otherwise it's a table, so recurse
-			tDeeper := node.(*Table)
-			newHC >>= root.t
-			_, err = tDeeper.insertLeaf(newHC, 1, leaf)
+			if 1 > root.maxTableDepth {
+				err = MaxTableDepthExceeded
+			} else {
+				// otherwise it's a table, so recurse
+				tDeeper := node.(*Table)
+				newHC >>= root.t
+				_, err = tDeeper.insertLeaf(newHC, 1, leaf)
+			}
 		}
 	}
 	return

@@ -1,6 +1,8 @@
 hamt_go/CHANGES
 
 v0.9.0
+    2014-05-20
+        * maxDepth() replaced by Table.root plus Root.maxDepth      * SLOC 1532
     2014-05-16
         * 5-10% faster with NewTableWithLeaf                        * SLOC 1489
 v0.8.1

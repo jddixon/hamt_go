@@ -1,14 +1,23 @@
 hamt_go/TODO
 
+2014-05-19
+    * table_test must be modified to test NewTableWithLeaf instead
+        of NewTable
+    * Table.insert/find/deleteLeaf drop maxDepth args                   * DONE
+        - add root.maxTableDepth field                                  * DONE
+
 2014-05-15
     * modify NewHAMT() to add add error return, to deal with w > 6      * DONE
         and w = t = 0                                                   * DONE
     * possible optimization: first Leaf to be inserted parameter to     * DONE
         NewTable                                                        * DONE
-    * possible optimization: maxDepth a parameter to insert/find/delete
-        Leaf, gets decremented at each iteration, error if 0
-    * then Root is responsible for calculating root.MaxDepth (once 
-        and only once)
+
+    THESE CHANGES (perf3* results) worsened performance by about 8%:
+    * possible optimization: maxDepth a parameter to insert/find/delete * DONE
+        Leaf, gets decremented at each iteration, error if 0            * DONE
+    * then Root is responsible for calculating root.MaxDepth (once      * DONE
+        and only once)                                                  * DONE
+
 
 2014-05-12 (04-20, re-edited)
     * convert Table.maxSlots to function MaxSlots()                     * DONE

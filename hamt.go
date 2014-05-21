@@ -25,9 +25,12 @@ func NewHAMT(w, t uint) (h *HAMT, err error) {
 			if t == 0 {
 				t = w
 			}
-			root := NewRoot(w, t)
-			h = &HAMT{
-				root: root,
+			var root *Root
+			root, err = NewRoot(w, t)
+			if err == nil {
+				h = &HAMT{
+					root: root,
+				}
 			}
 		}
 	}

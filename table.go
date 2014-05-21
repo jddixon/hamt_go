@@ -20,69 +20,66 @@ type Table struct {
 	mask   uint64
 	bitmap uint64
 	slots  []HTNodeI // each nil or a pointer to either a leaf or a table
-
-	depth uint // only here for use in development and debugging !
+	root   *Root
 }
 
-func NewTable(depth, w, t uint) (table *Table, err error) {
-	if w > 6 {
-		err = MaxTableSizeExceeded
+// Debugging / sanity check
+func CheckTableParam(depth uint, root *Root) (w, t uint, err error) {
+	if root == nil {
+		err = NilRoot
 	} else {
+		w = root.w
+		t = root.t
+		if w > 6 {
+			err = MaxTableSizeExceeded
+		} else if t+(depth-1)*w > 64 {
+			err = MaxTableDepthExceeded
+		}
+	}
+	return
+}
+
+func NewTable(depth uint, root *Root) (table *Table, err error) {
+	w, t, err := CheckTableParam(depth, root)
+	if err == nil {
 		table = new(Table)
-		table.depth = depth
 		table.w = w
 		table.t = t
-
+		table.root = root
 		flag := uint64(1 << w)
 		table.mask = flag - 1
-		err = table.CheckTableDepth(depth)
-		if err != nil {
-			table = nil
-		}
 	}
 	return
 }
 
 // Create a new table and insert a first Leaf into it.
 //
-func NewTableWithLeaf(depth, w, t uint, firstLeaf *Leaf) (
+func NewTableWithLeaf(depth uint, root *Root, firstLeaf *Leaf) (
 	table *Table, err error) {
 
-	if w > 6 {
-		err = MaxTableSizeExceeded
-	}
+	w, t, err := CheckTableParam(depth, root)
 	if err == nil {
 		tbl := new(Table)
-		tbl.depth = depth
 		tbl.w = w
 		tbl.t = t
+		tbl.root = root
 		wFlag := uint64(1 << w)
 		tbl.mask = wFlag - 1
-		err = tbl.CheckTableDepth(depth)
+		shiftCount := t + (depth-1)*w
+		hc := firstLeaf.Key.Hashcode() >> shiftCount
+		ndx := hc & tbl.mask
+		flag := uint64(1 << ndx)
+		tbl.slots = []HTNodeI{firstLeaf}
+		tbl.bitmap = flag
 		if err == nil {
-			shiftCount := t + (depth-1)*w
-			hc := firstLeaf.Key.Hashcode() >> shiftCount
-			ndx := hc & tbl.mask
-			flag := uint64(1 << ndx)
-			tbl.slots = []HTNodeI{firstLeaf}
-			tbl.bitmap = flag
-			// DEBUG
-			//fmt.Printf("leaf0 hashcode %x, hc %x, sets bit 0x%02x\n",
-			//	firstLeaf.Key.Hashcode(), hc, flag)
-			// END
-			if err == nil {
-				table = tbl
-			}
+			table = tbl
 		}
 	}
 	return
 }
 
-// Return the maximum possible depth for the table, (64 - t)/w.  There are
-// 64 bits available for keys, the root table uses t, each successive
-// table uses w more bits.  The root table is at depth 0.
-func (table *Table) MaxDepth() uint {
-	return (64 - table.t) / table.w
+func (table *Table) GetRoot() *Root {
+	return table.root
 }
 
 // Return the maximum number of slots in the table, 2^w.
@@ -119,9 +116,9 @@ func (table *Table) getTableCount() (count uint) {
 	return
 }
 
-func (table *Table) GetDepth() uint {
-	return uint(table.depth)
-}
+//func (table *Table) GetDepth() uint {
+//	return uint(table.depth)
+//}
 
 // XXX Should modify to remove empty table recursively where this
 // is the last entry in the table
@@ -194,10 +191,14 @@ func (table *Table) deleteLeaf(hc uint64, depth uint, key KeyI) (
 			}
 		} else {
 			// node is a table, so recurse
-			tDeeper := node.(*Table)
-			hc >>= table.w
 			depth++
-			err = tDeeper.deleteLeaf(hc, depth, key)
+			if depth > table.root.maxTableDepth {
+				err = NotFound
+			} else {
+				tDeeper := node.(*Table)
+				hc >>= table.w
+				err = tDeeper.deleteLeaf(hc, depth, key)
+			}
 		}
 	}
 	return
@@ -208,10 +209,13 @@ func (table *Table) deleteLeaf(hc uint64, depth uint, key KeyI) (
 // Return nil if no matching entry is found or the value associated with
 // the matching entry or any error encountered.
 //
+// The caller guarantees that depth<=maxDepth.
+//
 func (table *Table) findLeaf(hc uint64, depth uint, key KeyI) (
 	value interface{}, err error) {
 
-	sliceSize := uint(len(table.slots))
+	p := table.slots // 22 ?
+	sliceSize := uint(len(p))
 	if sliceSize != 0 {
 		ndx := hc & table.mask
 		flag := uint64(1 << ndx)
@@ -222,7 +226,7 @@ func (table *Table) findLeaf(hc uint64, depth uint, key KeyI) (
 			if mask != 0 {
 				slotNbr = uint(BitCount64(table.bitmap & mask))
 			}
-			node := table.slots[slotNbr]
+			node := p[slotNbr] // 20 ?
 			if node.IsLeaf() {
 				myLeaf := node.(*Leaf)
 				myKey := myLeaf.Key.(*BytesKey)
@@ -233,21 +237,15 @@ func (table *Table) findLeaf(hc uint64, depth uint, key KeyI) (
 				// otherwise the value returned is nil
 			} else {
 				// node is a table, so recurse
-				tDeeper := node.(*Table)
-				hc >>= table.w
 				depth++
-				value, err = tDeeper.findLeaf(hc, depth, key)
+				if depth <= table.root.maxTableDepth {
+					tDeeper := node.(*Table)
+					hc >>= table.w
+					value, err = tDeeper.findLeaf(hc, depth, key)
+				}
+				// otherwise the value returned is nil
 			}
 		}
-	}
-	return
-}
-
-func (table *Table) CheckTableDepth(depth uint) (err error) {
-	if depth > table.MaxDepth() {
-		msg := fmt.Sprintf("Table depth is %d but max depth is %d\n",
-			depth, table.MaxDepth())
-		err = errors.New(msg)
 	}
 	return
 }
@@ -256,42 +254,44 @@ func (table *Table) CheckTableDepth(depth uint) (err error) {
 // 2014-05-13: Performance of this function was considerably improved (runtime
 // down 25-50%) by replacing slice appends with slice make/copy sequences.
 //
+// The caller guarantees that depth <= maxDepth.
 func (table *Table) insertLeaf(hc uint64, depth uint, leaf *Leaf) (
 	slotNbr uint, err error) {
 
-	err = table.CheckTableDepth(depth)
-	if err == nil {
-		ndx := hc & table.mask
-		flag := uint64(1 << ndx)
-		mask := flag - 1
-		if mask != 0 {
-			slotNbr = BitCount64(table.bitmap & mask)
-		}
-		sliceSize := uint(len(table.slots))
-		if sliceSize == 0 {
-			table.slots = []HTNodeI{leaf}
-			table.bitmap |= flag
-		} else {
-			// Is there is already something at this slotNbr ?
-			if table.bitmap&flag != 0 {
-				entry := table.slots[slotNbr]
+	ndx := hc & table.mask
+	flag := uint64(1 << ndx)
+	mask := flag - 1
+	if mask != 0 {
+		slotNbr = BitCount64(table.bitmap & mask)
+	}
+	sliceSize := uint(len(table.slots))
+	if sliceSize == 0 {
+		table.slots = []HTNodeI{leaf}
+		table.bitmap |= flag
+	} else {
+		// Is there is already something at this slotNbr ?
+		if table.bitmap&flag != 0 {
+			entry := table.slots[slotNbr]
 
-				if entry.IsLeaf() {
-					// if it's a leaf, we replace the value iff the keys match
-					curLeaf := entry.(*Leaf)
-					curKey := curLeaf.Key.(*BytesKey)
-					newKey := leaf.Key.(*BytesKey)
-					if bytes.Equal(curKey.Slice, newKey.Slice) {
-						// the keys match, so we replace the value
-						curLeaf.Value = leaf.Value
+			if entry.IsLeaf() {
+				// if it's a leaf, we replace the value iff the keys match
+				curLeaf := entry.(*Leaf)
+				curKey := curLeaf.Key.(*BytesKey)
+				newKey := leaf.Key.(*BytesKey)
+				if bytes.Equal(curKey.Slice, newKey.Slice) {
+					// the keys match, so we replace the value
+					curLeaf.Value = leaf.Value
+				} else {
+					var (
+						tableDeeper *Table
+					)
+					depth++
+					if depth > table.root.maxTableDepth {
+						err = MaxTableDepthExceeded
 					} else {
-						var (
-							tableDeeper *Table
-						)
-						depth++
 						oldLeaf := entry.(*Leaf)
 						tableDeeper, err = NewTableWithLeaf(
-							depth, table.w, table.t, oldLeaf)
+							depth, table.root, oldLeaf)
 						if err == nil {
 							hc >>= table.w // this is hashcode for the NEW leaf
 							// then put the new leaf in the new table
@@ -302,30 +302,34 @@ func (table *Table) insertLeaf(hc uint64, depth uint, leaf *Leaf) (
 							}
 						}
 					}
+				}
+			} else {
+				depth++
+				if depth > table.root.maxTableDepth {
+					err = MaxTableDepthExceeded
 				} else {
 					// otherwise it's a table, so recurse
 					tDeeper := entry.(*Table)
 					hc >>= table.w
-					depth++
 					_, err = tDeeper.insertLeaf(hc, depth, leaf)
 				}
-			} else if slotNbr == 0 {
-				leftSlots := make([]HTNodeI, sliceSize+1)
-				leftSlots[0] = leaf
-				copy(leftSlots[1:], table.slots[:])
-				table.slots = leftSlots
-				table.bitmap |= flag
-			} else if slotNbr == sliceSize {
-				table.slots = append(table.slots, leaf)
-				table.bitmap |= flag
-			} else {
-				leftSlots := make([]HTNodeI, sliceSize+1)
-				copy(leftSlots[:slotNbr], table.slots[:slotNbr])
-				leftSlots[slotNbr] = leaf
-				copy(leftSlots[slotNbr+1:], table.slots[slotNbr:])
-				table.slots = leftSlots
-				table.bitmap |= flag
 			}
+		} else if slotNbr == 0 {
+			leftSlots := make([]HTNodeI, sliceSize+1)
+			leftSlots[0] = leaf
+			copy(leftSlots[1:], table.slots[:])
+			table.slots = leftSlots
+			table.bitmap |= flag
+		} else if slotNbr == sliceSize {
+			table.slots = append(table.slots, leaf)
+			table.bitmap |= flag
+		} else {
+			leftSlots := make([]HTNodeI, sliceSize+1)
+			copy(leftSlots[:slotNbr], table.slots[:slotNbr])
+			leftSlots[slotNbr] = leaf
+			copy(leftSlots[slotNbr+1:], table.slots[slotNbr:])
+			table.slots = leftSlots
+			table.bitmap |= flag
 		}
 	}
 	return
