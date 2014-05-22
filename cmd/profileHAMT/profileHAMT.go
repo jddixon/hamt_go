@@ -4,6 +4,7 @@ package main
 
 /////////////////////////////////////////////////////////////////////
 // Run this with something similar to
+//   go build
 //   time ./profileHAMT -c cpu.prof -m mem.prof
 // Then process results with
 //   go tool pprof profileHAMT cpu.prof mem.prof

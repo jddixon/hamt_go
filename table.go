@@ -208,8 +208,8 @@ func (table *Table) deleteLeaf(hc uint64, depth uint, key KeyI) (
 func (table *Table) findLeaf(hc uint64, depth uint, key KeyI) (
 	value interface{}, err error) {
 
-	p := table.slots // 14 of 46 samples; 22 of 41; 17 of 43
-	sliceSize := uint(len(p))
+	p := &table.slots // 14 of 46 samples; 22 of 41; 17 of 43
+	sliceSize := uint(len(*p))
 	if sliceSize != 0 {
 		ndx := hc & table.mask
 		flag := uint64(1 << ndx)
@@ -220,7 +220,7 @@ func (table *Table) findLeaf(hc uint64, depth uint, key KeyI) (
 			if mask != 0 {
 				slotNbr = uint(BitCount64(table.bitmap & mask))
 			}
-			node := p[slotNbr] // 20 of 46; 14 of 41; 23 of 43
+			node := (*p)[slotNbr] // 20 of 46; 14 of 41; 23 of 43
 			if node.IsLeaf() {
 				myLeaf := node.(*Leaf)
 				myKey := myLeaf.Key.(*BytesKey)
@@ -251,21 +251,22 @@ func (table *Table) findLeaf(hc uint64, depth uint, key KeyI) (
 // The caller guarantees that depth <= Root.maxDepth.
 func (table *Table) insertLeaf(hc uint64, depth uint, leaf *Leaf) (err error) {
 
-	var slotNbr uint
+	var slotNbr uint // whatever is in first line: about 15 of 37
 	ndx := hc & table.mask
 	flag := uint64(1 << ndx)
 	mask := flag - 1
 	if mask != 0 {
 		slotNbr = BitCount64(table.bitmap & mask)
 	}
-	sliceSize := uint(len(table.slots))
+	p := &table.slots
+	sliceSize := uint(len(*p))
 	if sliceSize == 0 {
 		table.slots = []HTNodeI{leaf}
 		table.bitmap |= flag
 	} else {
 		// Is there is already something at this slotNbr ?
 		if table.bitmap&flag != 0 {
-			entry := table.slots[slotNbr]
+			entry := (*p)[slotNbr]
 
 			if entry.IsLeaf() {
 				// if it's a leaf, we replace the value iff the keys match
@@ -292,7 +293,7 @@ func (table *Table) insertLeaf(hc uint64, depth uint, leaf *Leaf) (err error) {
 							err = tableDeeper.insertLeaf(hc, depth, leaf)
 							if err == nil {
 								// the new table replaces the existing leaf
-								table.slots[slotNbr] = tableDeeper
+								(*p)[slotNbr] = tableDeeper
 							}
 						}
 					}
