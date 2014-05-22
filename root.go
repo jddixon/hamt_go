@@ -146,10 +146,10 @@ func (root *Root) findLeaf(key KeyI) (value interface{}, err error) {
 	return
 }
 
-func (root *Root) insertLeaf(leaf *Leaf) (slotNbr uint, err error) {
+func (root *Root) insertLeaf(leaf *Leaf) (err error) {
 
 	newHC := leaf.Key.Hashcode()
-	slotNbr = uint(newHC & root.mask)
+	slotNbr := uint(newHC & root.mask)
 
 	if root.slots[slotNbr] == nil {
 		root.slots[slotNbr] = leaf
@@ -175,8 +175,7 @@ func (root *Root) insertLeaf(leaf *Leaf) (slotNbr uint, err error) {
 					} else {
 						newHC >>= root.t // this is hc for the NEW entry
 						// then put the new entry in the new table
-						_, err = tableDeeper.insertLeaf(
-							newHC, 1, leaf)
+						err = tableDeeper.insertLeaf(newHC, 1, leaf)
 						if err == nil {
 							// the new table replaces the existing leaf
 							root.slots[slotNbr] = tableDeeper
@@ -191,7 +190,7 @@ func (root *Root) insertLeaf(leaf *Leaf) (slotNbr uint, err error) {
 				// otherwise it's a table, so recurse
 				tDeeper := node.(*Table)
 				newHC >>= root.t
-				_, err = tDeeper.insertLeaf(newHC, 1, leaf)
+				err = tDeeper.insertLeaf(newHC, 1, leaf)
 			}
 		}
 	}

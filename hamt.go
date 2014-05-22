@@ -74,7 +74,7 @@ func (h *HAMT) Find(k KeyI) (interface{}, error) {
 func (h *HAMT) Insert(k KeyI, v interface{}) (err error) {
 	leaf, err := NewLeaf(k, v)
 	if err == nil {
-		_, err = h.root.insertLeaf(leaf)
+		err = h.root.insertLeaf(leaf)
 	}
 	return
 }

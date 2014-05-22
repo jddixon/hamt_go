@@ -1,0 +1,15 @@
+hamt_go/README.perf
+
+2014-05-21
+
+The perf.2014* files measure only insert times.
+
+The perf2.2014* files are the results of doing a million inserts and
+a million finds.  That is, each operation consists of one insert and
+one find.  We do this a million times.
+
+The perf3.2014* results show the effect of fiddling with maxDepth, 
+first passing it as a parameter and then (20140521-15*) after making
+maxDepth a Root field and then passing a pointer to root to each of
+Table.{insert,find,delete}Leaf.  This certainly gets the best results 
+so far.

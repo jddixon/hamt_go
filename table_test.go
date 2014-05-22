@@ -75,7 +75,6 @@ func (s *XLSuite) doTestTableDepthZeroInserts(c *C, w, t uint) {
 	var (
 		err                     error
 		bitmap, flag, idx, mask uint64
-		pos                     uint
 	)
 	dummyRoot, err := NewRoot(w, t)
 	c.Assert(err, IsNil)
@@ -120,7 +119,8 @@ func (s *XLSuite) doTestTableDepthZeroInserts(c *C, w, t uint) {
 	idx = hc & table.mask
 	flag = 1 << idx
 	mask = flag - 1
-	pos = BitCount64(bitmap & mask)
+	slotNbr := BitCount64(bitmap & mask)
+	c.Assert(0 <= slotNbr && slotNbr < SLOT_COUNT, Equals, true)
 	occupied := uint64(1 << idx)
 	bitmap |= occupied
 
@@ -134,21 +134,19 @@ func (s *XLSuite) doTestTableDepthZeroInserts(c *C, w, t uint) {
 		c.Assert(err, IsNil)
 		c.Assert(value, IsNil)
 
-		slotNbr, err := table.insertLeaf(hc, depth, leaf)
+		err = table.insertLeaf(hc, depth, leaf)
 		c.Assert(err, IsNil)
-		c.Assert(0 <= slotNbr && slotNbr < SLOT_COUNT, Equals, true)
 
 		// insert the value into the hash slice in such a way as
 		// to maintain order
 		idx = hc & table.mask
 		flag = 1 << idx
 		mask = flag - 1
-		pos = BitCount64(bitmap & mask)
+		slotNbr := BitCount64(bitmap & mask)
+		c.Assert(0 <= slotNbr && slotNbr < SLOT_COUNT, Equals, true)
 		occupied := uint64(1 << idx)
 		bitmap |= occupied
-
 		c.Assert(table.bitmap, Equals, bitmap)
-		c.Assert(uint(pos), Equals, slotNbr)
 
 		v, err := table.findLeaf(hc, depth, bKey)
 		c.Assert(err, IsNil)
@@ -265,10 +263,8 @@ func (s *XLSuite) doTestEntrySplittingInserts(c *C, rng *xr.PRNG, w uint) {
 		c.Assert(leaf, NotNil)
 		c.Assert(leaf.IsLeaf(), Equals, true)
 
-		slotNbr, err := table.insertLeaf(hc, depth, leaf)
+		err = table.insertLeaf(hc, depth, leaf)
 		c.Assert(err, IsNil)
-		// in this test, only one entry at the top level, so slotNbr always zero
-		c.Assert(slotNbr, Equals, uint(0))
 
 		// confirm that the new entry is now present ----------------
 		_, err = table.findLeaf(hc, depth, key64)
@@ -369,7 +365,7 @@ func (s *XLSuite) TestTableInsertsOfRandomishValues(c *C) {
 		c.Assert(leaf, NotNil)
 		c.Assert(leaf.IsLeaf(), Equals, true)
 
-		_, err = table.insertLeaf(hc, depth, leaf)
+		err = table.insertLeaf(hc, depth, leaf)
 		c.Assert(err, IsNil)
 
 		// confirm that the new entry is now present ----------------
@@ -384,7 +380,7 @@ func (s *XLSuite) TestTableInsertsOfRandomishValues(c *C) {
 		c.Assert(leaf2, NotNil)
 		c.Assert(leaf2.IsLeaf(), Equals, true)
 
-		_, err = table.insertLeaf(hc, depth, leaf2)
+		err = table.insertLeaf(hc, depth, leaf2)
 		c.Assert(err, IsNil)
 
 		// make sure that a Find returns the new value
@@ -394,7 +390,7 @@ func (s *XLSuite) TestTableInsertsOfRandomishValues(c *C) {
 		c.Assert(*retPtr, Equals, newValue)
 
 		// put the old value back
-		_, err = table.insertLeaf(hc, depth, leaf)
+		err = table.insertLeaf(hc, depth, leaf)
 		c.Assert(err, IsNil)
 
 	}

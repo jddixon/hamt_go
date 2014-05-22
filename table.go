@@ -20,7 +20,7 @@ type Table struct {
 	mask   uint64
 	bitmap uint64
 	slots  []HTNodeI // each nil or a pointer to either a leaf or a table
-	root   *Root
+	root   *Root     // pointer to the fixed-size root table
 }
 
 // Debugging / sanity check
@@ -150,54 +150,48 @@ func (table *Table) removeFromSlices(offset uint) (err error) {
 }
 
 // Enter with hc the hashcode for the key shifted appropriately for the
-// current depth.
+// current depth, so that the first w bits of the shifted hashcode can
+// be used as the index of the leaf in the table.
 //
+// The caller guarantees that depth <= Root.maxDepth.
 func (table *Table) deleteLeaf(hc uint64, depth uint, key KeyI) (
 	err error) {
 
-	var (
-		ndx64, flag, mask uint64
-	)
-	sliceSize := byte(len(table.slots))
-	if sliceSize == 0 {
+	if len(table.slots) == 0 {
 		err = NotFound
-	}
-	if err == nil {
-		ndx64 = hc & table.mask
-		flag = uint64(1 << ndx64)
-		mask = flag - 1
+	} else {
+		ndx := hc & table.mask
+		flag := uint64(1 << ndx)
+		mask := flag - 1
 		if table.bitmap&flag == 0 {
 			err = NotFound
-		}
-	}
-	if err == nil {
-		// the node is present; get its position in the slice
-		var pos byte
-		if mask != 0 {
-			pos = byte(BitCount64(table.bitmap & mask))
-		}
-		node := table.slots[pos]
-		// XXX this MUST exist
-		if node.IsLeaf() {
-			// KEYS MUST BE OF THE SAME TYPE
-			myLeaf := node.(*Leaf)
-			myKey := myLeaf.Key.(*BytesKey)
-			searchKey := key.(*BytesKey)
-			if bytes.Equal(searchKey.Slice, myKey.Slice) {
-				err = table.removeFromSlices(uint(pos))
-				table.bitmap &= ^flag
-			} else {
-				err = NotFound
-			}
 		} else {
-			// node is a table, so recurse
-			depth++
-			if depth > table.root.maxTableDepth {
-				err = NotFound
+			// the node is present; get its position in the slice
+			var slotNbr uint
+			if mask != 0 {
+				slotNbr = BitCount64(table.bitmap & mask)
+			}
+			node := table.slots[slotNbr]
+			if node.IsLeaf() {
+				myLeaf := node.(*Leaf)
+				myKey := myLeaf.Key.(*BytesKey)
+				searchKey := key.(*BytesKey)
+				if bytes.Equal(searchKey.Slice, myKey.Slice) {
+					err = table.removeFromSlices(slotNbr)
+					table.bitmap &= ^flag
+				} else {
+					err = NotFound
+				}
 			} else {
-				tDeeper := node.(*Table)
-				hc >>= table.w
-				err = tDeeper.deleteLeaf(hc, depth, key)
+				// node is a table, so recurse
+				depth++
+				if depth > table.root.maxTableDepth {
+					err = NotFound
+				} else {
+					tDeeper := node.(*Table)
+					hc >>= table.w
+					err = tDeeper.deleteLeaf(hc, depth, key)
+				}
 			}
 		}
 	}
@@ -209,12 +203,12 @@ func (table *Table) deleteLeaf(hc uint64, depth uint, key KeyI) (
 // Return nil if no matching entry is found or the value associated with
 // the matching entry or any error encountered.
 //
-// The caller guarantees that depth<=maxDepth.
+// The caller guarantees that depth<=Root.maxDepth.
 //
 func (table *Table) findLeaf(hc uint64, depth uint, key KeyI) (
 	value interface{}, err error) {
 
-	p := table.slots // 22 ?
+	p := table.slots // 14 of 46 samples; 22 of 41; 17 of 43
 	sliceSize := uint(len(p))
 	if sliceSize != 0 {
 		ndx := hc & table.mask
@@ -226,7 +220,7 @@ func (table *Table) findLeaf(hc uint64, depth uint, key KeyI) (
 			if mask != 0 {
 				slotNbr = uint(BitCount64(table.bitmap & mask))
 			}
-			node := p[slotNbr] // 20 ?
+			node := p[slotNbr] // 20 of 46; 14 of 41; 23 of 43
 			if node.IsLeaf() {
 				myLeaf := node.(*Leaf)
 				myKey := myLeaf.Key.(*BytesKey)
@@ -254,10 +248,10 @@ func (table *Table) findLeaf(hc uint64, depth uint, key KeyI) (
 // 2014-05-13: Performance of this function was considerably improved (runtime
 // down 25-50%) by replacing slice appends with slice make/copy sequences.
 //
-// The caller guarantees that depth <= maxDepth.
-func (table *Table) insertLeaf(hc uint64, depth uint, leaf *Leaf) (
-	slotNbr uint, err error) {
+// The caller guarantees that depth <= Root.maxDepth.
+func (table *Table) insertLeaf(hc uint64, depth uint, leaf *Leaf) (err error) {
 
+	var slotNbr uint
 	ndx := hc & table.mask
 	flag := uint64(1 << ndx)
 	mask := flag - 1
@@ -295,7 +289,7 @@ func (table *Table) insertLeaf(hc uint64, depth uint, leaf *Leaf) (
 						if err == nil {
 							hc >>= table.w // this is hashcode for the NEW leaf
 							// then put the new leaf in the new table
-							_, err = tableDeeper.insertLeaf(hc, depth, leaf)
+							err = tableDeeper.insertLeaf(hc, depth, leaf)
 							if err == nil {
 								// the new table replaces the existing leaf
 								table.slots[slotNbr] = tableDeeper
@@ -311,7 +305,7 @@ func (table *Table) insertLeaf(hc uint64, depth uint, leaf *Leaf) (
 					// otherwise it's a table, so recurse
 					tDeeper := entry.(*Table)
 					hc >>= table.w
-					_, err = tDeeper.insertLeaf(hc, depth, leaf)
+					err = tDeeper.insertLeaf(hc, depth, leaf)
 				}
 			}
 		} else if slotNbr == 0 {

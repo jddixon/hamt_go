@@ -1,5 +1,7 @@
 hamt_go/TODO
 
+2014-05-21
+    * Table.insertLeaf should NOT return slotNbr                        * DONE
 2014-05-19
     * table_test must be modified to test NewTableWithLeaf instead
         of NewTable
