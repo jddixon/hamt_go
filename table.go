@@ -206,39 +206,36 @@ func (table *Table) deleteLeaf(hc uint64, depth uint, key KeyI) (
 // The caller guarantees that depth<=Root.maxDepth.
 //
 func (table *Table) findLeaf(hc uint64, depth uint, key KeyI) (
-	value interface{}, err error) {
+	value interface{}, err error) { // 1 of 90 samples cum
 
-	p := &table.slots // 14 of 46 samples; 22 of 41; 17 of 43
-	sliceSize := uint(len(*p))
-	if sliceSize != 0 {
-		ndx := hc & table.mask
-		flag := uint64(1 << ndx)
+	ndx := hc & table.mask // 19 of 92 - MOVQ 10(DX), CX
+	flag := uint64(1 << ndx)
+
+	if table.bitmap&flag != 0 {
+		// the node is present; get its position in the slice
+		var slotNbr uint
 		mask := flag - 1
-		if table.bitmap&flag != 0 {
-			// the node is present; get its position in the slice
-			var slotNbr uint
-			if mask != 0 {
-				slotNbr = uint(BitCount64(table.bitmap & mask))
+		if mask != 0 {
+			slotNbr = uint(BitCount64(table.bitmap & mask))
+		}
+		node := table.slots[slotNbr] // 24 of 92 cum - ADDQ BP, BX
+		if node.IsLeaf() {
+			myLeaf := node.(*Leaf)
+			myKey := myLeaf.Key.(*BytesKey) // 5 of 92 cum - lib call assest
+			searchKey := key.(*BytesKey)    // 7 of 92 cum - lib call assert
+			if bytes.Equal(searchKey.Slice, myKey.Slice) {
+				value = myLeaf.Value
 			}
-			node := (*p)[slotNbr] // 20 of 46; 14 of 41; 23 of 43
-			if node.IsLeaf() {
-				myLeaf := node.(*Leaf)
-				myKey := myLeaf.Key.(*BytesKey)
-				searchKey := key.(*BytesKey)
-				if bytes.Equal(searchKey.Slice, myKey.Slice) {
-					value = myLeaf.Value
-				}
-				// otherwise the value returned is nil
-			} else {
-				// node is a table, so recurse
-				depth++
-				if depth <= table.root.maxTableDepth {
-					tDeeper := node.(*Table)
-					hc >>= table.w
-					value, err = tDeeper.findLeaf(hc, depth, key)
-				}
-				// otherwise the value returned is nil
+			// otherwise the value returned is nil
+		} else {
+			// node is a table, so recurse
+			depth++
+			if depth <= table.root.maxTableDepth {
+				tDeeper := node.(*Table)
+				hc >>= table.w
+				value, err = tDeeper.findLeaf(hc, depth, key)
 			}
+			// otherwise the value returned is nil
 		}
 	}
 	return
