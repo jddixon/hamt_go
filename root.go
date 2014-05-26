@@ -122,9 +122,10 @@ func (root *Root) findLeaf(key KeyI) (value interface{}, err error) {
 
 	hc := key.Hashcode()
 	ndx := hc & root.mask
-	if root.slots[ndx] != nil {
+	p := &root.slots
+	if (*p)[ndx] != nil {
 		// the entry is present
-		node := root.slots[ndx]
+		node := (*p)[ndx]
 		if node.IsLeaf() {
 			myLeaf := node.(*Leaf)
 			myKey := myLeaf.Key.(*BytesKey)
@@ -151,11 +152,12 @@ func (root *Root) insertLeaf(leaf *Leaf) (err error) {
 	newHC := leaf.Key.Hashcode()
 	slotNbr := uint(newHC & root.mask)
 
-	if root.slots[slotNbr] == nil {
-		root.slots[slotNbr] = leaf
+	p := &root.slots
+	if (*p)[slotNbr] == nil {
+		(*p)[slotNbr] = leaf
 	} else {
 		// there is already something in this slot
-		node := root.slots[slotNbr]
+		node := (*p)[slotNbr]
 		if node.IsLeaf() {
 			// if it's a leaf, we replace the value iff the keys match
 			oldLeaf := node.(*Leaf)
@@ -178,7 +180,7 @@ func (root *Root) insertLeaf(leaf *Leaf) (err error) {
 						err = tableDeeper.insertLeaf(newHC, 1, leaf)
 						if err == nil {
 							// the new table replaces the existing leaf
-							root.slots[slotNbr] = tableDeeper
+							(*p)[slotNbr] = tableDeeper
 						}
 					}
 				}

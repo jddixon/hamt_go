@@ -1,5 +1,8 @@
 hamt_go/TODO
 
+2014-05-25
+    * upgrade go: issue 7649, inefficient register usage                * DONE
+
 2014-05-21
     * Table.insertLeaf should NOT return slotNbr                        * DONE
     * investigate mysterious improvement in Root.insertLeaf() perf
@@ -38,10 +41,10 @@ hamt_go/TODO
     * add profileHAMT.go after blog.golang.org/profiling-go-programs    * DONE
 
 2014-05-09 (was 04-23)
-    * need performance test which runs as a command, always does same
-        number of ops (eg 10^6)
-    * need performance test which is say 1% inserts, 99% finds, 
-        and so forth
+    * need performance test which runs as a command, always does same   * DONE
+        number of ops (eg 2 * 10^6)                                     * DONE
+    * need performance test which is say 1% inserts, 99% finds,         * DONE 
+        and so forth                                                    * DONE
     * same test but with varying degrees of concurrency
 
 2014-05-07
