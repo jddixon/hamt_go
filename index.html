@@ -36,7 +36,7 @@ recursing in the process.</p>
 
 <p>The current implementation has been tested with values of
 3, 4, 5, and 6 for <code>w</code>.  Preliminary performance tests indicate
-that <code>w=5</code> is optimal.  That is, a table with 32 slots gives the best
+that <code>w=6</code> is optimal.  That is, a table with 64 slots gives the best
 performance.</p>
 
 <p>An enhancement introduces a fixed size table at the root.  This is
@@ -65,9 +65,7 @@ can be done using a specific machine-language instruction, POPCNT.  The current
 implementation of hamt_go emulates this in software using the
 <a href="http://en.wikipedia.org/wiki/SWAR">SWAR</a> algorithm,  The emulation code is on the order of ten times
 slower than the machine instruction.<br />
-<em>In practice, as measured by the Golang pprof profiler,
-POPCNT emulation is not significantly slower,
-because the emulation code simply is not run all that often.</em>
+<em>In practice, as measured by the Golang pprof profiler, POPCNT emulation does not significantly slow down computations, because the emulation code simply does not use that many CPU cycles.</em>
 <em>This is in any case not actually a limitation, but rather an observation: the HAMT alorithm runs faster with hardware support.</em></p></li>
 </ul>
 
@@ -80,7 +78,8 @@ take approximately  0.5 to 0.6 microseconds each on a lightly-loaded server
 value can be found using the key, where the root table has <code>2^18</code> slots).  As the root table approaches the
 number of entries in size, this falls to about 1.0 us, or 500ns/op.</p>
 
-<p>These figures were obtained from <em>single-threaded</em> tests.</p>
+<p>These figures were obtained from <em>single-threaded</em> tests.  With some degree
+of concurrency, the code runs at about 370 ns/op.</p>
 
 <h2>References</h2>
 
