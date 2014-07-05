@@ -80,3 +80,7 @@ These figures were obtained from *single-threaded* tests.
 [wiki-hamt]: http://en.wikipedia.org/wiki/Hash_array_mapped_trie
 
 [wiki-swar]: http://en.wikipedia.org/wiki/SWAR
+
+## On-line Documentation
+
+More information on the **hamt_go** project can be found [here](https://jddixon.github.io/hamt_go)
