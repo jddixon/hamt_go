@@ -10,3 +10,4 @@ tmp
 *ZZZ
 perf.*
 perf?.*
+.wrapped
