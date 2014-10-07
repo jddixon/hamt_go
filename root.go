@@ -94,8 +94,8 @@ func (root *Root) deleteLeaf(key KeyI) (err error) {
 		if node.IsLeaf() {
 			// KEYS MUST BE OF THE SAME TYPE
 			myLeaf := node.(*Leaf)
-			myKey := myLeaf.Key.(*BytesKey)
-			searchKey := key.(*BytesKey)
+			myKey := myLeaf.Key.(BytesKey)
+			searchKey := key.(BytesKey)
 			if bytes.Equal(searchKey.Slice, myKey.Slice) {
 				root.slots[ndx] = nil
 			} else {
@@ -128,8 +128,8 @@ func (root *Root) findLeaf(key KeyI) (value interface{}, err error) {
 		node := (*p)[ndx]
 		if node.IsLeaf() {
 			myLeaf := node.(*Leaf)
-			myKey := myLeaf.Key.(*BytesKey)
-			searchKey := key.(*BytesKey)
+			myKey := myLeaf.Key.(BytesKey)
+			searchKey := key.(BytesKey)
 			if bytes.Equal(searchKey.Slice, myKey.Slice) {
 				value = myLeaf.Value
 			} else {
@@ -161,8 +161,8 @@ func (root *Root) insertLeaf(leaf *Leaf) (err error) {
 		if node.IsLeaf() {
 			// if it's a leaf, we replace the value iff the keys match
 			oldLeaf := node.(*Leaf)
-			curKey := oldLeaf.Key.(*BytesKey)
-			newKey := leaf.Key.(*BytesKey)
+			curKey := oldLeaf.Key.(BytesKey)
+			newKey := leaf.Key.(BytesKey)
 			if bytes.Equal(curKey.Slice, newKey.Slice) {
 				// the keys match, so we replace the value
 				oldLeaf.Value = leaf.Value

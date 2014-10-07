@@ -12,13 +12,13 @@ type BytesKey struct {
 	Slice []byte
 }
 
-func NewBytesKey(b []byte) (k *BytesKey, err error) {
+func NewBytesKey(b []byte) (k BytesKey, err error) {
 	if b == nil {
 		err = NilKey
 	} else if len(b) < 8 {
 		err = ShortKey
 	} else {
-		k = &BytesKey{Slice: b}
+		k = BytesKey{Slice: b}
 	}
 	return
 }
@@ -27,7 +27,7 @@ func NewBytesKey(b []byte) (k *BytesKey, err error) {
 
 // Convert the first 8 bytes of the key into an unsigned uint64.
 // We are guaranteed that len(b.Slice) is >= 8, so error return is unneeded.
-func (b *BytesKey) Hashcode() (hc uint64) {
+func (b BytesKey) Hashcode() (hc uint64) {
 	//buf := bytes.NewReader(b.Slice)
 	// err = binary.Read(buf, binary.LittleEndian, &hc
 	// XXX Calculating this here makes the code run about 10% faster)

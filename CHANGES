@@ -1,7 +1,7 @@
 hamt_go/CHANGES
 
 v1.0.0
-    2014-10-06
+    2014-10-07
         * switched from pointer receiver to value receiver          * SLOC 1762
 v0.9.0
     2014-05-20

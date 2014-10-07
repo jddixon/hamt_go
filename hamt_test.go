@@ -145,7 +145,7 @@ func (s *XLSuite) doTestHAMTInsertsOfRandomishValues(c *C, w, t uint) {
 	KEY_COUNT := uint(32) // 1024)
 	KEY_LEN := uint(16)
 	var (
-		bKey  *BytesKey
+		bKey  BytesKey
 		err   error
 		value interface{}
 	)
@@ -156,7 +156,7 @@ func (s *XLSuite) doTestHAMTInsertsOfRandomishValues(c *C, w, t uint) {
 
 	// BEGIN KEY_MAKER ==============================================
 	keys := make([][]byte, KEY_COUNT)
-	bKeys := make([]*BytesKey, KEY_COUNT)
+	bKeys := make([]BytesKey, KEY_COUNT)
 	hashcodes := make([]uint64, KEY_COUNT)
 	values := make([]interface{}, KEY_COUNT)
 	hcMap := make(map[uint64]bool)
@@ -272,7 +272,7 @@ func (s *XLSuite) doTestHamtEntrySplittingInserts(c *C, rng *xr.PRNG,
 	t, w uint) {
 
 	var (
-		bKey  *BytesKey
+		bKey  BytesKey
 		err   error
 		value interface{}
 	)
@@ -285,7 +285,7 @@ func (s *XLSuite) doTestHamtEntrySplittingInserts(c *C, rng *xr.PRNG,
 	_, rawKeys := s.makePermutedKeys(rng, w) // XXX fields ignored
 	KEY_COUNT := 64 / w                      // some keys may be ignored
 
-	bKeys := make([]*BytesKey, KEY_COUNT)
+	bKeys := make([]BytesKey, KEY_COUNT)
 	hashcodes := make([]uint64, KEY_COUNT)
 	values := make([]interface{}, KEY_COUNT)
 

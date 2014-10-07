@@ -52,7 +52,7 @@ func (s *XLSuite) TestTableDepthZeroInserts(c *C) {
 // its BytesKey, its hashcode, and a leaf whose key is the BytesKey
 // and whose value is a pointer to the raw key.
 func (s *XLSuite) makeNthKey(c *C, ndx byte, keyLen uint) (
-	rawKey []byte, bKey *BytesKey, hc uint64, leaf *Leaf) {
+	rawKey []byte, bKey BytesKey, hc uint64, leaf *Leaf) {
 
 	var err error
 	rawKey = make([]byte, keyLen)
@@ -228,7 +228,7 @@ func (s *XLSuite) doTestEntrySplittingInserts(c *C, rng *xr.PRNG, w uint) {
 	_, rawKeys := s.makePermutedKeys(rng, w) // XXX fields ignored
 	KEY_COUNT := maxDepth                    // some keys ignored
 
-	key64s := make([]*BytesKey, KEY_COUNT)
+	key64s := make([]BytesKey, KEY_COUNT)
 	hashcodes := make([]uint64, KEY_COUNT)
 	values := make([]interface{}, KEY_COUNT)
 
@@ -321,7 +321,7 @@ func (s *XLSuite) TestTableInsertsOfRandomishValues(c *C) {
 	const KEY_COUNT = 16 * 1024
 
 	rawKeys := make([][]byte, KEY_COUNT)
-	key64s := make([]*BytesKey, KEY_COUNT)
+	key64s := make([]BytesKey, KEY_COUNT)
 	hashcodes := make([]uint64, KEY_COUNT)
 	values := make([]interface{}, KEY_COUNT)
 	hcMap := make(map[uint64]bool)

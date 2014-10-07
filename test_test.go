@@ -12,7 +12,7 @@ import (
 // keyLen; the keys are guaranteed to have random ndx values (hashcode & mask)
 
 func (s *XLSuite) uniqueKeyMaker(c *C, rng *xr.PRNG, w, keyCount, keyLen uint) (
-	rawKeys [][]byte, bKeys []*BytesKey, hashcodes []uint64, values []interface{}) {
+	rawKeys [][]byte, bKeys []BytesKey, hashcodes []uint64, values []interface{}) {
 
 	maxCount := uint(1 << w)
 	if keyCount > maxCount {
@@ -25,7 +25,7 @@ func (s *XLSuite) uniqueKeyMaker(c *C, rng *xr.PRNG, w, keyCount, keyLen uint) (
 	mask := flag - 1
 
 	rawKeys = make([][]byte, keyCount)
-	bKeys = make([]*BytesKey, keyCount)
+	bKeys = make([]BytesKey, keyCount)
 	hashcodes = make([]uint64, keyCount)
 	values = make([]interface{}, keyCount)
 

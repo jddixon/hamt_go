@@ -1,5 +1,9 @@
 hamt_go/TODO
 
+2014-10-07
+    * FIX: tests succeeded despite impossible conversion of 
+        BytesKey to *BytesKey
+
 2014-05-26
     * modify concurProfileHAMT to add locking, then do insertions
         in paralle with finds (perhaps do 2^K inserts, start J finds

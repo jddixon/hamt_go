@@ -174,8 +174,8 @@ func (table *Table) deleteLeaf(hc uint64, depth uint, key KeyI) (
 			node := table.slots[slotNbr]
 			if node.IsLeaf() {
 				myLeaf := node.(*Leaf)
-				myKey := myLeaf.Key.(*BytesKey)
-				searchKey := key.(*BytesKey)
+				myKey := myLeaf.Key.(BytesKey)
+				searchKey := key.(BytesKey)
 				if bytes.Equal(searchKey.Slice, myKey.Slice) {
 					err = table.removeFromSlices(slotNbr)
 					table.bitmap &= ^flag
@@ -221,8 +221,8 @@ func (table *Table) findLeaf(hc uint64, depth uint, key KeyI) (
 		node := table.slots[slotNbr] // 20 of 52 - ADDQ BP,BX
 		if node.IsLeaf() {
 			myLeaf := node.(*Leaf)
-			myKey := myLeaf.Key.(*BytesKey) // 5 of 92 cum - lib call assest
-			searchKey := key.(*BytesKey)    // 7 of 92 cum - lib call assert
+			myKey := myLeaf.Key.(BytesKey) // 5 of 92 cum - lib call assest
+			searchKey := key.(BytesKey)    // 7 of 92 cum - lib call assert
 			if bytes.Equal(searchKey.Slice, myKey.Slice) {
 				value = myLeaf.Value
 			}
@@ -267,8 +267,8 @@ func (table *Table) insertLeaf(hc uint64, depth uint, leaf *Leaf) (err error) {
 			if entry.IsLeaf() {
 				// if it's a leaf, we replace the value iff the keys match
 				curLeaf := entry.(*Leaf)
-				curKey := curLeaf.Key.(*BytesKey)
-				newKey := leaf.Key.(*BytesKey)
+				curKey := curLeaf.Key.(BytesKey)
+				newKey := leaf.Key.(BytesKey)
 				if bytes.Equal(curKey.Slice, newKey.Slice) {
 					// the keys match, so we replace the value
 					curLeaf.Value = leaf.Value

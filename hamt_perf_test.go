@@ -22,15 +22,15 @@ var _ = fmt.Print
 // Create N random-ish K-byte values.  These are to be used as BytesKeys,
 // so the first 64 bits must represent a unique value.
 
-func makeSomeUniqueKeys(N, K int) (rawKeys [][]byte, bKeys []*BytesKey) {
+func makeSomeUniqueKeys(N, K int) (rawKeys [][]byte, bKeys []BytesKey) {
 
 	rng := xr.MakeSimpleRNG()
 	rawKeys = make([][]byte, N)
-	bKeys = make([]*BytesKey, N)
+	bKeys = make([]BytesKey, N)
 	keyMap := make(map[uint64]bool)
 
 	for i := 0; i < N; i++ {
-		var bKey *BytesKey
+		var bKey BytesKey
 		key := make([]byte, K)
 		for {
 			rng.NextBytes(key)
