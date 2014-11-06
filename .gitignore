@@ -6,8 +6,9 @@ junk*
 .merkle
 .posted
 *.swp
+.wrapped
 tmp
 *ZZZ
+.sharedev
 perf.*
 perf?.*
-.wrapped

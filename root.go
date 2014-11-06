@@ -19,7 +19,7 @@ type Root struct {
 }
 
 func NewRoot(w, t uint) (root *Root, err error) {
-	if w > 6 {
+	if w > MAX_W {
 		err = MaxTableSizeExceeded
 	} else if t > 64 { // very generous!
 		err = MaxRootTableSizeExceeded

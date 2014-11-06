@@ -30,7 +30,7 @@ func CheckTableParam(depth uint, root *Root) (w, t uint, err error) {
 	} else {
 		w = root.w
 		t = root.t
-		if w > 6 {
+		if w > MAX_W {
 			err = MaxTableSizeExceeded
 		} else if t+(depth-1)*w > 64 {
 			err = MaxTableDepthExceeded

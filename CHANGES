@@ -1,5 +1,8 @@
 hamt_go/CHANGES
 
+v1.0.1
+    2014-11-06
+        * replace magic number 6 with MAX_W                         * SLOC 1763
 v1.0.0
     2014-10-07
         * switched from pointer receiver to value receiver          * SLOC 1762

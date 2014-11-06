@@ -75,7 +75,7 @@ func (s *XLSuite) BenchmarkHAMT_6(c *C) {
 	if VERBOSITY > 0 {
 		fmt.Println("\nBenchmarkHAMT_6")
 	}
-	s.doBenchmark(c, uint(6), 18)
+	s.doBenchmark(c, MAX_W, 18)
 }
 func (s *XLSuite) doBenchmark(c *C, w, t uint) {
 	// build an array of N random-ish K-byte rawKeys

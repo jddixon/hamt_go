@@ -19,7 +19,7 @@ func NewHAMT(w, t uint) (h HAMT, err error) {
 	if t == 0 && w == 0 {
 		err = ZeroLengthTables
 	} else {
-		if w > 6 {
+		if w > MAX_W {
 			err = MaxTableSizeExceeded
 		} else {
 			if t == 0 {
