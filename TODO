@@ -1,5 +1,10 @@
 hamt_go/TODO
 
+2014-10-11
+    * code in util.go duplicates logic in xlUtil_go/bit_map_64.go;
+        they should be consolidated, taking care to avoid circular
+        dependencies
+
 2014-10-07
     * FIX: tests succeeded despite impossible conversion of 
         BytesKey to *BytesKey
