@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"fmt"
 	xr "github.com/jddixon/rnglib_go"
+	xu "github.com/jddixon/xlUtil_go"
 	. "gopkg.in/check.v1"
 )
 
@@ -119,7 +120,7 @@ func (s *XLSuite) doTestTableDepthZeroInserts(c *C, w, t uint) {
 	idx = hc & table.mask
 	flag = 1 << idx
 	mask = flag - 1
-	slotNbr := BitCount64(bitmap & mask)
+	slotNbr := xu.BitCount64(bitmap & mask)
 	c.Assert(0 <= slotNbr && slotNbr < SLOT_COUNT, Equals, true)
 	occupied := uint64(1 << idx)
 	bitmap |= occupied
@@ -142,7 +143,7 @@ func (s *XLSuite) doTestTableDepthZeroInserts(c *C, w, t uint) {
 		idx = hc & table.mask
 		flag = 1 << idx
 		mask = flag - 1
-		slotNbr := BitCount64(bitmap & mask)
+		slotNbr := xu.BitCount64(bitmap & mask)
 		c.Assert(0 <= slotNbr && slotNbr < SLOT_COUNT, Equals, true)
 		occupied := uint64(1 << idx)
 		bitmap |= occupied

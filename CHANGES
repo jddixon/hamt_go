@@ -1,5 +1,8 @@
 hamt_go/CHANGES
 
+v1.1.0
+    2014-12-12
+        * moved BitCount32/64() to xlUtil_go                        * SLOC 1692
 v1.0.1
     2014-11-06
         * replace magic number 6 with MAX_W                         * SLOC 1763

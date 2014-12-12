@@ -93,3 +93,35 @@ func (s *XLSuite) makePermutedKeys(rng *xr.PRNG, w uint) (
 
 	return
 }
+
+func (s *XLSuite) TestMakingPermutedKeys(c *C) {
+
+	rng := xr.MakeSimpleRNG()
+	var w uint
+	for w = uint(4); w < uint(7); w++ {
+		fields, keys := s.makePermutedKeys(rng, w)
+		flag := uint64(1 << w)
+		mask := flag - 1
+		maxDepth := 64 / w // rounding down
+		fieldCount := uint(len(fields))
+		// we are relying on Hashcode(), which has only 64 bits
+		if maxDepth > fieldCount {
+			maxDepth = fieldCount
+		}
+		for i := uint(0); i < maxDepth; i++ {
+			bKey, err := NewBytesKey(keys[i])
+			c.Assert(err, IsNil)
+			hc := bKey.Hashcode()
+			for j := uint(0); j <= i; j++ {
+				ndx := hc & mask
+				if uint(ndx) != uint(fields[j]) {
+					fmt.Printf(
+						"GLITCH: w %d keyset %d field[%2d] %02x ndx %02x\n",
+						w, i, j, fields[j], ndx)
+				}
+				c.Assert(uint(ndx), Equals, uint(fields[j]))
+				hc >>= w
+			}
+		}
+	}
+}

@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	xu "github.com/jddixon/xlUtil_go"
 )
 
 var _ = fmt.Print
@@ -169,7 +170,7 @@ func (table *Table) deleteLeaf(hc uint64, depth uint, key KeyI) (
 			// the node is present; get its position in the slice
 			var slotNbr uint
 			if mask != 0 {
-				slotNbr = BitCount64(table.bitmap & mask)
+				slotNbr = xu.BitCount64(table.bitmap & mask)
 			}
 			node := table.slots[slotNbr]
 			if node.IsLeaf() {
@@ -216,7 +217,7 @@ func (table *Table) findLeaf(hc uint64, depth uint, key KeyI) (
 		var slotNbr uint
 		mask := flag - 1
 		if mask != 0 {
-			slotNbr = uint(BitCount64(table.bitmap & mask))	// gets expanded inline; 0/52
+			slotNbr = uint(xu.BitCount64(table.bitmap & mask))	// gets expanded inline; 0/52
 		}
 		node := table.slots[slotNbr] // 20 of 52 - ADDQ BP,BX
 		if node.IsLeaf() {
@@ -253,7 +254,7 @@ func (table *Table) insertLeaf(hc uint64, depth uint, leaf *Leaf) (err error) {
 	flag := uint64(1 << ndx)
 	mask := flag - 1
 	if mask != 0 {
-		slotNbr = BitCount64(table.bitmap & mask)
+		slotNbr = xu.BitCount64(table.bitmap & mask)
 	}
 	sliceSize := uint(len(table.slots))
 	if sliceSize == 0 {
