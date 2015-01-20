@@ -1,4 +1,4 @@
-# hamt_go
+<h1 class="libTop">hamt_go</h1>
 
 A Go implementation of the HAMT data structure.
 
