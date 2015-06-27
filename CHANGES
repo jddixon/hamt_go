@@ -1,80 +1,83 @@
 hamt_go/CHANGES
 
+v1.1.1
+    2015-06-27
+        * update .gitignore                                         SLOC 1688
 v1.1.0
     2014-12-12
-        * moved BitCount32/64() to xlUtil_go                        * SLOC 1692
+        * moved BitCount32/64() to xlUtil_go                        SLOC 1692
 v1.0.1
     2014-11-06
-        * replace magic number 6 with MAX_W                         * SLOC 1763
+        * replace magic number 6 with MAX_W                         SLOC 1763
 v1.0.0
     2014-10-07
-        * switched from pointer receiver to value receiver          * SLOC 1762
+        * switched from pointer receiver to value receiver          SLOC 1762
 v0.9.0
     2014-05-20
-        * maxDepth() replaced by Table.root plus Root.maxDepth      * SLOC 1532
+        * maxDepth() replaced by Table.root plus Root.maxDepth      SLOC 1532
     2014-05-16
-        * 5-10% faster with NewTableWithLeaf                        * SLOC 1489
+        * 5-10% faster with NewTableWithLeaf                        SLOC 1489
 v0.8.1
     2014-05-15
-        * performance enhancements, then add findLeaf to test loop  * SLOC 1446
+        * performance enhancements, then add findLeaf to test loop  SLOC 1446
 v0.8.0
     2014-05-12
-        * replaced Entry with HTNodeI everywhere; dropped Entry     * SLOC 1414
-        * added profileHAMT, dropped Table.indices                  * SLOC 1463
-        * calculated BytesKey.Hashcode() directly                   * SLOC 1450
-        * Table.MaxSlots(), Table.MaxDepth() functions              * SLOC 1453
-        * root.insertLeaf(), Table.insertLeaf() optimized           * SLOC 1441
+        * replaced Entry with HTNodeI everywhere; dropped Entry     SLOC 1414
+        * added profileHAMT, dropped Table.indices                  SLOC 1463
+        * calculated BytesKey.Hashcode() directly                   SLOC 1450
+        * Table.MaxSlots(), Table.MaxDepth() functions              SLOC 1453
+        * root.insertLeaf(), Table.insertLeaf() optimized           SLOC 1441
 v0.7.0
     2014-05-06
         * replace *Entry with NodeI in other tables
-        * unique test keys                                          * SLOC 1468
+        * unique test keys                                          SLOC 1468
     2014-05-10
         * use rnglib_go instead of xlattice_go/rnglib
     2014-05-12
         * corrected rnglib_go import
 v0.6.0
     2014-05-06
-        * replace *Entry with NodeI in root table                   * SLOC 1449
+        * replace *Entry with NodeI in root table                   SLOC 1449
 v0.5.0
     2014-05-05
-        * unsuccessful find returns nil value, nil error            * SLOC 1464
+        * unsuccessful find returns nil value, nil error            SLOC 1464
 v0.4.0
     2014-04-22
-        * introduced root with 2^t entries and no use of POPCOUNT   * SLOC 1183
+        * introduced root with 2^t entries and no use of POPCOUNT   SLOC 1183
     2014-04-23
-        * perf tests debugged                                       * SLOC 1248
+        * perf tests debugged                                       SLOC 1248
     2014-04-25
-        * added HAMT entry splitting test                           * SLOC 1351
-        * dupe key handling plus tests; plus cleanup                * SLOC 1419
+        * added HAMT entry splitting test                           SLOC 1351
+        * dupe key handling plus tests; plus cleanup                SLOC 1419
     2014-04-30
-        * leaf count tests improved, errors corrected               * SLOC 1451
+        * leaf count tests improved, errors corrected               SLOC 1451
 v0.3.0
     2014-04-21
-        * debugged HAMT that actually uses SWAR code                * SLOC 2793
+        * debugged HAMT that actually uses SWAR code                SLOC 2793
             - much legacy code still present
     2014-04-22
-        * dropped HAMT32, HAMT64, and related code                  * SLOC 1046
-        * correct handling of t at non-root levels                  * SLOC 1049
+        * dropped HAMT32, HAMT64, and related code                  SLOC 1046
+        * correct handling of t at non-root levels                  SLOC 1049
 v0.2.0
     2014-04-17
-        * tested, working HAMT64 code                               * SLOC 1717
+        * tested, working HAMT64 code                               SLOC 1717
     2014-04-20
-        * HAMT32 and HAMT64 replaced by HAMT parameterized by w     * SLOC 2827
+        * HAMT32 and HAMT64 replaced by HAMT parameterized by w     SLOC 2827
             and t; legacy code remains, the t parameter is present
             but ignored
 v0.1.1
     2014-04-07
-        * first level ndx inserts pass test                         * SLOC  549
+        * first level ndx inserts pass test                         SLOC  549
     2014-04-08
-        * test verifies first level values correct                  * SLOC  571
+        * test verifies first level values correct                  SLOC  571
     2014-04-12
-        * tested, working Table32.{insert,find,delete}Entry()       * SLOC  730
+        * tested, working Table32.{insert,find,delete}Entry()       SLOC  730
     2014-04-16
-        * recursive Table32 tests succeed                           * SLOC  967
-        * tested, working HAMT32.{Insert,Find,Delete}               * SLOC 1007
+        * recursive Table32 tests succeed                           SLOC  967
+        * tested, working HAMT32.{Insert,Find,Delete}               SLOC 1007
 
 v0.1.0
     2014-04-04
-        * code extracted from ctries_go testing basic insert algo   * SLOC  104
-        * added SWAR-based BitCount32/64() as util.go               * SLOC  148
-        * added Bytes*Key, EntryI, HAMT, Key*I, Leaf* and tests     * SLOC  386
+        * code extracted from ctries_go testing basic insert algo   SLOC  104
+        * added SWAR-based BitCount32/64() as util.go               SLOC  148
+        * added Bytes*Key, EntryI, HAMT, Key*I, Leaf* and tests     SLOC  386
