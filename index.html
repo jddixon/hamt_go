@@ -27,7 +27,7 @@ are either tables or leaf entries.</p>
 or a table with up to <code>2^w</code> slots, where w is a small
 integer.  The next <code>w</code> bits of the hash
 derived from the key are construed as an index into that table.  The
-table grows dynamically to its maximum number of slots as entries are added.<br />
+table grows dynamically to its maximum number of slots as entries are added.
 Whenever there is a
 collision at a given level, a pointer to a new table replaces the current
 leaf entry,
@@ -64,7 +64,7 @@ processors this
 can be done using a specific machine-language instruction, POPCNT.  The current
 implementation of hamt_go emulates this in software using the
 <a href="http://en.wikipedia.org/wiki/SWAR">SWAR</a> algorithm,  The emulation code is on the order of ten times
-slower than the machine instruction.<br />
+slower than the machine instruction.
 <em>In practice, as measured by the Golang pprof profiler, POPCNT emulation does not significantly slow down computations, because the emulation code simply does not use that many CPU cycles.</em>
 <em>This is in any case not actually a limitation, but rather an observation: the HAMT alorithm runs faster with hardware support.</em></p></li>
 </ul>
@@ -104,7 +104,7 @@ Follow the SOFTWARE LICENSE link below for more information on project software 
        </a> project
     </div>
     <div class="logo" >
-      <a href="http://www.xlattice.org">
+      <a href="https://jddixon.github.io/xlattice/">
       <img src="img/xlattice-2014.jpg" alt="the XLattice Project" style="float: right;" >
       </a>
     </div>
