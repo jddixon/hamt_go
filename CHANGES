@@ -1,5 +1,8 @@
 hamt_go/CHANGES
 
+v1.1.2
+    2015-11-19
+        * minor edits to *.md                                       SLOC 1688
 v1.1.1
     2015-06-27
         * update .gitignore                                         SLOC 1688
