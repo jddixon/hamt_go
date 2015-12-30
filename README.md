@@ -86,4 +86,4 @@ of concurrency, the code runs at about 370 ns/op.
 ## On-line Documentation
 
 More information on the **hamt_go** project can be found
-[here](://jddixon.github.io/hamt_go)
+[here](https://jddixon.github.io/hamt_go)
