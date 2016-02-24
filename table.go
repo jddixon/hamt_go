@@ -209,7 +209,7 @@ func (table *Table) deleteLeaf(hc uint64, depth uint, key KeyI) (
 func (table *Table) findLeaf(hc uint64, depth uint, key KeyI) (
 	value interface{}, err error) { // 1 of 90 samples cum
 
-	ndx := hc & table.mask	// 27 of 52; MOVQ 10(DX),CX
+	ndx := hc & table.mask // 27 of 52; MOVQ 10(DX),CX
 	flag := uint64(1 << ndx)
 
 	if table.bitmap&flag != 0 {
@@ -217,7 +217,7 @@ func (table *Table) findLeaf(hc uint64, depth uint, key KeyI) (
 		var slotNbr uint
 		mask := flag - 1
 		if mask != 0 {
-			slotNbr = uint(xu.BitCount64(table.bitmap & mask))	// gets expanded inline; 0/52
+			slotNbr = uint(xu.BitCount64(table.bitmap & mask)) // gets expanded inline; 0/52
 		}
 		node := table.slots[slotNbr] // 20 of 52 - ADDQ BP,BX
 		if node.IsLeaf() {

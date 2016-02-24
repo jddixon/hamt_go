@@ -200,7 +200,7 @@ func (s *XLSuite) TestEntrySplittingInserts(c *C) {
 	// s.doTestEntrySplittingInserts(c, rng, uint(3))	// key too short
 	// s.doTestEntrySplittingInserts(c, rng, uint(4))	// index out of range
 	s.doTestEntrySplittingInserts(c, rng, uint(5))
-	s.doTestEntrySplittingInserts(c, rng, uint(6))		// MAX_W
+	s.doTestEntrySplittingInserts(c, rng, uint(6)) // MAX_W
 	// s.doTestEntrySplittingInserts(c, rng, uint(7))	// entry not found
 	// s.doTestEntrySplittingInserts(c, rng, uint(8))	// index out of range
 }

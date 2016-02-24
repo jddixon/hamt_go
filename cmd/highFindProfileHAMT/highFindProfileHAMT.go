@@ -155,7 +155,7 @@ func main() {
 		}
 		n := uint(19)
 		t := n - 2
-		j := uint(16)	// number of finds per insert
+		j := uint(16) // number of finds per insert
 		if err == nil {
 			//         w , t , J,  N
 			doBenchmark(6, t, j, 2<<n, cpuProfFile)
