@@ -20,7 +20,7 @@ func (s *XLSuite) TestHAMTCtor(c *C) {
 	t := uint(0)
 	s.doTestHAMTCtor(c, uint(4), t)
 	s.doTestHAMTCtor(c, uint(5), t)
-	s.doTestHAMTCtor(c, uint(6), t)	// MAX_W
+	s.doTestHAMTCtor(c, uint(6), t) // MAX_W
 }
 func (s *XLSuite) doTestHAMTCtor(c *C, w, t uint) {
 	h, err := NewHAMT(w, t)
