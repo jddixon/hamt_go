@@ -1,5 +1,8 @@
 hamt_go/CHANGES
 
+v1.1.6
+    2016-06-23
+        * add ghpDoc/{css,img}/                                     SLOC 2357
 v1.1.5
     2016-05-24
         * add bkp2U, other bash scripts; update .dvcz               SLOC 1807
@@ -93,6 +96,7 @@ v0.1.0
         * code extracted from ctries_go testing basic insert algo   SLOC  104
         * added SWAR-based BitCount32/64() as util.go               SLOC  148
         * added Bytes*Key, EntryI, HAMT, Key*I, Leaf* and tests     SLOC  386
+
 
 
 

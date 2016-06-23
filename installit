@@ -4,7 +4,15 @@ if [ ! -z "${DEV_BASE// }" ]
 then
   cd $DEV_BASE/go/src/github.com/jddixon/hamt_go
   
-  echo "\nLOGIC FOR INSTALLING GO SCRIPTS IS NOT IMPLEMENTED"
+  pushd cmd/highFindProfileHAMT
+  go build && go install
+  popd
+  pushd cmd/profileHAMT
+  go build && go install
+  popd
+  pushd cmd/concurProfileHAMT
+  go build && go install
+  popd
   
 else
   echo "DEV_BASE is not defined"
