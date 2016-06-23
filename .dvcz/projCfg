@@ -2,8 +2,8 @@
 project:hamt_go
 package:hamt_go
 mainlang:go
-version:1.1.4
-versionDate:2016-02-24
+version:1.1.5
+versionDate:2016-05-24
 :?dirs?:
 dir:std:ghpDoc
 dir:std:.dvcz
@@ -12,7 +12,13 @@ dir:local:cmd
 :?files?:
 code:std:.dvcz/projCfg
 code:std:.dvcz/projCfg.local
+code:std:.dvcz/builds
+code:std:.dvcz/lastBuildList
+code:std:.dvcz/version
+code:std:.dvczignore
+code:std:.dvczignore.local
 code:std:.gitignore
+code:std:.gitignore.local
 code:std:/var/app/sharedev/config/projCfg
 txt:std:.copyright
 txt:std:CHANGES
