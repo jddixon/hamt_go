@@ -5,7 +5,7 @@ then
   cd $DEV_BASE/go/src/github.com/jddixon/hamt_go
   
   
-  pySloc -L go  -X *.pb.go -v $@
+  pySloc -L go cmd/highFindProfileHAMT/highFindProfileHAMT.go cmd/profileHAMT/profileHAMT.go cmd/concurProfileHAMT/concurProfileHAMT.go  -X *.pb.go -v $@
 else
   echo "DEV_BASE is not defined"
 fi
