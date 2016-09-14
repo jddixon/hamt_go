@@ -1,0 +1,87 @@
+
+BenchmarkHAMT_3
+setup time for 1 16-byte rawKeys: 25.779us
+     1 tables,   262144 slots,  2.10 megabytes
+t 18, slotsInRoot  262144, w 3, slotsPerChild  8
+
+BenchmarkHAMT_3
+setup time for 100 16-byte rawKeys: 176.496us
+     1 tables,   262144 slots,  2.10 megabytes
+t 18, slotsInRoot  262144, w 3, slotsPerChild  8
+
+BenchmarkHAMT_3
+setup time for 10000 16-byte rawKeys: 19.415987ms
+   212 tables,   263832 slots,  2.11 megabytes
+t 18, slotsInRoot  262144, w 3, slotsPerChild  8
+
+BenchmarkHAMT_3
+setup time for 1000000 16-byte rawKeys: 2.080626804s
+441872 tables,  3797112 slots, 30.38 megabytes
+t 18, slotsInRoot  262144, w 3, slotsPerChild  8
+PASS: hamt_perf_test.go:53: XLSuite.BenchmarkHAMT_3	 1000000	      1751 ns/op
+
+BenchmarkHAMT_4
+setup time for 1 16-byte rawKeys: 16.923us
+     1 tables,   262144 slots,  2.10 megabytes
+t 18, slotsInRoot  262144, w 4, slotsPerChild 16
+
+BenchmarkHAMT_4
+setup time for 100 16-byte rawKeys: 159.93us
+     1 tables,   262144 slots,  2.10 megabytes
+t 18, slotsInRoot  262144, w 4, slotsPerChild 16
+
+BenchmarkHAMT_4
+setup time for 10000 16-byte rawKeys: 24.106359ms
+   186 tables,   265104 slots,  2.12 megabytes
+t 18, slotsInRoot  262144, w 4, slotsPerChild 16
+
+BenchmarkHAMT_4
+setup time for 1000000 16-byte rawKeys: 2.02934438s
+344129 tables,  5768192 slots, 46.15 megabytes
+t 18, slotsInRoot  262144, w 4, slotsPerChild 16
+PASS: hamt_perf_test.go:59: XLSuite.BenchmarkHAMT_4	 1000000	      1676 ns/op
+
+BenchmarkHAMT_5
+setup time for 1 16-byte rawKeys: 18.078us
+     1 tables,   262144 slots,  2.10 megabytes
+t 18, slotsInRoot  262144, w 5, slotsPerChild 32
+
+BenchmarkHAMT_5
+setup time for 100 16-byte rawKeys: 187.276us
+     1 tables,   262144 slots,  2.10 megabytes
+t 18, slotsInRoot  262144, w 5, slotsPerChild 32
+
+BenchmarkHAMT_5
+setup time for 10000 16-byte rawKeys: 23.6169ms
+   204 tables,   268640 slots,  2.15 megabytes
+t 18, slotsInRoot  262144, w 5, slotsPerChild 32
+
+BenchmarkHAMT_5
+setup time for 1000000 16-byte rawKeys: 2.045100972s
+291317 tables,  9584256 slots, 76.67 megabytes
+t 18, slotsInRoot  262144, w 5, slotsPerChild 32
+PASS: hamt_perf_test.go:65: XLSuite.BenchmarkHAMT_5	 1000000	      1634 ns/op
+
+BenchmarkHAMT_6
+setup time for 1 16-byte rawKeys: 17.751us
+     1 tables,   262144 slots,  2.10 megabytes
+t 18, slotsInRoot  262144, w 6, slotsPerChild 64
+
+BenchmarkHAMT_6
+setup time for 100 16-byte rawKeys: 191.465us
+     1 tables,   262144 slots,  2.10 megabytes
+t 18, slotsInRoot  262144, w 6, slotsPerChild 64
+
+BenchmarkHAMT_6
+setup time for 10000 16-byte rawKeys: 23.869546ms
+   172 tables,   273088 slots,  2.18 megabytes
+t 18, slotsInRoot  262144, w 6, slotsPerChild 64
+
+BenchmarkHAMT_6
+setup time for 1000000 16-byte rawKeys: 2.015420691s
+263625 tables, 17134080 slots, 137.07 megabytes
+t 18, slotsInRoot  262144, w 6, slotsPerChild 64
+PASS: hamt_perf_test.go:74: XLSuite.BenchmarkHAMT_6	 1000000	      1602 ns/op
+OK: 4 passed
+PASS
+ok  	github.com/jddixon/hamt_go	25.617s
