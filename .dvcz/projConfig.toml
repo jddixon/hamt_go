@@ -1,0 +1,23 @@
+# projConfig.toml for hamt_go
+
+[meta]
+    version = '0.1.0'
+
+[project]
+    name = 'hamt_go'  # distro name
+    package = 'hamt_go'  # internal name
+    main_lang = 'go'
+    version = '1.1.9'
+    version_date = '2017-11-03'
+    author = 'Jim Dixon'
+    author_email = 'jddixon@gmail.com'
+    copyright = '2014-2017'
+    description = 'Go implemenation of HAMT data strudture'
+    dev_status = 'beta'
+    license = 'mit'
+    relpath = 'go/src/github.com/jddixon/hamt_go'
+    state = 'shared'
+    url = 'https://jddixon.github.io/hamt_go'
+
+[go]
+    cmds=['profileHAMT', 'concurProfileHAMT', 'highFindProfileHAMT']
