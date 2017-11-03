@@ -1,4 +1,4 @@
-projConfig.toml for hamt_go
+# projConfig.toml for hamt_go
 
 [meta]
     version = '0.1.0'
@@ -7,11 +7,11 @@ projConfig.toml for hamt_go
     name = 'hamt_go'  # distro name
     package = 'hamt_go'  # internal name
     main_lang = 'go'
-    version = '1.1.8'
-    version_date = '2017-04-22'
+    version = '1.1.9'
+    version_date = '2017-11-03'
     author = 'Jim Dixon'
     author_email = 'jddixon@gmail.com'
-    copyright = '2014-2016'
+    copyright = '2014-2017'
     description = 'Go implemenation of HAMT data strudture'
     dev_status = 'beta'
     license = 'mit'

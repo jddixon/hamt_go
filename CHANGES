@@ -1,5 +1,8 @@
 hamt_go/CHANGES
 
+v1.1.9
+    2017-11-03
+        * correct directory structure, config files                 SLOC 2379
 v1.1.8
     2017-04-22
         * add projConfig.toml                                       SLOC 2377
@@ -102,6 +105,7 @@ v0.1.0
         * code extracted from ctries_go testing basic insert algo   SLOC  104
         * added SWAR-based BitCount32/64() as util.go               SLOC  148
         * added Bytes*Key, EntryI, HAMT, Key*I, Leaf* and tests     SLOC  386
+
 
 
 
